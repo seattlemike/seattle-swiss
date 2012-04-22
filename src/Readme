@@ -1,0 +1,67 @@
+*Readme* - major stuff
+
+##### Apr 2012:
+
+Modes:
+  Swiss / Single Elim / Double Elim / Round Robin / Monday Night
+  Want: Tournament -> section [mode] -> Rounds
+    where each tournament has multiple section with ways to import teams/starting-ranks from other
+    sections, each section with its own mode.  So for example, we have sections, Swiss A, Swiss B,
+    Swiss C, each imports 1/3 of teams from tournament pool, random starting rank, Swiss mode.  Then
+    section Single Elim importing top 8 teams from each Swiss section.
+  Should these be called Sections?  Brackets?  Pools?  Divisions?  'Single Elim Division' doesn't
+    make sense.  'Final Division'.  I don't know.
+
+  But for now:  Tournament [mode] -> Rounds
+    with a mechanism for importing teams/ranks from other tournaments where [owner] is an [admin]
+
+  Got to get this ready for Lex!
+
+Public View:
+  view.php should require_privs( is_public($tid) or tournament_isadmin($tid, $aid) )
+    so that I can't just start sticking id=[#] in the url to look at non-public tourneys
+
+
+##### Sep 2011:
+
+Cross-browser compatibility:
+  check that things render reasonably on various browsers.
+  we're really ugly on ie7/8/9, which all of them ignore nth-child
+
+Forms:
+  get rid of those page-spanning forms - don't write forms that span their own
+  containg div's close tag
+
+Header:
+  want to move all navigation to the header
+  should figure out which page we're on to 'selected' out the appropriate button
+  pages should have(?) a secondary header that's page-specific - maybe as a left sidebar
+
+Pairings:
+  need a way to guarantee no rematches.  current method tries a little, but not very hard.
+  could form an edge-weighted graph and find a minimal perfect matching.
+    see paper here: www.disco.ethz.ch/publications/ctw04.pdf
+    and further discussion here:  http://stackoverflow.com/questions/5203894/a-good-approximation-algorithm-for-the-maximum-weight-perfect-match-in-non-bipart
+  but this is kind of overkill.  We could probably modify our current algorithm to just
+  backtrack a little, but who knows if this will work in arbitrary environments (i.e. with
+  a medium amount of teams, like twenty or thirty, and a bunch of rounds)
+  We should make sure that it does.
+
+connect_to_db
+  I've set things up such that we throw away our db connection and just reconnect
+    a bunch of times every page load.  Is this why things feel so laggy today?
+    If so, we need to fix that.  Fffffuuuuuuuuuuu
+
+Trying to condense a bunch of pages down to - admin.php, tournament.php, etc
+  structure should generally look like:
+  *check $_POST['action'] to see if there is stuff to do
+      offload the doing into included utils files
+      and header(location:) to wherever we should end up
+  *page display
+
+some stuff on session_start() instead of session_register()
+  see http://stackoverflow.com/questions/7194457/whats-wrong-with-session-register
+  and http://stackoverflow.com/questions/3319231/what-are-session-id-session-regenerate-id-and-session-name-used-for
+
+Drew -
+  I like asynctest.  Drew here!

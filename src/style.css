@@ -1,0 +1,206 @@
+/* from main.css */
+/* setup */
+body {
+	margin:0;
+	padding:0;
+	border:0;
+	width:100%;
+	background:#fff;
+    font-size: 100%;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Fonts */
+.textBox, .nav, .button, .header, .topHeader, .footer { font-family: 'Rosario', sans-serif; }
+.con { font-family: 'Rokkitt', serif; }
+
+/* Text Effects */
+.warning { color: #b22; }
+.header, .footer { font-size: 1.2em; }
+.topHeader { font-size: 1.5em; margin: 0px; }
+.button, .nav a {
+    font-weight: normal;
+    font-size: 1em;
+}
+
+.cHead, .line, .topHeader, .header, .footer { text-align: center; }
+.lHead, .subBox, label, p, .textbox { text-align: left; }
+
+/* Borders */
+.topHeader { border-bottom: 1px solid #aaf; }
+.mainBox, .subBox { border: 1px solid #aaf; }
+.game { border: 1px solid black; }
+
+
+ol { 
+    list-style: none;
+    margin: 0em;
+    padding: 0em;
+    padding-left: 1em;
+}
+ol.spaced li {
+    margin-bottom: 0.5em;
+}
+
+/* All Header */
+.header, .footer {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+.topHeader { 
+    padding-bottom: .5em;
+    padding-top: 2em;
+}
+.footer { padding-bottom: 1em; }
+
+.rHead { float: right; }
+.raiseHead {
+    position: relative;
+    top: -2em;
+}
+.backHead { 
+    margin-left: 1%;
+    width: 98%;
+    float: left; 
+}
+
+/* Text Layout */
+p, .line { margin: 0.5em 0 0.5em 0; }
+
+/* Page Layout */
+.con {
+    margin-top: 1em;
+    width: 100%;
+    clear: both;
+    text-align: center;
+}
+
+.centerBox {
+    display: inline-block;
+    min-width: 60%;
+}
+.textbox { 
+    display: inline-block;
+    width: 60%; 
+}
+
+.mainBox { 
+    margin-bottom: 1em;
+    padding: 0.5em ;
+}
+.centerBox .team { min-width: 20%; }
+
+.subBox { 
+    margin-bottom: .5em;
+    padding-left: 2em;
+}
+
+.cBox { 
+    display:inline-block;
+    padding: 0.2em;
+    margin-left: 0.5em;
+}
+
+/* tabulated display */
+.standings {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.standings td {
+    height: 40px;
+    text-align: center;
+    min-width: 40px;
+}
+
+.standings tr:first-child { background: #fbb; } 
+.standings tr:nth-child(2) { border-bottom: 1px solid black; }
+.standings tr:nth-child(2n+4) { background: #ddd; }
+.standings tr:nth-child(2n+3) { background: #aaa; }
+/* .standings .bold { font-size: larger; } */
+.standings tr:nth-child(2n+4) .bold { background: #fbb; }
+.standings tr:nth-child(2n+3) .bold { background: #f99; }
+
+/*  TODO: get rid of these ASAP */
+table { border-collapse:collapse; }
+table.list { width: 100%; }
+th { text-align: center; padding: 0.2em; }
+td { padding: 0 5px 0 5px; }
+td.right { text-align: right; }
+td.center{ text-align: center; }
+
+/* Run Tournament */
+    .rematch { background: #9af; }
+    .played { background: #ccc; }
+    .playing { background: #ebb; }
+    .game * { vertical-align: middle; }
+    .middle { vertical-align: bottom; }
+    .team {
+        display: inline-block;
+        padding: 3px 10px 3px 10px;
+        text-align: center;
+    }
+
+
+/* Forms and Input */
+    form { margin: 0; }
+    input, .nav a, .button {
+        margin: 3px;
+        padding: 3px 5px 3px 5px;
+        background: #ddd;
+        border: 1px solid black;
+    }
+    label {
+        display: block;
+        font-size: 0.8em;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+    label input {
+        display: block;
+    }
+    
+
+    /* Links and Buttons */
+        a:visited, a:active, a:link {
+            text-decoration:none;
+            color: #224365;
+        }
+        .button:hover, a:hover { color: #68819b; }
+
+        .nav a, .button {
+            display: inline-block;
+            text-decoration:none;
+            text-align: center;
+            color: #224365;
+            min-width: 60px;
+        }
+
+        a.selected, input.selected { background: #aaa; }
+
+        input.wide { width: 200px; }
+        input.short { width: 50px; }
+
+        a.spaced { margin: 5px 10px 5px 10px }
+
+/* header footer */
+
+#header {
+	clear:both;
+	float:left;
+	width:100%;
+	border-bottom: 1px solid #000;
+	padding: 10px 0 10px 0;
+	margin: 0 0 10px 0;
+}
+
+#footer {
+	clear:both;
+	float:left;
+	width:100%;
+	border-top:1px solid #000;
+}

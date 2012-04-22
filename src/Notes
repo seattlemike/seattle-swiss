@@ -1,0 +1,20 @@
+utils_settings.php
+  function get_db_settings() { return array("db_host","db_user","db_pass","db_name"); } 
+  function salt_pass()   { return md5("salt string".$pass); }
+   - there was somethign else I wanted here - timeout maybe?
+   - maybe utils_settings should be in the repository with the values above?
+     is there a way to do this and keep it from overwriting our local copies
+     every time we do a svn update?
+
+storing date strings in the database
+  using DATETIME type, converting at the last minute with <?php date("m/d/Y", $db_date) ?>
+
+Form submits [low priority]
+  I wish hitting enter had some well-defined effect:
+  http://stackoverflow.com/questions/925334/how-is-the-default-submit-button-on-an-html-form-determined
+
+Authentication [low priority]
+  can't a malicious user eavesdrop on (a) someone's session id or (b) someone's
+  md5'd password, both of which are transmitted in plaintext over the wifi?
+    does adding a nonce somehow fix this?
+    http://en.wikipedia.org/wiki/Cryptographic_nonce

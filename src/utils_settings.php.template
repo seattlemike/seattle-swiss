@@ -1,0 +1,9 @@
+<?php
+  // list($db_addr, $db_user, $db_pass, $db_name) = get_db_settings();
+  function get_db_settings() {
+    return array('localhost','db_admin','password','db_name');
+  }
+  function salt_pass($pass) {
+	  return md5("long_random_string".$pass);
+  }
+?>
