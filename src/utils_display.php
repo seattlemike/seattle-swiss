@@ -22,7 +22,7 @@ function disp_header_admin() {
     if (check_login()) {
         echo "<div class='lHead'>\n";
         echo "<a href='main_menu.php'>{$_SESSION['admin_name']}</a>";
-        echo "<a href=''>user settings</a>";
+        echo "<a href='user.php'>settings</a>";
         if ($_SESSION['admin_type'] == 'super') 
             echo "<a href='main_menu.php?super=true'>super</a>";
         echo "<a href='logout.php'>log out</a>\n";
