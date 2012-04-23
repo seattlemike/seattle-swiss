@@ -1,19 +1,11 @@
 <?php
-  $title_text="Seattle Swiss";
+  $header_text="Two Oh Swiss";
+  $title_text="About";
   include("header.php");
   ?>
 
 <div class='con'>
     <div class='centerBox textbox'>
-        <div class='mainBox'> 
-            <div class="header">Well, About That</div>
-            <p> You're catching us at a pretty early stage, so fair warning:
-            things may not work, things may break, things may change, and
-            things may just plain not do what you want.
-            But you have recourse!  If you want to see something improved /
-            fixed / changed / given more options, please let us know.  Email mike or paul [see below].
-            </p>
-        </div>
         <div class='mainBox'> 
             <div class="header">About Tournaments</div>
             <p>Seattle Swiss is Tournament Software, meant as a flexible, robust system to 
@@ -57,6 +49,15 @@
             </ol>
             <p>The intention is to add several more tie-breaking schemes, and some flexibility to
             select which is the primary mechanism, secondary, etc.  Just not quite yet.</p>
+        </div>
+        <div class='mainBox'> 
+            <div class="header">Well, About That</div>
+            <p> You're catching us at a pretty early stage, so fair warning:
+            things may not work, things may break, things may change, and
+            things may just plain not do what you want.
+            But you have recourse!  If you want to see something improved /
+            fixed / changed / given more options, please let us know.  Email mike or paul.
+            </p>
         </div>
         <div class='mainBox'> 
             <div class="header">About Us</div>

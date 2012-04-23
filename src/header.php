@@ -39,7 +39,7 @@ if ( isset($_POST['tournament_id']) || isset($_GET['id']) ) {
 
     $tname = get_tournament_name($tid);
     if (isset($tname)) {
-        $title_text = $tname;
+        $title_text = $tname;  //should probably be if (!$title_text)
         if ( isset($_POST['round_id']) || isset($_GET['round_id']) )
             ($rid = $_POST['round_id']) || ($rid = $_GET['round_id']);
         if ( (! isset($rid)) || 

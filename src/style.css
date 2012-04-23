@@ -149,10 +149,16 @@ td.center{ text-align: center; }
 /* Forms and Input */
     form { margin: 0; }
     input, .nav a, .button {
+        /*margin: 0.1em;*/
+        /*padding: 0.1em 0.2em 0.1em 0.2em;*/
         margin: 3px;
         padding: 3px 5px 3px 5px;
+
         background: #ddd;
         border: 1px solid black;
+    }
+    input.numeric {
+        width: 6em;
     }
     label {
         display: block;

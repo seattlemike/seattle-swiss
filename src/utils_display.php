@@ -10,7 +10,7 @@
 
 // button with onclick that modifies form.action
 function disp_tournament_button($value, $action, $extra='', $class='') {
-    $onclick = "this.form.elements[\"action\"].value=\"$action\";$extra";
+    $onclick = "this.form.elements[\"action\"].value=\"$action\"; $extra";
     echo "<input onclick='$onclick' class='button $class' type='submit' name='submit' value='$value' />";
 }
 
@@ -147,23 +147,30 @@ function disp_teams($t, $aid) {
         <input type='hidden' name='team_id' value=''>
         <input type='hidden' name='action' value='' />
         <table>
-            <tr><th></th><th>Team Name</th><th>Players</th></tr>
-            <tr> <td> <? disp_tournament_button("Add", "add_team"); ?> </td>
-                <td><div class='team_name'><input type='text' name='add_name'></div></td>
-                <td><div class='team_text'><input type='text' name='add_text'></div></td>
+            <tr><th colspan=2></th><th>Team Name</th><th>Players</th>
+                <th title="if unsure, leave blank"><i>UID</i></th>
+                <th title="for random starting rank, leave blank">Starting Rank</th></tr>
+            <tr> <td colspan=2> <? disp_tournament_button("Add", "add_team"); ?> </td>
+                <td><input type='text' name='add_name'></td>
+                <td><input type='text' name='add_text'></td>
+                <td><input class='numeric' type='text' name='add_uid'></td>
+                <td><input class='numeric' type='text' name='add_starting_rank'></td>
             </tr>
 <?php
     foreach (get_tournament_teams($t['tournament_id']) as $team) {
         echo "<tr><td>\n";
-        disp_tournament_button("Update", "update_team", " this.form.elements[\"team_id\"].value={$team['team_id']};");
-        echo "</td>\n";
-        echo "<td><div class='team_name'><input type='text' name='name_{$team['team_id']}' value='{$team['team_name']}'></div></td>\n";
-        echo "<td><div class='team_text'><input type='text' name='text_{$team['team_id']}' value='{$team['team_text']}'></div></td>\n";
-        echo "<td>\n";
+        disp_tournament_button("Update", "update_team", "this.form.elements[\"team_id\"].value={$team['team_id']};");
+        echo "</td>\n<td>";
         if ($team['is_disabled']) { $class = "selected"; }
         else                      { $class = ""; }
-        disp_tournament_button("Disable", "disable_team", " this.form.elements[\"team_id\"].value={$team['team_id']};", $class);
-        echo "</td></tr>\n";
+        if (!$team['team_uid'])   { $team['team_uid'] = ""; }
+        if (!$team['team_init'])  { $team['team_init'] = ""; }
+        disp_tournament_button("Disable", "disable_team", "this.form.elements[\"team_id\"].value={$team['team_id']};", $class);
+        echo "</td>\n<td><div class='team_name'><input type='text' name='name_{$team['team_id']}' value='{$team['team_name']}'></div></td>\n";
+        echo "<td><div class='team_text'><input type='text' name='text_{$team['team_id']}' value='{$team['team_text']}'></div></td>\n";
+        echo "<td><input class='numeric' type='text' name='add_uid' value='{$team['team_uid']}'></td>\n";
+        echo "<td><input class='numeric' type='text' name='add_starting_rank' value='{$team['team_init']}'></td>\n";
+        echo "</tr>\n";
     }
     echo "</table>\n";
     echo "</form>\n";

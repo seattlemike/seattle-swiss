@@ -1,5 +1,5 @@
 <?php
-    $page_name="User Settings";
+    $title_text ="User Settings";
 	include("header.php");  // sets $tid if valid tournament
 	require_login();
 

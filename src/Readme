@@ -21,6 +21,23 @@ Public View:
   view.php should require_privs( is_public($tid) or tournament_isadmin($tid, $aid) )
     so that I can't just start sticking id=[#] in the url to look at non-public tourneys
 
+Navigating Teams:
+  tournament.php needs a nicer way to deal with teams:
+    Import from file, url(?), textbox, OTHER TOURNAMENT
+    Delete button for team if !exist games with that team in them
+    Disable needs more explanation
+    Single button to update all teams
+
+Inputs:  (js) Any time text has been modified, add class 'selected' to indicate this
+
+tblPlayer:
+  player id / player uid / player name
+  tblPlayerTeam
+    player id / team id
+  when importing / adding players to teams check for existing player uid
+    if old_name == new_name where old_uid == new_uid then add old_id to the team and don't make a new
+    tblPlayer entry - else do [so new id, duplicate uid, new name is a possible scenario]
+  at some point maybe we'll stat by uid and just have "Alias" x,y,z
 
 ##### Sep 2011:
 
