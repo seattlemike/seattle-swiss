@@ -193,7 +193,7 @@ function tournament_create($data, $aid) {
 }
 
 function tournament_edit($data, $aid) {
-    require_privs(tournament_isadmin($data['tournament_id'], $aid));
+    require_privs(tournament_isadmin($data['tournament_id'], $aid));  //already done?
     $bind_vars = array(':tname' => $data['tournament_name'],
         ':tcity' => $data['tournament_city'],
         ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
@@ -336,30 +336,40 @@ function tournament_populate_round($tid, $rid, $aid) {
   return $rid;
 }
 
-function team_add($_POST, $aid) {
-    require_privs(tournament_isadmin($_POST['tournament_id'], $aid));
-    if ($_POST['add_name'] == "") return false; 
-    $bind_vars = array(':tname' => $_POST['add_name'], ':ttext' => $_POST['add_text'], ':toid' => $_POST['tournament_id']);
-    $success = sql_try("INSERT INTO tblTeam (team_name, tournament_id, team_text)
-                VALUES (:tname, :toid, :ttext)", $bind_vars);
 
-    return $success;
+//TODO: shouldn't fail silently on !$data['add_name']
+function team_add($data) {
+    $bind_vars = array(':tname' => $data['name_add'], 
+                       ':tuid'  => $data['uid_add'], 
+                       ':tinit' => $data['init_add'], 
+                       ':ttext' => $data['text_add'], 
+                       ':toid'  => $data['tournament_id']);
+    $query = "INSERT INTO tblTeam (team_name, tournament_id, team_text, team_uid, team_init) 
+              VALUES (:tname, :toid, :ttext, :tuid, :tinit)";
+    if (!$data['name_add']) return false;
+    else                    return sql_try($query, $bind_vars);
 }
 
-function team_disable($data, $aid) {
-    require_privs(tournament_isadmin($data['tournament_id'], $aid));
-    $success = sql_try("UPDATE tblTeam SET is_disabled = 1 XOR is_disabled WHERE team_id = :teamid AND tournament_id = :tid", array(":teamid" => $data["team_id"], ":tid" => $data["tournament_id"]));
-    return $success;
+//ASSERT require_privs($tid,$aid)
+function team_disable($data) {
+    $query = "UPDATE tblTeam SET is_disabled = 1 XOR is_disabled 
+              WHERE team_id = :teamid AND tournament_id = :tid";
+    $bind_vars = array(':teamid' => $data['team_id'], 
+                       ':tid'    => $data['tournament_id']);
+    return sql_try($query, $bind_vars);
 }
 
-function team_edit($data, $aid) {
-    require_privs(tournament_isadmin($data['tournament_id'], $aid));
+//ASSERT require_privs($tid,$aid)
+//ASSERT $data["tournament_id"] isn't derived from $_POST data
+function team_update($data) {
     $tid = $data['team_id'];
-    $bind_vars = array(':tid'   => $tid,
+    $bind_vars = array(':tid'   => $data["tournament_id"],
                        ':tname' => $data["name_$tid"],
+                       ':tuid'  => $data["uid_$tid"],
+                       ':tinit' => $data["init_$tid"],
                        ':ttext' => $data["text_$tid"]);
-    $success = sql_try("UPDATE tblTeam SET team_name = :tname, team_text = :ttext
-                WHERE team_id = :tid", $bind_vars);
+    $success = sql_try("UPDATE tblTeam SET team_name = :tname, team_text = :ttext, team_uid = :tuid,
+                        team_init = :tinit WHERE team_id = :tid", $bind_vars);
     return $success;
 }
 

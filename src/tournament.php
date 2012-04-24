@@ -8,7 +8,7 @@
 
     //TODO: validate tournament details
     if (isset($_POST['action'])) {
-        $_POST['tournament_id'] = $tid;
+        $_POST['tournament_id'] = $tid;  //this is not a bad thing
 
         if ($_POST['action'] == 'delete_tournament') {
             if ($_POST['confirmed'] == 'true') {
@@ -26,16 +26,11 @@
             if (! tournament_remove_admin($_POST, $_SESSION['admin_id']))
                 echo "<div class='header warning'>Failed to remove admin</div>";
             }
-        elseif ($_POST['action'] == 'add_team') {
-            team_add($_POST, $_SESSION['admin_id']);
-        }
-        elseif ($_POST['action'] == 'disable_team') {
-            team_disable($_POST, $_SESSION['admin_id']);
-        }
-        elseif ($_POST['action'] == 'update_team') {
-            team_edit($_POST, $_SESSION['admin_id']);
-        }
-        if ($redir) header("location:main_menu.php");
+        /* ASSERT require_privs(tid, aid)  [above]*/
+        elseif ($_POST['action'] == 'add_team')     { team_add($_POST);     }
+        elseif ($_POST['action'] == 'disable_team') { team_disable($_POST); }
+        elseif ($_POST['action'] == 'update_team')  { team_update($_POST);  }
+        if ($redir) header("location:main_menu.php");  // stick this back in delete_tournament?
     }
   ?>
 
@@ -76,7 +71,25 @@
 
         <div class="mainBox">
             <div class="header">Teams</div>
-                <? disp_teams($tourney, $_SESSION['admin_id']); ?> 
+            <form name='admin' method='post' action=''>
+                <input type='hidden' name='team_id' value=''>
+                <input type='hidden' name='action' value='' />
+                <table>
+                    <tr><th colspan=2></th><th>Team Name</th><th>Players</th>
+                        <th title="if unsure, leave blank"><i>UID</i></th>
+                        <th title="for random starting rank, leave blank">Starting Rank</th></tr>
+                    <tr> <td colspan=2> <? disp_tournament_button("Add", "add_team"); ?> </td>
+                        <td><input type='text' name='name_add'></td>
+                        <td><input type='text' name='text_add'></td>
+                        <td><input class='numeric' type='text' name='uid_add'></td>
+                        <td><input class='numeric' type='text' name='init_add'></td>
+                    </tr>
+                    <?php
+                    foreach (get_tournament_teams($tid) as $team)
+                        disp_team_edit($team);
+                    ?>
+                </table>
+            </form>
             <div class='header'></div>
         </div>
         <div class="nav line">
