@@ -71,15 +71,34 @@
                     }
                     ?>
                 </form>
-            <div class='header'></div>
         </div>
 
         <div class="mainBox">
             <div class="header">Teams</div>
-                <? disp_teams($tourney, $_SESSION['admin_id']); ?> 
-            <div class='header'></div>
+            <form name='admin' method='post' action=''>
+                <input type='hidden' name='team_id' value=''>
+                <input type='hidden' name='action' value='' />
+                <table>
+                    <tr><th></th><th>Team Name</th><th>Players</th>
+                        <th title="if unsure, leave blank"><i>UID</i></th>
+                        <th title="for random starting rank, leave blank">Starting Rank</th></tr>
+                    <tr> <td> <? disp_tournament_button("Add", "add_team"); ?> </td>
+                        <td><input type='text' name='add_name'></td>
+                        <td><input type='text' name='add_text'></td>
+                        <td><input class='numeric' type='text' name='add_uid'></td>
+                        <td><input class='numeric' type='text' name='add_starting_rank'></td>
+                    </tr>
+                    <?php
+                        foreach (get_tournament_teams($tourney['tournament_id']) as $team)
+                            disp_team_edit($team); 
+                    ?>
+                    <tr><td colspan=5 class='center'>
+                        <? disp_tournament_button("Update", "update", "", "selected"); ?></div>
+                    </td></tr>
+                </table>
+            </form>
         </div>
-        <div class="nav line">
+        <div class="nav rHead">
             <form name='delete' method='post' action=''>
                 <input type='hidden' name='action' value='' />
                 <input type='hidden' name='confirmed' value='<? echo $confirm ?>' />
@@ -91,7 +110,6 @@
                         disp_tournament_button('Delete Tournament', 'delete_tournament');
                 ?>
             </form>
-            <div class='header'></div>
         </div>
     </div>
 </div>
