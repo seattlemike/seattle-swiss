@@ -92,7 +92,7 @@
             </form>
             <div class='header'></div>
         </div>
-        <div class="nav line">
+        <div class="nav rHead">
             <form name='delete' method='post' action=''>
                 <input type='hidden' name='action' value='' />
                 <input type='hidden' name='confirmed' value='<? echo $confirm ?>' />
