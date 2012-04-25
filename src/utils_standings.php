@@ -83,25 +83,13 @@ class stats {
     return $standings;
   }
 
-  function get_score($id) {
-    return $this->teams[$id]['score'];
-  }
-  function get_rand($id) {
-    return $this->teams[$id]['rand'];
-  }
-
-  function get_par($id) {
-    foreach ($this->teams[$id]['opponents'] as $opp_id) {
-      if (($oppid != -1) && (isset($this->teams[$opp_id]['rank'])))
-          $tbscore += (1 / floatval($this->teams[$opp_id]['rank']));
-      elseif ($oppid == -1)
-          $tbscore += 1/1000;
+    function get_score($id) {
+        return $this->teams[$id]['score'];
     }
-    
-    if ($tbscore > 0)
-      $this->teams[$id]['par'] = sprintf("%.2f", 1 / $tbscore);
-    return $tbscore;
-  }
+
+    function get_rand($id) {
+        return $this->teams[$id]['rand'];
+    }
 
     function get_cumulative($id) {
         if (isset($this->teams[$id]['cumulative']))
@@ -185,7 +173,8 @@ function group_by($ary, $idx) {
   return $ret;
 }
 
-function get_standings($tid) {
+// teams ordered best to worst
+function swiss_standings($tid) {
     $stats = new stats();
     ($db = connect_to_db()) || die("Couldn't connect to database for tournament standings");
 

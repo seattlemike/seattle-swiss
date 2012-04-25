@@ -97,8 +97,13 @@ function create_admin($db, $email, $name, $city, $pass) {
 //
 
 function get_tournament_name($tid) {
-  $tourney = sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid', array(':tid' => $tid));
-  return $tourney['tournament_name'];
+    $t = sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid', array(':tid' => $tid));
+    return $t['tournament_name'];
+}
+
+function get_tournament_mode($tid) {
+    $t = sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid', array(':tid' => $tid));
+    return $t['tournament_mode'];
 }
 
 function get_tournament($tid, $aid) {
@@ -322,22 +327,22 @@ function tournament_empty_round($rid, $aid, $db = null) {
 }
 
 function tournament_populate_round($tid, $rid, $aid) {
-  //TODO: tournament structure!
-  $db = connect_to_db();
+    $db = connect_to_db();
 
-  // if we're not passed an $rid, make a new round and populate
-  if (!$rid)
-    ($rid = tournament_add_round($tid)) || die("<h1>Failed to add tournament round to populate</h1>");
+    // if we're not passed an $rid, make a new round and populate
+    if (!$rid)
+        ($rid = tournament_add_round($tid)) || die("<h1>Failed to add tournament round to populate</h1>");
 
-  $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid AND tournament_id = :tid", array(":rid"=>$rid, ":tid"=>$tid), $db);
-  if ($round) {
-    require_privs(tournament_isadmin($tid, $aid));
-    $pairs = tournament_get_pairings($tid);
-    foreach ($pairs as $p)
-      tournament_add_game($rid, $p, $db);
-  }
+    // Redundant check(rid && tid) to prevent rid phishing from remote tid
+    $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid AND tournament_id = :tid", array(":rid"=>$rid, ":tid"=>$tid), $db);
+    if ($round) {
+        require_privs(tournament_isadmin($tid, $aid));
+        $pairs = tournament_get_pairings($tid);
+        foreach ($pairs as $p)
+            tournament_add_game($rid, $p, $db);
+    }
 
-  return $rid;
+    return $rid;
 }
 
 

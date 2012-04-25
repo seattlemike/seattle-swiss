@@ -217,7 +217,7 @@ function disp_standings($tid) {
 
 
 function disp_swiss($tid, $nrounds) {
-    $standings = get_standings($tid);
+    $standings = swiss_standings($tid);
     if (count($standings) == 0) { return; }
 
     echo "<table class='standings'>\n";
@@ -241,23 +241,6 @@ function disp_swiss($tid, $nrounds) {
         echo "</tr>\n";
     }
     echo "</table>\n";
-}
-
-function disp_detailed_standings($tid) {
-  echo "<table class='standings'>";
-  echo "<tr><th>semi-rank</th><th>Rank</th><th>Team Name</th><th>Score</th><th>Buchholz</th><th>Cumulative</th><th>Berger</th>";
-  foreach (get_standings($tid) as $rank => $team) {
-    echo "<tr>";
-    echo "<td>{$team['rank']}</td>";
-    echo "<td>".($rank+1)."</td>";
-    echo "<td>{$team['name']}</td>";
-    echo "<td>{$team['score']}</td>";
-    echo "<td>{$team['buchholz']}</td>";
-    echo "<td>{$team['cumulative']}</td>";
-    echo "<td>{$team['berger']}</td>";
-    echo "</tr>";
-  }
-  echo "</table>";
 }
 
 function disp_team_score($team) {

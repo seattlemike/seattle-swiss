@@ -61,13 +61,29 @@ function not_disabled($team) {
     return (! $team['disabled']);
 }
 
+// ASSERT:  SWISS_MODE=0 SINGLE_ELIM_MODE=1 DOUBLE_ELIM_MODE=2 ROUND_ROBIN_MODE=3
 function tournament_get_pairings($tid) {
-    //TODO: tournament structure!
+    $mode = get_tournament_mode($tid);
+    if     ($mode == 0) return get_swiss_pairings($tid);
+    elseif ($mode == 1) return get_single_pairings($tid);
+    else // Ohno!  No pairings yet for this mode!
+        return array();
+}
 
-    // standings in order of ASCENDING RANK
-    //$teams = array_reverse( array_filter(get_standings($tid, true), function ($team) { return (! $team['disabled']) } ));
-    $teams = array_reverse( array_filter(get_standings($tid, true), "not_disabled"));
-    // filter out is_disabled teams
+function get_single_pairings($tid) {
+    return array();
+}
+
+
+// NEW IDEA:
+//  create a weighted edge-graph - teams as vertices, edges for teams who have not yet met
+//    higher weights for less desirable pairings
+//  find a minimal-weight perfect matching
+//
+
+function get_swiss_pairings($tid) {
+    // standings returned top-down
+    $teams = array_reverse( array_filter(swiss_standings($tid, true), "not_disabled"));
     $pairs = array();
 
     //I hate odd numbers.   TODO: better odd number behaviour
@@ -104,14 +120,6 @@ function tournament_get_pairings($tid) {
   }
   return $pairs;
 }
-
-// NEW IDEA:
-//  create a weighted edge-graph - teams as vertices, edges for teams who have not yet met
-//    higher weights for less desirable pairings
-//  find a minimal-weight perfect matching
-//
-
-
 
 
 ?>
