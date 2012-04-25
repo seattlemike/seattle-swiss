@@ -383,7 +383,7 @@ function tournament_update_score( $gid, $data) {
   foreach ($teams as $team) {
     $tid = $team['team_id'];
     $score = $data["score_$tid"];
-    if (! $score) { $score = -1; }
+    if ($score == "") { $score = -1; }
     else          { $score = intval($score); }
     sql_try("UPDATE tblGameTeams SET score = :score WHERE game_id = :gid AND team_id = :tid", 
             array(":score" => $score, ":gid" => $gid, ":tid" => $tid));
