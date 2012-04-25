@@ -406,7 +406,8 @@ function tournament_toggle_court( $gid ) {
 
 function game_is_rematch($teams) {
   if (count($teams) < 2)  return false;  // or should be != 2
-  $opponents = sql_select_all("SELECT b.team_id from tblGameTeams a JOIN tblGameTeams b USING (game_id) WHERE a.team_id = :tid AND a.score != -1", array(":tid" => $teams[0]['team_id']));
+  // should look more closely at this SELECT - I think we want something more like round_id != rid
+  $opponents = sql_select_all("SELECT b.team_id from tblGameTeams a JOIN tblGameTeams b USING (game_id) WHERE a.team_id = :tid AND a.score != -1 AND b.score != -1", array(":tid" => $teams[0]['team_id']));
   foreach ($opponents as $opp)  // should check against not just teams[1], but teams[2, etc]
     if ($opp['team_id'] == $teams[1]['team_id'])
         return true;
