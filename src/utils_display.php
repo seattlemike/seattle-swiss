@@ -184,6 +184,8 @@ function disp_round_nav($tid, $rid, $aid=null) {
 }
 
 function disp_teams_list($tid) {
+  //TODO: grey out teams that have been disabled
+  //TODO: if team_init is nonzero, display this somewhere
   echo "<div class='header'>Teams</div>\n";
   $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid ORDER BY team_name ASC", array(":tid" => $tid));
   if (!$teams) return;
@@ -276,19 +278,27 @@ function check_team_score($team) {
   return ($team['score'] >= 0);
 }
 
+function disp_toggle_button($gid, $tog) {
+    $val = $tog ? 'Off Court' : 'On Court';
+    echo "<input type='hidden' name='toggle' value='$tog' \>";
+    echo "<input class='button' type='button' name='tog_btn' onclick='togOnCourt($gid)' value='$val' \>";
+}
 
-function disp_game($url, $game, $teams, $isadmin=false) {
+function disp_game($game, $url, $isadmin, $db = null) {
+    $gid = $game['game_id'];
+    $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid", array(":gid" => $gid), $db);
+
     if (array_product(array_map('check_team_score', $teams)))
-        $class = "played";
-    elseif ($game['court'])
-        $class = "playing";
-    elseif (game_is_rematch($teams))
-        $class = "rematch";
+        $outer = "played";
+    else {
+        if (game_is_rematch($teams)) $outer = "rematch";
+        if ($game['playing'])        $inner = "playing";
+    }
 
-    echo "<div class='line game $class'>";
-    echo "<form name='game_{$game['game_id']}' action='$url' method='post'>";
-    echo "<input type='hidden' name='game_id' value='{$game['game_id']}' />";
+    echo "<div class='line game $outer'>";
+    echo "<form class='$inner' id='game_$gid' name='game_$gid' action='$url' method='post' onsubmit='postToggles(this)'>";
     echo "<input type='hidden' name='action' value='' />";
+    echo "<input type='hidden' name='game_id' value='$gid' />";
     if ($isadmin)
         disp_tournament_button('Delete', 'delete_game');
 
@@ -298,12 +308,10 @@ function disp_game($url, $game, $teams, $isadmin=false) {
 
     if ($isadmin) {
         echo "<div class='team'>";
-        if ($class == "played")
+        if ($outer == 'played')
             disp_tournament_button('Update', 'update_score');
         else {
-            if ($game['court']) $extra = 'Off Court';
-            else        $extra = 'On Court';
-            disp_tournament_button($extra, 'toggle_oncourt');
+            disp_toggle_button($gid, $game['playing'] ? "1" : "");
             echo "<br>";
             disp_tournament_button('Set Score', 'update_score');
         }
@@ -312,23 +320,19 @@ function disp_game($url, $game, $teams, $isadmin=false) {
     echo "</form>\n</div>\n";
 }
 
-function disp_games($tid, $rid, $aid=null) {
+function disp_games($togs, $tid, $rid, $aid=null) {
     ($db = connect_to_db()) || die("Couldn't connect to database for disp_games");
     if (! get_tournament_round($tid, $rid))
         return false;
 
-    if ($aid)
-        $isadmin = tournament_isadmin($tid, $aid);
+    $isadmin = $aid && tournament_isadmin($tid, $aid);
+    $url     = "play_tournament.php?id=$tid&round_id=$rid";
 
-    $url = "play_tournament.php?id=$tid&round_id=$rid";
-
-    //$game_numbers = sql_select_all("SELECT game_id FROM tblGame WHERE round_id = :rid GROUP BY game_id", array(":rid" => $rid));
     $game_list = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid),$db);
     if ($game_list) {
-        //   "Teams JOIN (tblGame, tblGameTeams) on (tblGame.game_id = tblGameTeams.game_id AND tblTeam.team_id = tblGameTeams.team_id) WHERE tblGame.round_id = :rid", array(":rid" => $rid));
         foreach ($game_list as $g) {
-            $scores = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid", array(":gid" => $g['game_id']), $db);
-            disp_game($url, $g, $scores, $isadmin);
+            $g['playing'] = (strpos($togs, $g['game_id']) > -1);
+            disp_game($g, $url, $isadmin, $db);
         }
     }
     return true;

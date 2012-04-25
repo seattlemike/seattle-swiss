@@ -375,23 +375,25 @@ function team_update($data) {
 
 function tournament_update_score( $gid, $data) {
   // grab tournament_id corresponding to $gid, then require_privs
-  $olds = sql_select_all("SELECT * FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
-  foreach ($olds as $team) {
-    $newval = $data["score_{$team['team_id']}"];
-    if ($newval != "")
-      sql_try("UPDATE tblGameTeams SET score = :score WHERE game_id = :gid AND team_id = :tid", 
-                array(":score" => intval($newval), ":gid" => $gid, ":tid" => $team['team_id']));
+  $teams = sql_select_all("SELECT * FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
+  foreach ($teams as $team) {
+    $tid = $team['team_id'];
+    $score = $data["score_$tid"];
+    if (! $score) { $score = -1; }
+    else          { $score = intval($score); }
+    sql_try("UPDATE tblGameTeams SET score = :score WHERE game_id = :gid AND team_id = :tid", 
+            array(":score" => $score, ":gid" => $gid, ":tid" => $tid));
   }
 }
 
+//ASSERT require_privs($tid,$aid)
 function tournament_delete_game( $gid ) {
-  //check privs
   $ret = sql_try("DELETE FROM tblGame WHERE game_id = :gid", array(":gid" => $gid));
   return $ret && sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
 }
 
+//ASSERT require_privs($tid,$aid)
 function tournament_toggle_court( $gid ) {
-  //check privs
   $game = sql_select_one("SELECT * from tblGame WHERE game_id = :gid", array(":gid" => $gid));
   if ($game) {
     return sql_try("UPDATE tblGame SET court = :court WHERE game_id = :gid", array(":court" => (intval($game['court']) xor 1), ":gid" => $gid));
@@ -399,9 +401,9 @@ function tournament_toggle_court( $gid ) {
 }
 
 function game_is_rematch($teams) {
-  if (count($teams) < 2)  return false;
+  if (count($teams) < 2)  return false;  // or should be != 2
   $opponents = sql_select_all("SELECT b.team_id from tblGameTeams a JOIN tblGameTeams b USING (game_id) WHERE a.team_id = :tid AND a.score != -1", array(":tid" => $teams[0]['team_id']));
-  foreach ($opponents as $opp)
+  foreach ($opponents as $opp)  // should check against not just teams[1], but teams[2, etc]
     if ($opp['team_id'] == $teams[1]['team_id'])
         return true;
   return false;
