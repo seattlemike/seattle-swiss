@@ -72,6 +72,10 @@ function tournament_isowner($tid, $aid) {
     return ($t && $t['tournament_owner'] == $aid);
 }
 
+function tournament_ispublic($tid) {
+    return is_array(sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid AND is_public = 1', array(':tid' => $tid)));
+}
+
 //
 // Admin functions
 //

@@ -1,11 +1,9 @@
 <?php
     $page_name = "Run";
     include("header.php");
-    require_login();
 
 	// require tournament & on its admin list
 	$tid     || header("location:main_menu.php");
-    require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
 
     if ($rid == -1) unset($rid);  // TODO: why is this is here?
 
@@ -13,6 +11,8 @@
     //    TODO this doesn't look nice.  how can we make this look nicer?
 
     if (isset($_POST['action'])) {
+        require_login();
+        require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
 
         if ($_POST['action'] == 'add_round') {
             if ($rid=tournament_add_round($tid))
@@ -45,6 +45,15 @@
     }
 
   //TODO:  Tournament Structure!
+  // ASSERT:  NO PRIVS CHECKED YET
+
+if (check_login() && tournament_isadmin($tid, $_SESSION['admin_id']))
+    $mode = 'edit';
+elseif (tournament_ispublic($tid))
+    $mode = 'view';
+else
+	header("location:view.php");
+
 
 $url = "play_tournament.php?id=$tid";
 if (isset($rid)) $url .= "&round_id=$rid";
@@ -60,7 +69,7 @@ if (isset($rid)) $url .= "&round_id=$rid";
                     <input type='hidden' name='populate_id' value=''>
                     <div class="rHead">
                         <?php
-                        if (isset($rid) && tournament_round_is_done($rid))
+                        if (($mode == 'edit') && isset($rid) && tournament_round_is_done($rid))
                             disp_next_round_button($tid, $rid); 
                         ?>
                     </div>
@@ -76,7 +85,7 @@ if (isset($rid)) $url .= "&round_id=$rid";
             } ?>
         </div>
             
-        <?php if (isset($rid)) { ?>
+        <?php if (isset($rid) && ($mode == 'edit')) { ?>
             <div class="mainBox">
                 <div class="header">Edit Round</div> 
                 <form name='populate_tournament' action='<? echo $url?>' method='post'>

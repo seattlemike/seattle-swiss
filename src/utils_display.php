@@ -162,8 +162,8 @@ function disp_team_edit($team) {
 
 function disp_round_nav($tid, $rid, $aid=null) {
   if ($aid) $isadmin = tournament_isadmin($tid, $aid);
-  if ($isadmin) $url = "play_tournament.php";
-  else          $url = "view_games.php";
+  //if ($isadmin) $url = "play_tournament.php";
+  //else          $url = "view_games.php";
 
   $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number",
                            array(":tid" => $tid));
@@ -171,7 +171,7 @@ function disp_round_nav($tid, $rid, $aid=null) {
     foreach ($rounds as $r) {
       if ($r['round_id'] == $rid) $class = "selected";
       else                        $class = "";
-      echo "<a class='button $class' href='$url?id=$tid&round_id={$r['round_id']}'>";
+      echo "<a class='button $class' href='play_tournament.php?id=$tid&round_id={$r['round_id']}'>";
       echo "Round {$r['round_number']}</a>";
     }
     if ($isadmin) disp_tournament_button("+", "add_round"); 
