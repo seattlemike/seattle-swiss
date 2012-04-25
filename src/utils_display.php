@@ -304,7 +304,7 @@ function disp_game($game, $url, $isadmin, $db = null) {
 
     $stat_ary = array_map('disp_team_score', $teams);
     if (count($teams) == 1) // this game is a BYE
-      echo "<h3>BYE</h3>";
+      echo "<div class='team'>BYE</div>";
 
     if ($isadmin) {
         echo "<div class='team'>";
