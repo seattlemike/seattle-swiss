@@ -18,8 +18,7 @@ Modes:
   Got to get this ready for Lex!
 
 Public View:
-  view.php should require_privs( is_public($tid) or tournament_isadmin($tid, $aid) )
-    so that I can't just start sticking id=[#] in the url to look at non-public tourneys
+  view.php should display some recent games / upcoming games
 
 Navigating Teams:
   tournament.php needs a nicer way to deal with teams:

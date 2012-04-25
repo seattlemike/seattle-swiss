@@ -200,7 +200,7 @@ function disp_teams_list($tid) {
 // **STANDINGS**
 //
 
-function disp_standings($tid, $aid) {
+function disp_standings($tid) {
     $nrounds = get_tournament_nrounds($tid);
 
     if ($nrounds == 0) {
