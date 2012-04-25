@@ -2,10 +2,10 @@ function postToggles(form) {
     var toggles = [];
     var gamebox = document.getElementById("games");
     var games = gamebox.getElementsByTagName("form");
-    console.log("games.length: "+games.length);
     for (var j = 0; j < games.length; j++) {
-        if ((games[j] != form) && (games[j].elements.toggle.value))
+        if ((games[j] != form) && games[j].elements.hasOwnProperty("toggle") && games[j].elements.toggle.value) {
             toggles.push(games[j].elements.game_id.value);
+        }
     }
 
     var toggleField = document.createElement("input");
