@@ -106,7 +106,7 @@ p, .line { margin: 0.5em 0 0.5em 0; }
 }
 
 /* tabulated display */
-.standings {
+table.standings {
     margin-left: auto;
     margin-right: auto;
 }
@@ -117,13 +117,18 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     min-width: 40px;
 }
 
+.standings .dark  { background: #ddd; }
+.standings .light { background: #aaa; }
+
 .standings tr:first-child { background: #fbb; } 
-.standings tr:nth-child(2) { border-bottom: 1px solid black; }
-.standings tr:nth-child(2n+4) { background: #ddd; }
-.standings tr:nth-child(2n+3) { background: #aaa; }
-/* .standings .bold { font-size: larger; } */
-.standings tr:nth-child(2n+4) .bold { background: #fbb; }
-.standings tr:nth-child(2n+3) .bold { background: #f99; }
+.elim  tr:nth-child(1) { border-bottom: 1px solid black; }
+.elim tr:nth-child(2n+2) .bold { background: #f99; }
+.elim tr:nth-child(2n+3) .bold { background: #fbb; }
+.swiss tr:nth-child(2) { border-bottom: 1px solid black; }
+.swiss tr:nth-child(2n+4) { background: #ddd; }
+.swiss tr:nth-child(2n+3) { background: #aaa; }
+.swiss tr:nth-child(2n+4) .bold { background: #fbb; }
+.swiss tr:nth-child(2n+3) .bold { background: #f99; }
 
 /*  TODO: get rid of these ASAP */
 table { border-collapse:collapse; }

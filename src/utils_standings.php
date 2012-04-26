@@ -206,7 +206,7 @@ function get_standings($tid) {
 
     // add all non-disabled teams to $stats
     $team_query = "SELECT * FROM tblTeam WHERE tournament_id = :tid";
-    foreach (sql_select_all($team_query, array(":tid" => $tid), $db) as $team)
+    foreach (sql_select_all($team_query, array(":tid" => $tid), $db) as $team) 
         if (! $team['is_disabled'])
             $stats->add_team($team);
   

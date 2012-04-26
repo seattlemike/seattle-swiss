@@ -211,16 +211,59 @@ function disp_standings($tid) {
         if (tournament_is_over($tid)) $title = "Final Standings";
         else                       $title = "Standings [round $nrounds]";
         echo "<div class='header'>$title</div>\n";
-        disp_swiss($tid, $nrounds);
+        $mode = get_tournament_mode($tid);
+        if ($mode == 0)
+            disp_swiss($tid, $nrounds);
+        elseif ($mode == 1)
+            disp_elim($tid, $nrounds);
     }
 }
 
+function disp_color_td($inner, $rnum, $pos) {
+    $mod = pow(2, $rnum+2);
+    $div = pow(2, $rnum+1);
+    $color = intval(($pos % $mod) / $div) ? "light" : "dark";
+    echo "<td class='$color'>$inner</td>\n";
+}
 // standings are BEST TO WORST
+function disp_elim($tid) {
+    $standings = get_standings($tid);
+    $nrounds = ceil(log(count($standings),2));
+    $bsize = pow(2, $nrounds);
+
+    echo "<table class='elim standings'>\n";
+    echo "<tr><th>Rank</th><th>Seed</th><th colspan=".(2*$nrounds+1).">Results</th></tr>\n";
+    // Pad table with 'blank's up to bsize for nice pow2 display
+    $blank = array( 'result' => array() );
+    foreach (range(0, $bsize-1) as $pos) {
+        if ($standings[$pos-$del]['pos'] != $pos) {
+            $table[] = $blank;
+            $del++;
+        } else
+            $table[] = $standings[$pos-$del];
+    }
+    foreach ($table as $idx => $team) {
+        echo "<tr>";
+        echo "<td class='bold'>{$team['rank']}</td>\n";
+        echo "<td>{$team['seed']}</td>\n";
+        disp_color_td("<span title='{$team['text']}'>{$team['name']}</span>", 0, $idx);
+        for ($i = 0; $i < $nrounds; $i++) {
+            echo "<td style='min-width:5px;'></td>";  //spacer
+            if ($team['result'][$i]) $inner = "<span title='{$team['text']}'>{$team['name']}</span>";
+            else                       $inner = "";
+            disp_color_td($inner, $i+1, $idx);
+        }
+        echo "</tr>\n";
+    }
+    echo "</table>\n";
+}
+
+
 function disp_swiss($tid, $nrounds) {
     $standings = get_standings($tid);
     if (count($standings) == 0) { return; }
 
-    echo "<table class='standings'>\n";
+    echo "<table class='swiss standings'>\n";
     echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3>Tie Breaks</th></tr>\n";
     echo "<tr><th colspan=2></th>\n";
     for ($i = 1; $i <= $nrounds; $i++)
