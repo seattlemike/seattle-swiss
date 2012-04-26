@@ -217,7 +217,7 @@ function disp_standings($tid) {
 
 // standings are BEST TO WORST
 function disp_swiss($tid, $nrounds) {
-    $standings = swiss_standings($tid);
+    $standings = get_standings($tid);
     if (count($standings) == 0) { return; }
 
     echo "<table class='standings'>\n";

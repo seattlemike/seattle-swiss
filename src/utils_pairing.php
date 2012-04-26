@@ -62,8 +62,7 @@ function outer_matching($g) {
 function consec_matching($g) {
   $pairs = array();
   while (count($g) > 1)
-    $pairs[] = array(array_pop($g), array_pop($g));
-  echo "### count(pairs): ".count($pairs)."<br>\n";
+    $pairs[] = array(array_shift($g), array_shift($g));
   return $pairs;
 }
 
@@ -79,7 +78,7 @@ function tournament_get_pairings($tid) {
 
 function get_elim_pairings($tid) {
     // undefeated teams, sorted BY GAME ORDER
-    $teams = array_filter(elim_standings($tid), function ($t) { return ($t['live']); });
+    $teams = array_filter(get_standings($tid), function ($t) { return ($t['live']); });
     if (count($teams) < 2) return array();  //bail if we've got fewer than 2 teams
 
     if (log(count($teams), 2) == intval(log(count($teams), 2))) {
@@ -102,7 +101,7 @@ function get_elim_pairings($tid) {
 
 function get_swiss_pairings($tid) {
     // $teams:  not disabled, ordered BEST TO WORST
-    $teams = array_filter(swiss_standings($tid), function ($t) { return $t['live']; } );
+    $teams = array_filter(get_standings($tid, $mode), function ($t) { return $t['live']; } );
     $pairs = array();
 
     // TODO: instead of BYE... something?
