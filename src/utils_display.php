@@ -232,7 +232,8 @@ function disp_elim($tid) {
     $bsize = pow(2, $nrounds);
 
     echo "<table class='elim standings'>\n";
-    echo "<tr><th>Rank</th><th>Seed</th><th colspan=".(2*$nrounds+1).">Results</th></tr>\n";
+    echo "<tr><th>Seed</th><th>Place</th><th colspan=".(2*$nrounds+1).">Results</th></tr>\n";
+    echo "<tr><th colspan='".(2*$nrounds+3)."' class='blank'>&nbsp;</th></tr>";
     // Pad table with 'blank's up to bsize for nice pow2 display
     $blank = array( 'result' => array() );
     foreach (range(0, $bsize-1) as $pos) {
@@ -244,8 +245,8 @@ function disp_elim($tid) {
     }
     foreach ($table as $idx => $team) {
         echo "<tr>";
-        echo "<td class='bold'>{$team['rank']}</td>\n";
         echo "<td>{$team['seed']}</td>\n";
+        echo "<td>{$team['rank']}</td>\n";
         disp_color_td("<span title='{$team['text']}'>{$team['name']}</span>", 0, $idx);
         for ($i = 0; $i < $nrounds; $i++) {
             echo "<td style='min-width:5px;'></td>";  //spacer

@@ -119,11 +119,11 @@ table.standings {
 
 .standings .dark  { background: #ddd; }
 .standings .light { background: #aaa; }
+.standings .blank { background: #fff; border-bottom: 1px solid black; height: 20px;}
 
 .standings tr:first-child { background: #fbb; } 
-.elim  tr:nth-child(1) { border-bottom: 1px solid black; }
-.elim tr:nth-child(2n+2) .bold { background: #f99; }
-.elim tr:nth-child(2n+3) .bold { background: #fbb; }
+.elim tr:nth-child(2n+3) { background: #f99; }
+.elim tr:nth-child(2n+4) { background: #fbb; }
 .swiss tr:nth-child(2) { border-bottom: 1px solid black; }
 .swiss tr:nth-child(2n+4) { background: #ddd; }
 .swiss tr:nth-child(2n+3) { background: #aaa; }
