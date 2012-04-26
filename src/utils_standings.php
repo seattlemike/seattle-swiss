@@ -104,10 +104,6 @@ class stats {
         // sort once more by 'pos'
         $standings = array_values($this->teams);
         array_multisort(array_map(function($t) {return $t['pos'];}, $standings), SORT_NUMERIC, $standings);
-
-        echo "name: pos - seed - rank - score - [live]<br>\n";
-        foreach ($standings as $t)
-            echo "{$t['name']}: {$t['pos']} - {$t['seed']} - {$t['rank']} - {$t['score']} - [{$t['live']}]<br>\n";
         return $standings;
     }
 

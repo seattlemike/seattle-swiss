@@ -81,6 +81,7 @@ function tournament_get_pairings($tid) {
 
 function get_elim_pairings($tid) {
     // undefeated teams, sorted BY GAME ORDER
+    $teams = get_standings($tid);
     $teams = array_filter(get_standings($tid), function ($t) { return ($t['live']); });
     if (count($teams) < 2) return array();  //bail if we've got fewer than 2 teams
 
@@ -89,9 +90,10 @@ function get_elim_pairings($tid) {
     } else {
         // filter out all teams ranked at least nbye, pair the rest
         $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
-        $pairs = consec_matching(array_filter($teams, function ($t) { return ($t['seed'] > $nbye); }));
-        foreach (range(1, $nbye) as $i)
-            $pairs[] = array($i);
+        $pairs = consec_matching(array_filter($teams, function ($t) use ($nbye) { return ($t['seed'] > $nbye); }));
+        $byes = array_filter($teams, function($t) use ($nbye) { return ($t['seed'] <= $nbye); });
+        foreach ($byes as $t)
+            $pairs[] = array($t);
         return $pairs;
     }
 }

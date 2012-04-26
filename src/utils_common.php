@@ -281,51 +281,57 @@ function tournament_add_round($tid) {
 
 
 function tournament_insert_score($gid, $tid, $score=-1, $db=null) {
-  return sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, ?)", 
-                    array($gid, $tid, $score), $db);
+    return sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, ?)", 
+                        array($gid, $tid, $score), $db);
 }
 
 function tournament_add_game($rid, $list, $db=null) {
-  foreach ($list as $idx => $team) {
-    if ((! isset($team['id'])) || ($team['id'] == -1))
-      unset($list[$idx]);
-  }
-  if (count($list) == 0) return;
-  
-  ($db) || ($db = connect_to_db());  // make sure we've got a connection
+    echo "## Add game";
+    foreach ($list as $idx => $team) {
+        if ((! isset($team['id'])) || ($team['id'] == -1))
+            unset($list[$idx]);
+    }
+    if (count($list) == 0) return;
+    
+    ($db) || ($db = connect_to_db());  // make sure we've got a connection
 
-  $gid = sql_insert("INSERT INTO tblGame (round_id) VALUES (:rid)", array(":rid" => $rid), $db);
-  $gid || die("failed game insert while populating round");
+    $gid = sql_insert("INSERT INTO tblGame (round_id) VALUES (:rid)", array(":rid" => $rid), $db);
+    $gid || die("failed game insert while populating round");
 
-  if (count($list) == 1)  $score = 0;
-  else                    $score = -1;
-  foreach ($list as $team)
-    tournament_insert_score($gid, $team['id'], $score, $db) || die("failed to insert score during add game");
+    // MIKE DEBUG
+    if (count($list) == 1)
+        echo "## Adding a game that's a bye";
+
+
+    if (count($list) == 1)  $score = 0;
+    else                    $score = -1;
+    foreach ($list as $team)
+        tournament_insert_score($gid, $team['id'], $score, $db) || die("failed to insert score during add game");
 }
 
 function tournament_delete_round($rid, $aid) {
-  if (!$db) $db = connect_to_db();
-  // die() if don't have privs
-  $success = tournament_empty_round($rid, $aid, $db);
-  $success &= sql_try("DELETE FROM tblRound WHERE round_id = :rid", array(":rid" => $rid), $db);
-  return $success;
+    if (!$db) $db = connect_to_db();
+    // die() if don't have privs
+    $success = tournament_empty_round($rid, $aid, $db);
+    $success &= sql_try("DELETE FROM tblRound WHERE round_id = :rid", array(":rid" => $rid), $db);
+    return $success;
 }
 
 function tournament_empty_round($rid, $aid, $db = null) {
-  if (!$db) $db = connect_to_db();
-  $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid", array(":rid"=>$rid), $db);
-  if (! $round) return false;
-  require_privs(tournament_isadmin($round['tournament_id'], $aid));
+    if (!$db) $db = connect_to_db();
+    $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid", array(":rid"=>$rid), $db);
+    if (! $round) return false;
+    require_privs(tournament_isadmin($round['tournament_id'], $aid));
 
-  $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
-  if (count($games)) {
-    $success = sql_try("DELETE FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
-    foreach ($games as $g) {
-      $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $g['game_id']), $db);
-    }
-    return $success;
-  } 
-  else return true;
+    $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
+    if (count($games)) {
+        $success = sql_try("DELETE FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
+        foreach ($games as $g) {
+            $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $g['game_id']), $db);
+        }
+        return $success;
+    } 
+    else return true;
 }
 
 function tournament_populate_round($tid, $rid, $aid) {
