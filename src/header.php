@@ -38,8 +38,8 @@ if ( isset($_POST['tournament_id']) || isset($_GET['id']) ) {
     ($tid = $_POST['tournament_id']) || ($tid = $_GET['id']);
 
     $tname = get_tournament_name($tid);
-    if (isset($tname)) {
-        $title_text = $tname;  //should probably be if (!$title_text)
+    if (isset($tname)) {  //TODO: should use tournament_exists($tid) instead of isset(tname)
+        $title_text = $tname;  // clobbers when we have a tid [desired? used in view.php]
         if ( isset($_POST['round_id']) || isset($_GET['round_id']) )
             ($rid = $_POST['round_id']) || ($rid = $_GET['round_id']);
         if ( (! isset($rid)) || 
@@ -84,7 +84,5 @@ if (isset($title_text) && (! isset($header_text)))  { $header_text = $title_text
                 disp_header_admin();
             ?>
         </div>
-        <div class='topHeader'>
-            <? echo $header_text; ?>
-        </div>
+        <div class='topHeader'> <? echo $header_text; ?> </div>
 

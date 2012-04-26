@@ -49,7 +49,8 @@ function try_matching($g) {
   return array($rem, $pairs);
 }
 
-function force_matching($g) {
+function outer_matching($g) {
+  $pairs = array();
   while (count($g) > 1) {
     $a = array_pop($g);
     $b = array_shift($g);
@@ -58,28 +59,39 @@ function force_matching($g) {
   return $pairs;
 }
 
+function consec_matching($g) {
+  $pairs = array();
+  while (count($g) > 1)
+    $pairs[] = array(array_pop($g), array_pop($g));
+  echo "### count(pairs): ".count($pairs)."<br>\n";
+  return $pairs;
+}
+
 
 // ASSERT:  SWISS_MODE=0 SINGLE_ELIM_MODE=1 DOUBLE_ELIM_MODE=2 ROUND_ROBIN_MODE=3
 function tournament_get_pairings($tid) {
     $mode = get_tournament_mode($tid);
     if     ($mode == 0) return get_swiss_pairings($tid);
-    elseif ($mode == 1) return get_single_pairings($tid);
+    elseif ($mode == 1) return get_elim_pairings($tid);
     else // Ohno!  No pairings yet for this mode!
         return array();
 }
 
-function get_single_pairings($tid) {
-    // teams not yet out, sorted best to worst
-    $teams = array_filter(single_standings($tid), function ($t) { return ($t["live"]); });
-    $pairs = array();
-    if (log(count($teams), 2) == int(log(count($teams), 2))) {
+function get_elim_pairings($tid) {
+    // undefeated teams, sorted BY GAME ORDER
+    $teams = array_filter(elim_standings($tid), function ($t) { return ($t['live']); });
+    if (count($teams) < 2) return array();  //bail if we've got fewer than 2 teams
 
-    } else {  // we've got some Byes
-
-
+    if (log(count($teams), 2) == intval(log(count($teams), 2))) {
+        return consec_matching($teams);
+    } else {
+        // filter out all teams ranked at least nbye, pair the rest
+        $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
+        $pairs = consec_matching(array_filter($teams, function ($t) { return ($t['seed'] > $nbye); }));
+        foreach (range(1, $nbye) as $i)
+            $pairs[] = array($i);
+        return $pairs;
     }
-
-    return $pairs;
 }
 
 // NEW IDEA:  goal is to avoid eventual rematches in the bottom chunk of the tourney
@@ -90,7 +102,7 @@ function get_single_pairings($tid) {
 
 function get_swiss_pairings($tid) {
     // $teams:  not disabled, ordered BEST TO WORST
-    $teams = array_filter(swiss_standings($tid), function ($team) { return (! $team['disabled']); } );
+    $teams = array_filter(swiss_standings($tid), function ($t) { return $t['live']; } );
     $pairs = array();
 
     // TODO: instead of BYE... something?
@@ -125,7 +137,7 @@ function get_swiss_pairings($tid) {
   }
   if (count($rem) > 0) {
     debug_alert("rematches coming up");
-    $pairs = array_merge($pairs, force_matching($rem));
+    $pairs = array_merge($pairs, outer_matching($rem));
   }
   return $pairs;
 }

@@ -5,7 +5,7 @@
 	// require tournament & on its admin list
 	$tid     || header("location:main_menu.php");
 
-    if ($rid == -1) unset($rid);  // TODO: why is this is here?
+    if ($rid == -1) unset($rid);  // set in header if round not found with rid
 
     // check POST actions
     //    TODO this doesn't look nice.  how can we make this look nicer?

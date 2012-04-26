@@ -1,8 +1,8 @@
 <?php
 
 function make_rand ($seed ) {
-srand($seed);
-return rand();
+    srand($seed);
+    return rand();
 }
 
 class stats {
@@ -16,7 +16,7 @@ class stats {
     $this->teams[$team['team_id']] = array('name' => $team['team_name'],
                                            'id'   => $team['team_id'],
                                            'text' => $team['team_text'],
-                                           'disabled' => $team['is_disabled'],
+                                           'live' => (! $team['is_disabled']),
                                            'rand' => make_rand($team['team_id']),
                                            'opponents' => array(),
                                            'result' => array(),
@@ -196,8 +196,48 @@ function swiss_standings($tid) {
 }
 
 
-function single_standings($tid) {
-    return array();
+function elim_standings($tid) {
+    // get not-disabled teams
+    $teams = array_filter(get_tournament_teams($tid, "team_init"), function ($t) { return (! $t['is_disabled']); });
+    if (count($teams)) {
+        foreach ($teams as &$t)
+            if (! $t['team_init'])  // seed randomly if unspecified starting rank
+                $t['team_init'] = make_rand($t['team_id']);
+        // sort teams by team_init (seed)
+        array_multisort(array_map(function($t) {return $t['team_init'];}, $teams), SORT_NUMERIC, $teams);
+        $bsize = pow(2, ceil(log(count($teams),2)));
+        $teams[0]['pos'] = 0;
+        foreach ($teams as $s => &$t) {
+            $t['seed'] = $s+1; 
+            $t['live'] = true;
+            $t['id'] = $t['team_id'];
+            if ($s > 0) {
+                $c = pow(2,ceil(log($s+1,2)));
+                $del = $bsize / $c;
+                $t['pos'] = $teams[$c - ($s+1)]['pos'] + $del;
+            }
+        }
+        unset($t);
+        // sort teams by bracketing
+        array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
+        foreach ($teams as $t)
+            echo "# {$t['pos']}. {$t['seed']}\n<br>\n";
+
+        return array();
+
+        // make score list for completed games
+        // count wins
+        
+        /*
+        $games = group_by(sql_select_all("SELECT * FROM tblGame JOIN tblGameTeams USING (game_id) WHERE tblGame.round_id = :rid", array(":rid" => $round['round_id'])),
+                        'game_id');
+        foreach ($games as $match)
+            if ((count($match) == 1) || min($match[0]['score'], $match[1]['score']) >= 0)
+                $stats->add_result($match);
+        }
+        */
+    }
+    return $teams;
 }
 
 ?>

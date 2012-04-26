@@ -322,14 +322,12 @@ function disp_games($togs, $tid, $rid, $aid=null) {
 }
 
 function disp_team_select($tid, $name) {
-    // echo "<div class='team'>
     echo "<select name='$name'>";
-    foreach (get_tournament_teams($tid) as $team) {
-        echo "<option value='{$team['team_id']}'>{$team['team_name']}</option>";
-    }
+    $teams = array_filter(get_tournament_teams($tid), function ($t) {return (!$t['is_disabled']);});
+    foreach ($teams as $t)
+        echo "<option value='{$t['team_id']}'>{$t['team_name']}</option>";
     echo "<option value='-1'>BYE</option>";
     echo "</select>";
-    //echo "</div>";
 }
 
 function disp_next_round_button($tid, $rid) {

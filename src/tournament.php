@@ -85,7 +85,7 @@
                         <td><input class='numeric' type='text' name='init_add'></td>
                     </tr>
                     <?php
-                    foreach (get_tournament_teams($tid) as $team)
+                    foreach (get_tournament_teams($tid, "team_id") as $team)
                         disp_team_edit($team);
                     ?>
                 </table>

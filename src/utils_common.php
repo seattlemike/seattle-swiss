@@ -126,9 +126,10 @@ function get_tournament_admins($tid) {
             array(':tid' => $tid));
 }
 
-function get_tournament_teams($tid) {
-    return sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid",
-            array(':tid' => $tid));
+function get_tournament_teams($tid, $sort="") {
+    $q = "SELECT * FROM tblTeam WHERE tournament_id = :tid";
+    if ($sort) $q = "$q ORDER BY $sort";
+    return sql_select_all($q, array(':tid' => $tid));
 }
 
 function get_tournament_nrounds($tid) {
@@ -286,7 +287,7 @@ function tournament_insert_score($gid, $tid, $score=-1, $db=null) {
 
 function tournament_add_game($rid, $list, $db=null) {
   foreach ($list as $idx => $team) {
-    if ($team['id'] == -1)
+    if ((! isset($team['id'])) || ($team['id'] == -1))
       unset($list[$idx]);
   }
   if (count($list) == 0) return;
@@ -313,7 +314,7 @@ function tournament_delete_round($rid, $aid) {
 function tournament_empty_round($rid, $aid, $db = null) {
   if (!$db) $db = connect_to_db();
   $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid", array(":rid"=>$rid), $db);
-  if (! round) return false;
+  if (! $round) return false;
   require_privs(tournament_isadmin($round['tournament_id'], $aid));
 
   $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
@@ -335,14 +336,13 @@ function tournament_populate_round($tid, $rid, $aid) {
         ($rid = tournament_add_round($tid)) || die("<h1>Failed to add tournament round to populate</h1>");
 
     // Redundant check(rid && tid) to prevent rid phishing from remote tid
-    $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid AND tournament_id = :tid", array(":rid"=>$rid, ":tid"=>$tid), $db);
+    $round = get_tournament_round($tid, $rid, $db);
     if ($round) {
         require_privs(tournament_isadmin($tid, $aid));
         $pairs = tournament_get_pairings($tid);
         foreach ($pairs as $p)
             tournament_add_game($rid, $p, $db);
     }
-
     return $rid;
 }
 
