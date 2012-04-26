@@ -79,13 +79,15 @@ function disp_tournament_details($tourney = null) {
     if ($tourney['is_public']) $ispublic="checked='checked'";
     if ($tourney['is_over']) $isover="checked='checked'";
 
+    $modes = array("Swiss Rounds", "Single Elimination");
     $def = "class='wide' type='text' maxlength='40'";
     $inputs = array("Name" => "<input $def name='tournament_name' value='{$tourney['tournament_name']}' />",
                     "City" => "<input $def name='tournament_city' value='{$tourney['tournament_city']}' />",
                     "Date" => "<input $def name='tournament_date' value='$date' />", 
+                    "Mode" => "<input $def name='tournament_mode' value='{$modes[$tourney['tournament_mode']]}' DISABLED />",
                     "Public" => "<input type='checkbox' name='is_public' value='public' $ispublic />",
                     "Finished" => "<input type='checkbox' name='is_over' value='finished' $isover />");
-
+                    
     foreach ($inputs as $text => $input) {
         echo "<label>$text $input</label>\n";
     }

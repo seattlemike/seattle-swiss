@@ -184,18 +184,20 @@ function tournament_remove_admin($data, $aid) {
     return sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($data['tournament_id'], $data['admin_id']));
 }
 
-function tournament_create($data, $aid) {
+function create_tournament($data, $aid) {
     $bind_vars = array(':tname' => $data['tournament_name'],
-        ':tcity' => $data['tournament_city'],
         ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
-        ':tpub' => isset($data['is_public']),
         ':aid' => $aid);
+    if ($data['tournament_mode'] == '0')
+        $bind_vars[':tmode'] = 0;
+    else
+        $bind_vars[':tmode'] = 1;
+
     $newid = sql_insert("INSERT INTO tblTournament
-    (tournament_name, tournament_city, tournament_date, tournament_owner, is_public) 
-    VALUES (:tname, :tcity, :tdate, :aid, :tpub)", $bind_vars);
+    (tournament_name, tournament_date, tournament_mode, tournament_owner) 
+    VALUES (:tname, :tdate, :tmode, :aid)", $bind_vars);
     if ($newid != false) {
-        $success = sql_try("INSERT INTO tblTournamentAdmins
-        (tournament_id, admin_id) VALUES (?, ?)", array($newid, $aid));
+        $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $aid));
     }
     else
         $success = false;
