@@ -1,20 +1,22 @@
 <?php
 
-// group teams from the bottom up into bunches by semi-rank
-//   bunches are ordered in DESCENDING RANK
+// groups returned in order received
+//   within a group ORDER IS PRESERVED 
 function semi_group($teams) {
   foreach ($teams as $t) {
     if ($semi == $t['rank'])
       $g[] = $t;
     else {
       if (isset($g))
-        $groups[] = array_reverse($g); 
+        $groups[] = $g;
+        //$groups[] = array_reverse($g); 
       $semi = $t['rank'];
       $g = array($t);
     } 
   }
   if (isset($g))
-    $groups[] = array_reverse($g);
+    $groups[] = $g;
+    //$groups[] = array_reverse($g);
 
   return $groups;
 }
@@ -57,10 +59,6 @@ function force_matching($g) {
 }
 
 
-function not_disabled($team) {
-    return (! $team['disabled']);
-}
-
 // ASSERT:  SWISS_MODE=0 SINGLE_ELIM_MODE=1 DOUBLE_ELIM_MODE=2 ROUND_ROBIN_MODE=3
 function tournament_get_pairings($tid) {
     $mode = get_tournament_mode($tid);
@@ -71,37 +69,48 @@ function tournament_get_pairings($tid) {
 }
 
 function get_single_pairings($tid) {
-    return array();
+    // teams not yet out, sorted best to worst
+    $teams = array_filter(single_standings($tid), function ($t) { return ($t["live"]); });
+    $pairs = array();
+    if (log(count($teams), 2) == int(log(count($teams), 2))) {
+
+    } else {  // we've got some Byes
+
+
+    }
+
+    return $pairs;
 }
 
-
-// NEW IDEA:
+// NEW IDEA:  goal is to avoid eventual rematches in the bottom chunk of the tourney
 //  create a weighted edge-graph - teams as vertices, edges for teams who have not yet met
 //    higher weights for less desirable pairings
 //  find a minimal-weight perfect matching
 //
 
 function get_swiss_pairings($tid) {
-    // standings returned top-down
-    $teams = array_reverse( array_filter(swiss_standings($tid, true), "not_disabled"));
+    // $teams:  not disabled, ordered BEST TO WORST
+    $teams = array_filter(swiss_standings($tid), function ($team) { return (! $team['disabled']); } );
     $pairs = array();
 
-    //I hate odd numbers.   TODO: better odd number behaviour
-    // but for now: BYE for lowest ranked team that has not yet had a bye
+    // TODO: instead of BYE... something?
+    // I hate odd numbers: BYE for lowest ranked team that has not yet had a bye
     if ((count($teams) % 2) == 1) {
-        foreach ($teams as $idx => $t) {
+        // loop through $teams WORST TO BEST
+        foreach (array_reverse($teams) as $idx => $t) {
             if (! in_array(-1, $t['opponents'])) {
                 $pairs[] = array($t);
-                unset($teams[$idx]);
+                // $idx is within reversed array, so munge for $teams[index]
+                unset($teams[count($teams) - $idx - 1]);
                 break;
             }
         }
     }
 
-  // got groupings, but want them in DESCENDING RANK
-  $groups = array_reverse(semi_group($teams));
+  // get semi-groups BEST TO WORST
+  $groups = semi_group($teams);
 
-  // find matchup if possible, else merge with next, else grumpy!
+  // find matchup if possible, else merge with next semi-group, else grumpy!
   // TODO this could leave rematches in the bottom few
   $rem = array();
   foreach ($groups as $g) {

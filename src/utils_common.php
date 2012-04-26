@@ -317,13 +317,14 @@ function tournament_empty_round($rid, $aid, $db = null) {
   require_privs(tournament_isadmin($round['tournament_id'], $aid));
 
   $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
-  if ($games) {
+  if (count($games)) {
     $success = sql_try("DELETE FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
     foreach ($games as $g) {
       $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $g['game_id']), $db);
     }
-  }
-  return $success;
+    return $success;
+  } 
+  else return true;
 }
 
 function tournament_populate_round($tid, $rid, $aid) {

@@ -194,4 +194,10 @@ function swiss_standings($tid) {
     $db = null;
     return $stats->team_array();
 }
+
+
+function single_standings($tid) {
+    return array();
+}
+
 ?>
