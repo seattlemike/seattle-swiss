@@ -55,6 +55,9 @@ class stats {
         $this->teams[$my_id]['opp_name'][] = $opp_name;
         $this->teams[$my_id]['result'][] = $res;
         $this->teams[$my_id]['score'] += $res;
+        if ($this->mode > 0) //not swiss
+            if ($res < 1)
+                $this->teams[$my_id]['live'] = false;
     }
 
     function team_array() {
@@ -215,78 +218,6 @@ function get_standings($tid) {
   
     $db = null;
     return $stats->team_array();
-}
-
-
-function elim_standings($tid) {
-    $stats = new stats();
-
-    $team_query = "SELECT * FROM tblTeam WHERE tournament_id = :tid";
-    foreach (sql_select_all($team_query, array(":tid" => $tid), $db) as $team)
-        $stats->add_team($team);
-
-    $teams = array_filter(get_tournament_teams($tid, "team_init"), function ($t) { return (! $t['is_disabled']); });
-    if (count($teams)) {
-        $dup  = array();
-        foreach ($teams as $t) {
-            $t['live'] = true;
-            $t['id'] = $t['team_id'];
-            if (! $t['team_init'])  // seed randomly if unspecified starting rank
-                $t['team_init'] = make_rand($t['team_id']);
-            $dup[$t['id']] = $t;
-        }
-
-
-        $games = group_by(sql_select_all("SELECT * FROM tblGame JOIN tblGameTeams USING (game_id) WHERE tblGame.round_id = :rid", array(":rid" => $round['round_id'])),
-                        'game_id');
-        foreach ($games as $match) {
-            if (count($match) == 1)
-                $dup[$match[0]['team_id']]['wins'] ++;
-            elseif (min($match[0]['score'], $match[1]['score']) >= 0) {  // should check game_over
-                //ASSERT $match[0]['score'] != $match[1]['score']
-                if ($match[0]['score'] > $match[1]['score']) {
-                    $dup[$match[0]['team_id']]['wins']++;
-                    $dup[$match[1]['team_id']]['live'] = false;
-                }
-                elseif ($match[0]['score'] < $match[1]['score']) {
-                    $dup[$match[1]['team_id']]['wins']++;
-                    $dup[$match[0]['team_id']]['live'] = false;
-                }
-                else {
-                    echo "<br>### Should not have tie games in Elimination Bracket! ###\n<br>\n";
-                    $dup[$match[0]['team_id']]['live'] = false;
-                    $dup[$match[1]['team_id']]['live'] = false;
-                }
-            }
-        }
-
-        // sort teams by team_init (seed)
-        array_multisort(array_map(function($t) {return $t['team_init'];}, $dup), SORT_NUMERIC, $dup);
-        $bsize = pow(2, ceil(log(count($dup),2)));
-
-        $teams = array();
-        foreach( $dup as $t ) {
-            $teams[] = $t;
-            $teams['seed'] = count($teams);
-        }
-
-        $teams[0]['pos'] = 0;
-        foreach($teams as $k => $t) {
-            if ($s > 0) {
-                $c = pow(2,ceil(log($s+1,2)));
-                $del = $bsize / $c;
-                $teams[$k]['pos'] = $teams[$c - ($s+1)]['pos'] + $del;
-            }
-        }
-        // sort teams by bracketing
-        array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
-        foreach ($teams as $t)
-            echo "# {$t['pos']}. {$t['seed']}\n<br>\n";
-
-        return array();
-
-    }
-    return $teams;
 }
 
 ?>
