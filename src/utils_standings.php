@@ -55,22 +55,23 @@ class stats {
         $this->teams[$my_id]['opp_name'][] = $opp_name;
         $this->teams[$my_id]['result'][] = $res;
         $this->teams[$my_id]['score'] += $res;
-        if ($this->mode > 0) //not swiss
+        if ($this->mode == 1) // single-elim.  one loss means not-live.
             if ($res < 1)
                 $this->teams[$my_id]['live'] = false;
     }
 
     function team_array() {
 
-        if ($this->mode == 0)   //swiss
-            $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed');
-        elseif ($this->mode == 1)   //single-elim
-            $this->cmp_methods = array('get_score', 'get_seed');
-
         $this->build_seeds();
         $standings = array_values($this->teams);
-        usort($standings, array($this, 'deep_cmp'));
+        if ($this->mode == 0) {  //swiss
+            $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed');
+        }
+        elseif ($this->mode == 1) {   //single-elim
+            $this->cmp_methods = array('get_score', 'get_seed');
+        }
 
+        usort($standings, array($this, 'deep_cmp'));
         //assign partial ranks on score
         foreach($standings as $idx => $t) {
             if (isset($prev) && ($prev['score'] == $t['score']))
@@ -85,6 +86,8 @@ class stats {
                 $this->teams[$t['id']]['pos'] = $idx;
         }
         elseif ($this->mode == 1) { //single-elim
+            //now re-sort by seed to generate positions
+            array_multisort(array_map(function($t) {return $t['seed'];}, $standings), SORT_NUMERIC, $standings);
             $standings[0]['pos'] = 0; //redundant
 
             $bsize = pow(2, ceil(log(count($standings),2)));
@@ -98,9 +101,13 @@ class stats {
             }
         }
 
-        // sort standings by bracketing
+        // sort once more by 'pos'
         $standings = array_values($this->teams);
         array_multisort(array_map(function($t) {return $t['pos'];}, $standings), SORT_NUMERIC, $standings);
+
+        echo "name: pos - seed - rank - score - [live]<br>\n";
+        foreach ($standings as $t)
+            echo "{$t['name']}: {$t['pos']} - {$t['seed']} - {$t['rank']} - {$t['score']} - [{$t['live']}]<br>\n";
         return $standings;
     }
 

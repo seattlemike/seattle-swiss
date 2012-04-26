@@ -50,20 +50,23 @@ function try_matching($g) {
 }
 
 function outer_matching($g) {
-  $pairs = array();
-  while (count($g) > 1) {
-    $a = array_pop($g);
-    $b = array_shift($g);
-    $pairs[] = array($a, $b);
-  }
-  return $pairs;
+    $pairs = array();
+    while (count($g) > 1) {
+        $a = array_pop($g);
+        $b = array_shift($g);
+        $pairs[] = array($a, $b);
+    }
+    return $pairs;
 }
 
 function consec_matching($g) {
-  $pairs = array();
-  while (count($g) > 1)
-    $pairs[] = array(array_shift($g), array_shift($g));
-  return $pairs;
+    $pairs = array();
+    while (count($g) > 1) {
+        $a = array_shift($g);
+        $b = array_shift($g);
+        $pairs[] = array($b, $a);
+    }
+    return $pairs;
 }
 
 
