@@ -381,13 +381,15 @@ function team_disable($data) {
 //ASSERT $data["tournament_id"] isn't derived from $_POST data
 function team_update($data) {
     $tid = $data['team_id'];
-    $bind_vars = array(':tid'   => $data["tournament_id"],
+    $bind_vars = array(':tid'   => $tid,
+                       ':toid'  => $data["tournament_id"],
                        ':tname' => $data["name_$tid"],
                        ':tuid'  => $data["uid_$tid"],
                        ':tinit' => $data["init_$tid"],
                        ':ttext' => $data["text_$tid"]);
+    // checking both :tid and :toid against tid phishing
     $success = sql_try("UPDATE tblTeam SET team_name = :tname, team_text = :ttext, team_uid = :tuid,
-                        team_init = :tinit WHERE team_id = :tid", $bind_vars);
+                        team_init = :tinit WHERE team_id = :tid AND tournament_id = :toid", $bind_vars);
     return $success;
 }
 
