@@ -204,11 +204,11 @@ function get_standings($tid) {
     $stats = new stats($tid);
     ($db = connect_to_db()) || die("Couldn't connect to database for tournament standings");
 
-    // add all non-disabled teams to $stats
+    //TODO:  handle disabled v non-disabled for elim tournaments
+    // [redacted: ] add all non-disabled teams to $stats  //if (! $team['is_disabled'])
     $team_query = "SELECT * FROM tblTeam WHERE tournament_id = :tid";
     foreach (sql_select_all($team_query, array(":tid" => $tid), $db) as $team) 
-        if (! $team['is_disabled'])
-            $stats->add_team($team);
+        $stats->add_team($team);
   
     foreach (sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number ASC", array(":tid" => $tid), $db)
              as $round) {

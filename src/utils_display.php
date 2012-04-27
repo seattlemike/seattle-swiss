@@ -217,7 +217,7 @@ function disp_standings($tid) {
         if ($mode == 0)
             disp_swiss($tid, $nrounds);
         elseif ($mode == 1)
-            disp_elim($tid, $nrounds);
+            disp_elim($tid);
     }
 }
 
