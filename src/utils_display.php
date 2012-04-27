@@ -148,17 +148,26 @@ function disp_team_edit($team) {
 
     echo "<tr><td>\n";
     disp_tournament_button("Update", "update_team", "this.form.elements[\"team_id\"].value=$tid;");
-    echo "</td>\n<td>";
-    disp_tournament_button("Disable", "disable_team", "this.form.elements[\"team_id\"].value=$tid;",
-        $team['is_disabled'] ? "selected" : "");
+    echo "</td>\n";
 
     if (!$team['team_uid'])   { $team['team_uid'] = ""; }
     if (!$team['team_init'])  { $team['team_init'] = ""; }
-    echo "</td>\n";
     echo "<td><input type='text' name='name_$tid' value='{$team['team_name']}'></td>\n";
     echo "<td><input type='text' name='text_$tid' value='{$team['team_text']}'></td>\n";
     echo "<td><input class='numeric' type='text' name='uid_$tid' value='{$team['team_uid']}'></td>\n";
     echo "<td><input class='numeric' type='text' name='init_$tid' value='{$team['team_init']}'></td>\n";
+
+    echo "<td>";
+    disp_tournament_button("Disable", "disable_team", "this.form.elements[\"team_id\"].value=$tid;",
+        $team['is_disabled'] ? "selected" : "");
+    echo "</td>\n";
+    echo "<td>";
+    if (team_can_delete($team['team_id']))
+        disp_tournament_button("Delete", "delete_team", "this.form.elements[\"team_id\"].value=$tid;");
+    else
+        echo "<input class='button disabled' type='submit' name='delete_team' value='Delete' DISABLED />";
+    echo "</td>\n";
+
     echo "</tr>\n";
 }
 

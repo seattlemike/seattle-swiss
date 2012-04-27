@@ -182,6 +182,10 @@ td.center{ text-align: center; }
         }
         .button:hover, a:hover { color: #68819b; }
 
+        .button.disabled {
+            color: #68819b;
+        }
+
         .nav a, .button {
             display: inline-block;
             text-decoration:none;

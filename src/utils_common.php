@@ -354,6 +354,17 @@ function tournament_populate_round($tid, $rid, $aid) {
     return $rid;
 }
 
+function team_can_delete($tid) {
+    $game = sql_select_one("SELECT * FROM tblGameTeams WHERE team_id = :tid", array(":tid" => $tid));
+    return (!($game && count($game)));
+}
+
+function team_delete($data) {
+    //Should check:
+    //  team_id  exists and is for a team in tournament_id
+    if (team_can_delete($data['team_id']))
+        return sql_try("DELETE FROM tblTeam WHERE team_id = :tid", array(":tid" => $data['team_id']));
+}
 
 //TODO: shouldn't fail silently on !$data['add_name']
 function team_add($data) {

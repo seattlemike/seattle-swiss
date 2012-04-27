@@ -26,9 +26,11 @@
             if (! tournament_remove_admin($_POST, $_SESSION['admin_id']))
                 echo "<div class='header warning'>Failed to remove admin</div>";
             }
-        /* ASSERT require_privs(tid, aid)  [above]*/
+        //   ASSERT require_privs(tid, aid)
+        //      and $_POST[tournament_id] is set to tid
         elseif ($_POST['action'] == 'add_team')     { team_add($_POST);     }
         elseif ($_POST['action'] == 'disable_team') { team_disable($_POST); }
+        elseif ($_POST['action'] == 'delete_team')  { team_delete($_POST); }
         elseif ($_POST['action'] == 'update_team')  { team_update($_POST);  }
         if ($redir) header("location:main_menu.php");  // stick this back in delete_tournament?
     }
@@ -75,15 +77,16 @@
                 <input type='hidden' name='team_id' value=''>
                 <input type='hidden' name='action' value='' />
                 <table>
-                    <tr><th colspan=2></th><th>Team Name</th><th>Players</th>
+                    <tr><th></th><th>Team Name</th><th>Players</th>
                         <th title="if unsure, leave blank"><i>UID</i></th>
                         <th title="for random starting rank, leave blank">Starting Rank</th></tr>
-                    <tr> <td colspan=2> <? disp_tournament_button("Add", "add_team"); ?> </td>
+                    <tr> <td> <? disp_tournament_button("Add", "add_team"); ?> </td>
                         <td><input type='text' name='name_add'></td>
                         <td><input type='text' name='text_add'></td>
                         <td><input class='numeric' type='text' name='uid_add'></td>
                         <td><input class='numeric' type='text' name='init_add'></td>
                     </tr>
+                    <tr style='height:20px;'><th colspan=7>&nbsp;</th></tr>
                     <?php
                     foreach (get_tournament_teams($tid, "team_id") as $team)
                         disp_team_edit($team);
