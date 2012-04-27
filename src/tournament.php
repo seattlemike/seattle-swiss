@@ -28,6 +28,7 @@
             }
         //   ASSERT require_privs(tid, aid)
         //      and $_POST[tournament_id] is set to tid
+        elseif ($_POST['action'] == 'import_teams') { teams_import($_POST, $_SESSION['admin_id']) || die("import failed"); }
         elseif ($_POST['action'] == 'add_team')     { team_add($_POST);     }
         elseif ($_POST['action'] == 'disable_team') { team_disable($_POST); }
         elseif ($_POST['action'] == 'delete_team')  { team_delete($_POST); }
@@ -94,6 +95,22 @@
                 </table>
             </form>
             <div class='header'></div>
+        </div>
+        <div class="mainBox">
+            <div class="header">Import Teams</div>
+            <form name="import" method="post" action="">
+                Import top <input class='numeric' type='text' name='imp_num' />
+                teams from <select name='imp_tid'>
+                <?php
+                    $tournaments = get_my_tournaments($_SESSION['admin_id']);
+                    foreach ($tournaments as $t)
+                        if ($t['tournament_id'] != $tid)
+                            echo "<option value='{$t['tournament_id']}'>{$t['tournament_name']}</option>";
+                ?>
+                </select>
+                <input type='hidden' name='action' value='import_teams' />
+                <p><input class='button' type='submit' name='submit' value='Import' /></p>
+           </form>
         </div>
         <div class="nav rHead">
             <form name='delete' method='post' action=''>

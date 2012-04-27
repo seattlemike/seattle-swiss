@@ -225,9 +225,22 @@ function disp_standings($tid) {
         $mode = get_tournament_mode($tid);
         if ($mode == 0)
             disp_swiss($tid, $nrounds);
-        elseif ($mode == 1)
+        elseif ($mode == 1) {
             disp_elim($tid);
+            echo "<div class='header'></div>\n";
+            disp_places($tid);
+        }
     }
+}
+
+function disp_places($tid) {
+    $standings = get_standings($tid);
+    array_multisort(array_map(function($t) {return $t['place'];}, $standings), SORT_NUMERIC, $standings);
+    echo "<table class='standings'><th>Rank</th><th>Team</th>";
+    foreach ($standings as $t) {
+        echo "<tr><td>{$t['rank']}</td><td>{$t['name']}</td></tr>";
+    }
+    echo "</table>\n";
 }
 
 function disp_color_td($inner, $rnum, $pos) {

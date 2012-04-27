@@ -20,6 +20,7 @@ class stats {
                 'text' => $team['team_text'],
                 'live' => (! $team['is_disabled']),
                 'init' => $team['team_init'] ? $team['team_init'] : make_rand($team['team_id']),
+                'rand' => make_rand($team['team_id']),
                 'opponents' => array(),
                 'result' => array(),
                 'score' => 0,
@@ -65,15 +66,16 @@ class stats {
         $this->build_seeds();
         $standings = array_values($this->teams);
         if ($this->mode == 0) {  //swiss
-            $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed');
+            $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed', 'get_rand');
         }
         elseif ($this->mode == 1) {   //single-elim
-            $this->cmp_methods = array('get_score', 'get_seed');
+            $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
         }
 
         usort($standings, array($this, 'deep_cmp'));
         //assign partial ranks on score
         foreach($standings as $idx => $t) {
+            $this->teams[$t['id']]['place'] = $idx+1;
             if (isset($prev) && ($prev['score'] == $t['score']))
                 $t['rank'] = $prev['rank'];
             else $t['rank'] = $idx+1;
@@ -111,6 +113,9 @@ class stats {
         return $this->teams[$id]['score'];
     }
 
+    function get_rand($id) {
+        return $this->teams[$id]['rand'];
+    }
     function get_seed($id) {
         return -1 * $this->teams[$id]['seed'];
     }

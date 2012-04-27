@@ -360,10 +360,27 @@ function team_can_delete($tid) {
 }
 
 function team_delete($data) {
-    //Should check:
+    //TODO Should check:
     //  team_id  exists and is for a team in tournament_id
     if (team_can_delete($data['team_id']))
         return sql_try("DELETE FROM tblTeam WHERE team_id = :tid", array(":tid" => $data['team_id']));
+}
+
+function teams_import($data, $aid) {
+    require_privs(tournament_isadmin($data['imp_tid'], $aid));
+    $standings = get_standings($data['imp_tid']);
+
+    array_multisort(array_map(function($t) {return $t['place'];}, $standings), SORT_NUMERIC, $standings);
+    $imp = array_slice($standings,0,$data['imp_num']);
+    $status = true;
+    foreach ($imp as $k => $t) {
+        $status &= team_add( array('name_add' => $t['name'],
+                                   'uid_add' => 0,
+                                   'init_add' => $k+1,
+                                   'text_add' => $t['text'],
+                                   'tournament_id' => $data['tournament_id']) );
+    }
+    return $status;
 }
 
 //TODO: shouldn't fail silently on !$data['add_name']
