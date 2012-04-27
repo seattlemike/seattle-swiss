@@ -243,7 +243,7 @@ function disp_elim($tid) {
     $bsize = pow(2, $nrounds);
 
     echo "<table class='elim standings'>\n";
-    echo "<tr><th>Seed</th><th>Place</th><th colspan=".(2*$nrounds+1).">Results</th></tr>\n";
+    echo "<tr><th>Seed</th><th colspan=".(2*$nrounds+1).">Results</th></tr>\n";
     echo "<tr><th colspan='".(2*$nrounds+3)."' class='blank'>&nbsp;</th></tr>";
     // Pad table with 'blank's up to bsize for nice pow2 display
     $blank = array( 'result' => array() );
@@ -257,7 +257,6 @@ function disp_elim($tid) {
     foreach ($table as $idx => $team) {
         echo "<tr>";
         echo "<td>{$team['seed']}</td>\n";
-        echo "<td>{$team['rank']}</td>\n";
         disp_color_td("<span title='{$team['text']}'>{$team['name']}</span>", 0, $idx);
         for ($i = 0; $i < $nrounds; $i++) {
             echo "<td style='min-width:5px;'></td>";  //spacer
@@ -276,12 +275,12 @@ function disp_swiss($tid, $nrounds) {
     if (count($standings) == 0) { return; }
 
     echo "<table class='swiss standings'>\n";
-    echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3>Tie Breaks</th></tr>\n";
+    echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th></tr>\n";
     echo "<tr><th colspan=2></th>\n";
     for ($i = 1; $i <= $nrounds; $i++)
         echo "<th>R$i</th>";
     echo  "\n<th></th>\n";
-    echo  "<th title='Difficulty of all opponents faced'>Buchholz</th><th title='Difficulty of oppoents defeated and drawn'>Berger</th><th title='Integral over score across rounds'>Cumulative</th></tr>\n";
+    echo  "<th title='Difficulty of all opponents faced'>Buchholz</th><th title='Difficulty of oppoents defeated and drawn'>Berger</th><th title='Integral over time of current win/loss score'>Cumulative</th></tr>\n";
     
     foreach ($standings as $rank => $team) {
         echo "<tr>";

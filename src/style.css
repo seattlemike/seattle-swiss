@@ -121,14 +121,15 @@ table.standings {
 .standings .light { background: #aaa; }
 .standings .blank { background: #fff; border-bottom: 1px solid black; height: 20px;}
 
-.standings tr:first-child { background: #fbb; } 
-.elim tr:nth-child(2n+3) { background: #f99; }
-.elim tr:nth-child(2n+4) { background: #fbb; }
 .swiss tr:nth-child(2) { border-bottom: 1px solid black; }
+
+.standings tr:first-child { background: #bbf; } 
+/*.elim tr:nth-child(2n+3) { background: #68819b;}
+.elim tr:nth-child(2n+4) { background: #bbf;}*/
 .swiss tr:nth-child(2n+4) { background: #ddd; }
 .swiss tr:nth-child(2n+3) { background: #aaa; }
-.swiss tr:nth-child(2n+4) .bold { background: #fbb; }
-.swiss tr:nth-child(2n+3) .bold { background: #f99; }
+.swiss tr:nth-child(2n+3) .bold { background: #68819b;}
+.swiss tr:nth-child(2n+4) .bold { background: #bbf; }
 
 /*  TODO: get rid of these ASAP */
 table { border-collapse:collapse; }
