@@ -110,19 +110,19 @@ table.standings {
     margin-left: auto;
     margin-right: auto;
 }
-
 .standings td {
     height: 40px;
     text-align: center;
     min-width: 40px;
 }
 
+.standings .score { 
+}
+
 .standings .dark  { background: #ddd; }
 .standings .light { background: #aaa; }
 .standings .blank { background: #fff; border-bottom: 1px solid black; height: 20px;}
-
 .swiss tr:nth-child(2) { border-bottom: 1px solid black; }
-
 .standings tr:first-child { background: #bbf; } 
 /*.elim tr:nth-child(2n+3) { background: #68819b;}
 .elim tr:nth-child(2n+4) { background: #bbf;}*/

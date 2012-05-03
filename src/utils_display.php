@@ -243,12 +243,28 @@ function disp_places($tid) {
     echo "</table>\n";
 }
 
-function disp_color_td($inner, $rnum, $pos) {
+function get_td_color($rnum, $pos) {
     $mod = pow(2, $rnum+2);
     $div = pow(2, $rnum+1);
     $color = intval(($pos % $mod) / $div) ? "light" : "dark";
-    echo "<td class='$color'>$inner</td>\n";
+    return $color;
 }
+
+function disp_color_td($team, $round, $y) {
+    $mod = pow(2, $round+2);
+    $div = pow(2, $round+1);
+    $color = intval(($y % $mod) / $div) ? "light" : "dark";
+
+    echo "<td class='$color'>";
+    echo "<div class='result' title='{$team['text']}'>{$team['name']}</div>";
+    echo "</td>\n";
+    echo "<td class='$color'>";
+    if (($team['opponents'][$round] != -1) && ($team['id'] != -1))   // Game is not a BYE
+        echo "<div class='score'>{$team['games'][$round][$team['id']]}</div>";
+    echo "</td>\n";
+}
+
+
 // standings are BEST TO WORST
 function disp_elim($tid) {
     $standings = get_standings($tid);
@@ -256,13 +272,14 @@ function disp_elim($tid) {
     $bsize = pow(2, $nrounds);
 
     echo "<table class='elim standings'>\n";
-    echo "<tr><th>Seed</th><th colspan=".(2*$nrounds+1).">Results</th></tr>\n";
-    echo "<tr><th colspan='".(2*$nrounds+3)."' class='blank'>&nbsp;</th></tr>";
+    echo "<tr><th>Seed</th><th colspan=".(3*$nrounds+2).">Results</th></tr>\n";
+    echo "<tr><th colspan='".(3*$nrounds+3)."'> &nbsp;</th></tr>";
     // Pad table with 'blank's up to bsize for nice pow2 display
-    $blank = array( 'result' => array() );
+    $bye = array( 'id' => -1, 'name' => 'BYE', 'result' => array() );
+    $blank = array( 'id' => -1, 'result' => array() );
     foreach (range(0, $bsize-1) as $pos) {
         if ($standings[$pos-$del]['pos'] != $pos) {
-            $table[] = $blank;
+            $table[] = $bye;
             $del++;
         } else
             $table[] = $standings[$pos-$del];
@@ -270,18 +287,28 @@ function disp_elim($tid) {
     foreach ($table as $idx => $team) {
         echo "<tr>";
         echo "<td>{$team['seed']}</td>\n";
-        disp_color_td("<span title='{$team['text']}'>{$team['name']}</span>", 0, $idx);
+
+        disp_color_td($team, 0, $idx);
         for ($i = 0; $i < $nrounds; $i++) {
             echo "<td style='min-width:5px;'></td>";  //spacer
-            if ($team['result'][$i]) $inner = "<span title='{$team['text']}'>{$team['name']}</span>";
-            else                       $inner = "";
-            disp_color_td($inner, $i+1, $idx);
+            if ($team['result'][$i]) disp_color_td($team, $i+1, $idx);
+            else                     disp_color_td($blank, $i+1, $idx);
         }
         echo "</tr>\n";
     }
     echo "</table>\n";
 }
 
+function score_str($team, $i) {  // TODO need team id, then put self first
+    $s = $team['games'][$i];
+    if (count($s) > 1) {
+        $s[0] = $s[$team['opponents'][$i]];
+        unset($s[$team['opponents'][$i]]);
+        return implode($s, " - ")." vs ";
+    }
+    else 
+        return "";
+}
 
 function disp_swiss($tid, $nrounds) {
     $standings = get_standings($tid);
@@ -300,7 +327,7 @@ function disp_swiss($tid, $nrounds) {
         echo "<td>".($rank+1)."</td>";
         echo "<td class='bold'><span title='{$team['text']}'>{$team['name']}</span></td>\n";
         for ($i = 0; $i < $nrounds; $i++)
-            echo "<td><span class='result' title='vs {$team['opp_name'][$i]}'>{$team['result'][$i]}</span></td>\n";
+            echo "<td><span class='result' title='".score_str($team, $i)."{$team['opp_name'][$i]}'>{$team['result'][$i]}</span></td>\n";
         echo "<td class='bold'>{$team['score']}</td>";
         echo "<td>{$team['buchholz']}</td>";
         echo "<td>{$team['berger']}</td>";

@@ -23,6 +23,7 @@ class stats {
                 'rand' => make_rand($team['team_id']),
                 'opponents' => array(),
                 'result' => array(),
+                'games' => array(),  // [ id1 => score1, id2 => score2 ]
                 'score' => 0,
                 'pos' => 0 );
     }
@@ -36,19 +37,22 @@ class stats {
     }
 
     function add_result($game) {
+        foreach ($game as $g)
+            $score[$g['team_id']] = $g['score'];
+
         if (count($game) == 1)
-            $this->add_team_result($game[0]['team_id'], 1, -1);
+            $this->add_team_result($game[0]['team_id'], 1, -1, $score);
         else {
             if ($game[0]['score'] < $game[1]['score'])      $res = array(0,1);
             else if ($game[0]['score'] > $game[1]['score']) $res = array(1,0);
             else                                            $res = array(0.5,0.5);
 
             foreach (array(0,1) as $idx)
-                $this->add_team_result($game[$idx]['team_id'], $res[$idx], $game[($idx+1)%2]['team_id']);
+                $this->add_team_result($game[$idx]['team_id'], $res[$idx], $game[($idx+1)%2]['team_id'], $score);
         }
     }
 
-    function add_team_result($my_id, $res, $opp_id) {
+    function add_team_result($my_id, $res, $opp_id, $score) {
         if ($opp_id == -1) $opp_name = "BYE";
         else               $opp_name = $this->teams[$opp_id]['name'];
         //echo "add team result $my_id, $res, $opp_id<br>";
@@ -56,6 +60,7 @@ class stats {
         $this->teams[$my_id]['opp_name'][] = $opp_name;
         $this->teams[$my_id]['result'][] = $res;
         $this->teams[$my_id]['score'] += $res;
+        $this->teams[$my_id]['games'][] = $score;
         if ($this->mode == 1) // single-elim.  one loss means not-live.
             if ($res < 1)
                 $this->teams[$my_id]['live'] = false;
