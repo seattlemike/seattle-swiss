@@ -16,6 +16,7 @@ class stats {
         // really should just take id [and name?]
         $this->teams[$team['team_id']] = 
             array('name' => $team['team_name'],
+                'uid'  => $team['team_uid'],
                 'id'   => $team['team_id'],
                 'text' => $team['team_text'],
                 'live' => (! $team['is_disabled']),

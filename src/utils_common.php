@@ -374,8 +374,9 @@ function teams_import($data, $aid) {
     $imp = array_slice($standings,0,$data['imp_num']);
     $status = true;
     foreach ($imp as $k => $t) {
+
         $status &= team_add( array('name_add' => $t['name'],
-                                   'uid_add' => 0,
+                                   'uid_add'  => $t['uid'],
                                    'init_add' => $k+1,
                                    'text_add' => $t['text'],
                                    'tournament_id' => $data['tournament_id']) );
@@ -422,6 +423,7 @@ function team_update($data) {
 }
 
 function tournament_update_score( $gid, $data) {
+  // TODO: adjust timestamp for last-modified
   // grab tournament_id corresponding to $gid, then require_privs
   $teams = sql_select_all("SELECT * FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
   foreach ($teams as $team) {

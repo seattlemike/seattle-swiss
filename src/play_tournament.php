@@ -19,6 +19,7 @@
                 header("location:play_tournament.php?id=$tid&round_id=$rid");
         } 
         elseif ($_POST['action'] == 'update_score') {
+            //TODO validate:  $game_id is a member of tournament $tid
             tournament_update_score($_POST['game_id'], $_POST);
         } 
         elseif ($_POST['action'] == 'remove_round') {
