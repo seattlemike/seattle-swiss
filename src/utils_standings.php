@@ -77,6 +77,9 @@ class stats {
         elseif ($this->mode == 1) {   //single-elim
             $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
         }
+        elseif ($this->mode == 2) {   //single-elim
+            $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
+        }
 
         usort($standings, array($this, 'deep_cmp'));
         //assign partial ranks on score
