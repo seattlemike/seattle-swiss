@@ -69,7 +69,7 @@ if (isset($title_text) && (! isset($header_text)))  { $header_text = $title_text
         <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
         <link href='http://fonts.googleapis.com/css?family=Rosario' rel='stylesheet' type='text/css'>
         <link href='http://fonts.googleapis.com/css?family=Rokkitt:700' rel='stylesheet' type='text/css'>
-        <link rel='stylesheet' type='text/css' href='style.css' />
+        <link rel='stylesheet' type='text/css' href='/style.css' />
         <script src="swiss.js" type="text/javascript"></script>
         <?php 
             $title = "Seattle Swiss";
