@@ -29,12 +29,14 @@ function sql_try( $query, $values, $db=null) {
   return $success;
 }
 
+// insert a record into the db
 function sql_insert( $query, $values, $db=null) {
   list($success, , $lastid) = db_execute($query, $values, $db);
   if ($success) return $lastid;
   else          return false;
 }
 
+// returns only the top result from a query
 function sql_select_one($query, $values, $db=null) {
 	try {
     list($success,$stmt,) = db_execute($query, $values, $db);
@@ -44,6 +46,7 @@ function sql_select_one($query, $values, $db=null) {
 	catch(PDOException $e) { die ($e->getMessage()); }
 }
 
+// returns all records from a query
 function sql_select_all($query, $values, $db=null) {
 	try {
     list($success,$stmt,) = db_execute($query, $values, $db);

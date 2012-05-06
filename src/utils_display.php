@@ -79,7 +79,7 @@ function disp_tournament_details($tourney = null) {
     if ($tourney['is_public']) $ispublic="checked='checked'";
     if ($tourney['is_over']) $isover="checked='checked'";
 
-    $modes = array("Swiss Rounds", "Single Elimination");
+    $modes = array("Swiss Rounds", "Single Elimination", "Double Elimination");
     $def = "class='wide' type='text' maxlength='40'";
     $inputs = array("Name" => "<input $def name='tournament_name' value='{$tourney['tournament_name']}' />",
                     "City" => "<input $def name='tournament_city' value='{$tourney['tournament_city']}' />",
@@ -171,6 +171,7 @@ function disp_team_edit($team) {
     echo "</tr>\n";
 }
 
+// displays the navigation for a round
 function disp_round_nav($tid, $rid, $aid=null) {
   if ($aid) $isadmin = tournament_isadmin($tid, $aid);
   //if ($isadmin) $url = "play_tournament.php";
@@ -178,7 +179,7 @@ function disp_round_nav($tid, $rid, $aid=null) {
 
   $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number",
                            array(":tid" => $tid));
-  if ( $rounds != false ) {
+  if ( $rounds != false ) { // if rounds exist, show nav buttons for them
     foreach ($rounds as $r) {
       if ($r['round_id'] == $rid) $class = "selected";
       else                        $class = "";
@@ -187,7 +188,7 @@ function disp_round_nav($tid, $rid, $aid=null) {
     }
     if ($isadmin) disp_tournament_button("+", "add_round"); 
   }
-  else {
+  else { // if rounds don't exist, show nav button to start 1st round
     echo "<div class='line'>";
     if ($isadmin) disp_tournament_button("Start","populate_round");
     echo "</div>\n";
@@ -229,6 +230,9 @@ function disp_standings($tid) {
             disp_elim($tid);
             echo "<div class='header'></div>\n";
             disp_places($tid);
+        }
+        elseif ($mode == 2) {
+            // TODO: double elimination
         }
     }
 }

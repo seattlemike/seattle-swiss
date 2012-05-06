@@ -11,6 +11,7 @@ function max_session_life() {
 // Credentials functions
 //
 
+// require that the user has privileges to the tournament
 function require_privs($stmt, $warning='') {
     if ($_SESSION['admin_type'] == 'super')
         return true;
@@ -20,6 +21,7 @@ function require_privs($stmt, $warning='') {
         die($warning);
 }
 
+// checks to see if an admin is set
 function check_login() {
     return isset($_SESSION['admin_id']);
 }
@@ -57,6 +59,7 @@ function logout() {
     header("location:index.php");
 }
 
+// checks to see if the admin logged in has privileges for the tournament
 function tournament_isadmin($tid, $aid) {
     if ($_SESSION['admin_type'] == 'super')
         return true;
@@ -101,6 +104,7 @@ function get_tournament_name($tid) {
     return $t['tournament_name'];
 }
 
+// return tournament mode (0 = swiss, 1 = single, 2 = double, etc)
 function get_tournament_mode($tid) {
     $t = sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid', array(':tid' => $tid));
     return $t['tournament_mode'];
@@ -150,6 +154,7 @@ function get_tournament_status($tid) {
     return array($r['round_number'], count($played), count($games));
 }
 
+// return the round record with the specified rid
 function get_tournament_round($tid, $rid, $db=null) {
     return sql_select_one("SELECT * FROM tblRound WHERE tournament_id = :tid AND round_id = :rid", 
                           array(":tid" => $tid, ":rid" => $rid), $db);
@@ -190,8 +195,10 @@ function create_tournament($data, $aid) {
         ':aid' => $aid);
     if ($data['tournament_mode'] == '0')
         $bind_vars[':tmode'] = 0;
-    else
-        $bind_vars[':tmode'] = 1;
+    elseif ($data['tournament_mode'] == '1')
+		$bind_vars[':tmode'] = 1;
+	elseif ($data['tournament_mode'] == '2')
+        $bind_vars[':tmode'] = 2;
 
     $newid = sql_insert("INSERT INTO tblTournament
     (tournament_name, tournament_date, tournament_mode, tournament_owner) 
@@ -274,6 +281,7 @@ function tournament_is_over($tid) {
     return ($select && $select['is_over']);
 }
 
+// adds a round to a tournament
 function tournament_add_round($tid) {
     $select = sql_select_one("SELECT MAX(round_number) AS round_max FROM tblRound WHERE tournament_id = :tid", array(":tid" => $tid));
     if (!$select) $rnum = 1;
@@ -336,6 +344,7 @@ function tournament_empty_round($rid, $aid, $db = null) {
     else return true;
 }
 
+// populates a round
 function tournament_populate_round($tid, $rid, $aid) {
     $db = connect_to_db();
 
