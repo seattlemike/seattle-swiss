@@ -19,7 +19,7 @@ class stats {
                 'uid'  => $team['team_uid'],
                 'id'   => $team['team_id'],
                 'text' => $team['team_text'],
-                'live' => (! $team['is_disabled']),
+                'status' => $team['is_disabled'] ? -1 : 2,
                 'init' => $team['team_init'] ? $team['team_init'] : make_rand($team['team_id']),
                 'rand' => make_rand($team['team_id']),
                 'opponents' => array(),
@@ -62,9 +62,12 @@ class stats {
         $this->teams[$my_id]['result'][] = $res;
         $this->teams[$my_id]['score'] += $res;
         $this->teams[$my_id]['games'][] = $score;
-        if ($this->mode == 1) // single-elim.  one loss means not-live.
-            if ($res < 1)
-                $this->teams[$my_id]['live'] = false;
+        if ($this->mode == 2)  // double-elim, 2=winners 1=loser 0=eliminated
+            if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
+                $this->teams[$my_id]['status']--;
+        elseif ($this->mode == 1) // single-elim, 2=bracket 0=eliminated
+            if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
+                $this->teams[$my_id]['status'] = 0;
     }
 
     function team_array() {

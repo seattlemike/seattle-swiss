@@ -74,12 +74,18 @@ function consec_matching($g) {
 function tournament_get_pairings($tid) {
     $mode = get_tournament_mode($tid);
     if     ($mode == 0) return get_swiss_pairings($tid);
-    elseif ($mode == 1) return get_elim_pairings($tid);
+    elseif ($mode == 1) return get_sglelim_pairings($tid);
+    elseif ($mode == 2) return get_dblelim_pairings($tid);
     else // Ohno!  No pairings yet for this mode!
         return array();
 }
 
-function get_elim_pairings($tid) {
+function get_dblelim_pairings($tid) {
+    $teams = get_standings($tid);
+    return 
+}
+
+function get_sglelim_pairings($tid) {
     // undefeated teams, sorted BY GAME ORDER
     $teams = get_standings($tid);
     $teams = array_filter(get_standings($tid), function ($t) { return ($t['live']); });
@@ -106,7 +112,7 @@ function get_elim_pairings($tid) {
 
 function get_swiss_pairings($tid) {
     // $teams:  not disabled, ordered BEST TO WORST
-    $teams = array_filter(get_standings($tid, $mode), function ($t) { return $t['live']; } );
+    $teams = array_filter(get_standings($tid), function ($t) { return $t['live']; } );
     $pairs = array();
 
     // TODO: instead of BYE... something?

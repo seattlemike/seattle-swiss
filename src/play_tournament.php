@@ -30,6 +30,7 @@
             tournament_empty_round($rid, $_SESSION['admin_id']);
         }
         elseif ($_POST['action'] == 'populate_round') {
+            //TODO URGENT: only "next round" if doesn't already exist
             $pop_rid = tournament_populate_round($tid, $_POST['populate_id'], $_SESSION['admin_id']);
             if ($pop_rid != $rid)
                 header("location:play_tournament.php?id=$tid&round_id=$pop_rid");
