@@ -5,30 +5,33 @@ function make_rand ($seed ) {
     return rand();
 }
 
+// class used to calculate standings based on game results
 class stats {
     public $teams;
     function __construct($tid) {
         $this->teams = array();
         $this->mode = get_tournament_mode($tid);
     }
-    
+    // adds team information to the stats array and initialize fields
     function add_team($team) {
         // really should just take id [and name?]
         $this->teams[$team['team_id']] = 
-            array('name' => $team['team_name'],
-                'uid'  => $team['team_uid'],
-                'id'   => $team['team_id'],
-                'text' => $team['team_text'],
+            array('name' => $team['team_name'], // team name
+                'id'   => $team['team_id'], // team id
+                'text' => $team['team_text'], // players' names
+                // -1 if disabled, 0 if eliminated, 1 or 2 if still in
                 'status' => $team['is_disabled'] ? -1 : 2,
+                // initial seed if seed is set, otherwise rand(seed=team_id)
+                // seeding with team_id so the result is consistent
                 'init' => $team['team_init'] ? $team['team_init'] : make_rand($team['team_id']),
-                'rand' => make_rand($team['team_id']),
-                'opponents' => array(),
-                'result' => array(),
-                'games' => array(),  // [ id1 => score1, id2 => score2 ]
-                'score' => 0,
-                'pos' => 0 );
+                'rand' => make_rand($team['team_id']), // returns rand(seed=team_id)
+                'opponents' => array(), // list of opponents faced in order
+                'result' => array(), // outcomes of games in order
+                'score' => 0, // sum of results
+                'pos' => 0 ); // table row for the view
     }
 
+    // used to seed for single/double elim bracket
     function build_seeds() {
         // sort by $team['init'] and assign index+1 to $team['seed']
         $teams = array_values($this->teams);
@@ -62,14 +65,18 @@ class stats {
         $this->teams[$my_id]['result'][] = $res;
         $this->teams[$my_id]['score'] += $res;
         $this->teams[$my_id]['games'][] = $score;
-        if ($this->mode == 2)  // double-elim, 2=winners 1=loser 0=eliminated
-            if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
-                $this->teams[$my_id]['status']--;
-        elseif ($this->mode == 1) // single-elim, 2=bracket 0=eliminated
+
+        if ($this->mode == 1) {     // single-elim, 2=bracket 0=eliminated
             if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
                 $this->teams[$my_id]['status'] = 0;
+        }
+        elseif ($this->mode == 2) {  // double-elim, 2=winners 1=loser 0=eliminated 
+            if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
+                $this->teams[$my_id]['status']--;
+        }
     }
 
+    // Calculate standings and return array of teams sorted by Display Table Row
     function team_array() {
 
         $this->build_seeds();
@@ -80,7 +87,7 @@ class stats {
         elseif ($this->mode == 1) {   //single-elim
             $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
         }
-        elseif ($this->mode == 2) {   //single-elim
+        elseif ($this->mode == 2) {   //double-elim
             $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
         }
 
@@ -114,11 +121,12 @@ class stats {
                 }
             }
         }
+        elseif ($this->mode == 2) { //double-elim
+            //oh no!
+            
+        }
 
-        // sort once more by 'pos'
-        $standings = array_values($this->teams);
-        array_multisort(array_map(function($t) {return $t['pos'];}, $standings), SORT_NUMERIC, $standings);
-        return $standings;
+        return array_values($this->teams);
     }
 
     function get_score($id) {

@@ -81,15 +81,46 @@ function tournament_get_pairings($tid) {
 }
 
 function get_dblelim_pairings($tid) {
-    $teams = get_standings($tid);
-    return 
+    $pairs=array();
+    $standings = get_standings($tid);
+
+    $teams = array_filter($standings, function ($t) { return ($t['status'] == 1); });
+    // sort losers by ... BLARG!
+    array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
+    // figure out who may have a bye
+    $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
+    $wmatch = consec_matching(array_filter($teams, function ($t) use ($nbye) { return ($t['seed'] > $nbye); }));
+    // add matches to the list
+    array_merge($pairs, $wmatch);
+    $byes = array_filter($teams, function($t) use ($nbye) { return ($t['seed'] <= $nbye); });
+    // add byes to list
+    foreach ($byes as $t)
+        $pairs[] = array($t);
+    
+
+    $teams = array_filter($standings, function ($t) { return ($t['status'] == 2); });
+    // sort winners by pos
+    array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
+    // match those who don't have a bye
+    $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
+    $wmatch = consec_matching(array_filter($teams, function ($t) use ($nbye) { return ($t['seed'] > $nbye); }));
+    // add matches to the list
+    array_merge($pairs, $wmatch);
+    $byes = array_filter($teams, function($t) use ($nbye) { return ($t['seed'] <= $nbye); });
+    // add byes to list
+    foreach ($byes as $t)
+        $pairs[] = array($t);
+
+    return $pairs;
 }
 
+// returns pairings for single elimination
 function get_sglelim_pairings($tid) {
     // undefeated teams, sorted BY GAME ORDER
-    $teams = get_standings($tid);
-    $teams = array_filter(get_standings($tid), function ($t) { return ($t['live']); });
+    $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); });
+
     if (count($teams) < 2) return array();  //bail if we've got fewer than 2 teams
+    array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
 
     if (log(count($teams), 2) == intval(log(count($teams), 2))) {
         return consec_matching($teams);
@@ -112,7 +143,8 @@ function get_sglelim_pairings($tid) {
 
 function get_swiss_pairings($tid) {
     // $teams:  not disabled, ordered BEST TO WORST
-    $teams = array_filter(get_standings($tid), function ($t) { return $t['live']; } );
+    $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); } );
+    array_multisort(array_map(function($t) {return $t['place'];}, $teams), SORT_NUMERIC, $teams);
     $pairs = array();
 
     // TODO: instead of BYE... something?

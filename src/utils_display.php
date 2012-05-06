@@ -171,6 +171,7 @@ function disp_team_edit($team) {
     echo "</tr>\n";
 }
 
+// displays the navigation for a round
 function disp_round_nav($tid, $rid, $aid=null) {
   if ($aid) $isadmin = tournament_isadmin($tid, $aid);
   //if ($isadmin) $url = "play_tournament.php";
@@ -178,7 +179,7 @@ function disp_round_nav($tid, $rid, $aid=null) {
 
   $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number",
                            array(":tid" => $tid));
-  if ( $rounds != false ) {
+  if ( $rounds != false ) { // if rounds exist, show nav buttons for them
     foreach ($rounds as $r) {
       if ($r['round_id'] == $rid) $class = "selected";
       else                        $class = "";
@@ -187,7 +188,7 @@ function disp_round_nav($tid, $rid, $aid=null) {
     }
     if ($isadmin) disp_tournament_button("+", "add_round"); 
   }
-  else {
+  else { // if rounds don't exist, show nav button to start 1st round
     echo "<div class='line'>";
     if ($isadmin) disp_tournament_button("Start","populate_round");
     echo "</div>\n";
@@ -230,6 +231,9 @@ function disp_standings($tid) {
             echo "<div class='header'></div>\n";
             disp_places($tid);
         }
+        elseif ($mode == 2) {
+            // TODO: double elimination
+        }
     }
 }
 
@@ -268,6 +272,8 @@ function disp_color_td($team, $round, $y) {
 // standings are BEST TO WORST
 function disp_elim($tid) {
     $standings = get_standings($tid);
+    // TODO:  move table row calculation for display ('pos') to here
+    array_multisort(array_map(function($t) {return $t['pos'];}, $standings), SORT_NUMERIC, $standings);
     $nrounds = ceil(log(count($standings),2));
     $bsize = pow(2, $nrounds);
 
@@ -313,6 +319,7 @@ function score_str($team, $i) {  // TODO need team id, then put self first
 function disp_swiss($tid, $nrounds) {
     $standings = get_standings($tid);
     if (count($standings) == 0) { return; }
+    array_multisort(array_map(function($t) {return $t['pos'];}, $standings), SORT_NUMERIC, $standings);
 
     echo "<table class='swiss standings'>\n";
     echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th></tr>\n";

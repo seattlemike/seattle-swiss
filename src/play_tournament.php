@@ -7,9 +7,9 @@
 
     if ($rid == -1) unset($rid);  // set in header if round not found with rid
 
+    
+    // TODO this doesn't look nice.  how can we make this look nicer?
     // check POST actions
-    //    TODO this doesn't look nice.  how can we make this look nicer?
-
     if (isset($_POST['action'])) {
         require_login();
         require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
@@ -48,7 +48,7 @@
 
   //TODO:  Tournament Structure!
   // ASSERT:  NO PRIVS CHECKED YET
-
+// sets the view/edit mode based on the admin's privileges
 if (check_login() && tournament_isadmin($tid, $_SESSION['admin_id']))
     $mode = 'edit';
 elseif (tournament_ispublic($tid))
@@ -56,7 +56,7 @@ elseif (tournament_ispublic($tid))
 else
 	header("location:view.php");
 
-
+// adds a round id to the url if rounds exist
 $url = "play_tournament.php?id=$tid";
 if (isset($rid)) $url .= "&round_id=$rid";
 

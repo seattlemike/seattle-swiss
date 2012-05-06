@@ -20,6 +20,7 @@
             <label>Mode<select name='tournament_mode'>
                 <option value='0'>Swiss Rounds</option>";
                 <option value='1'>Single Elimination</option>";
+                <option value='2'>Double Elimination</option>";
             </select></label>
             <? disp_tournament_button("Create", 'new_tournament'); ?>
         </form>
