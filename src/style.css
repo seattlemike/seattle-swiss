@@ -106,15 +106,19 @@ p, .line { margin: 0.5em 0 0.5em 0; }
 }
 
 /* tabulated display */
-table.standings, table.twocolor {
+table {
     margin-left: auto;
     margin-right: auto;
 }
-.standings td {
+
+td {
     height: 40px;
-    text-align: center;
-    min-width: 40px;
+    min-width: 100px;
 }
+
+td.spacer  { min-width: 5px; }
+td.numeric { min-width: 40px; }
+td.numeric { text-align: center; }
 
 .twocolor tr:nth-child(2n) { background: #ddd; }
 .twocolor tr:nth-child(2n+1) { background: #aaa; }

@@ -117,14 +117,14 @@ function disp_tournaments($tlist, $dest='tournament.php') {
     if ((! $tlist) || (count($tlist) == 0))
         echo "<div class='header'>[no tournaments yet]</div>\n";
     else {
-        echo "<table class='twocolor'>\n";
+        echo "<table>\n";
         foreach ($tlist as $tourney) {
             $date = date("m/d/Y", strtotime($tourney['tournament_date']));
             echo "<tr><td>$date</td><td>{$mode[$tourney['tournament_mode']]}</td>\n";
             // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
             // else                                       { $class = ''; }
             //echo "<div class='line'>\n";
-            echo "<td><a class='$class' href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a></td>";
+            echo "<td><a href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a></td>";
             echo "</tr>\n";
             //echo "</div>\n";
         }
@@ -249,7 +249,7 @@ function disp_places($tid) {
     array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
     echo "<table class='standings'><th>Rank</th><th>Team</th>";
     foreach ($standings as $t) {
-        echo "<tr><td>{$t['rank']}</td><td>{$t['name']}</td></tr>";
+        echo "<tr><td class='numeric'>{$t['rank']}</td><td>{$t['name']}</td></tr>";
     }
     echo "</table>\n";
 }
@@ -269,7 +269,7 @@ function disp_color_td($team, $round, $y) {
     echo "<td class='$color'>";
     echo "<div class='result' title='{$team['text']}'>{$team['name']}</div>";
     echo "</td>\n";
-    echo "<td class='$color'>";
+    echo "<td class='$color numeric'>";
     if (($team['opponents'][$round] != -1) && ($team['id'] != -1))   // Game is not a BYE
         echo "<div class='score'>{$team['games'][$round][$team['id']]}</div>";
     echo "</td>\n";
@@ -299,11 +299,11 @@ function disp_elim($tid) {
     }
     foreach ($table as $idx => $team) {
         echo "<tr>";
-        echo "<td>{$team['seed']}</td>\n";
+        echo "<td class='numeric'>{$team['seed']}</td>\n";
 
         disp_color_td($team, 0, $idx);
         for ($i = 0; $i < $nrounds; $i++) {
-            echo "<td style='min-width:5px;'></td>";  //spacer
+            echo "<td class='spacer'></td>";  //spacer
             if ($team['result'][$i]) disp_color_td($team, $i+1, $idx);
             else                     disp_color_td($blank, $i+1, $idx);
         }
@@ -338,14 +338,14 @@ function disp_swiss($tid, $nrounds) {
     
     foreach ($standings as $rank => $team) {
         echo "<tr>";
-        echo "<td>".($rank+1)."</td>";
+        echo "<td class='numeric'>".($rank+1)."</td>";
         echo "<td class='bold'><span title='{$team['text']}'>{$team['name']}</span></td>\n";
         for ($i = 0; $i < $nrounds; $i++)
-            echo "<td><span class='result' title='".score_str($team, $i)."{$team['opp_name'][$i]}'>{$team['result'][$i]}</span></td>\n";
-        echo "<td class='bold'>{$team['score']}</td>";
-        echo "<td>{$team['buchholz']}</td>";
-        echo "<td>{$team['berger']}</td>";
-        echo "<td>{$team['cumulative']}</td>";
+            echo "<td class='numeric'><span class='result' title='".score_str($team, $i)."{$team['opp_name'][$i]}'>{$team['result'][$i]}</span></td>\n";
+        echo "<td class='bold numeric'>{$team['score']}</td>";
+        echo "<td class='numeric'>{$team['buchholz']}</td>";
+        echo "<td class='numeric'>{$team['berger']}</td>";
+        echo "<td class='numeric'>{$team['cumulative']}</td>";
         echo "</tr>\n";
     }
     echo "</table>\n";
