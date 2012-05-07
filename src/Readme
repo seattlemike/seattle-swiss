@@ -1,5 +1,13 @@
 *Readme* - major stuff
 
+##### May 2012:
+Urgent:
+  Get double elim team pairings working.
+  To do this move pos over to display.
+  Also move add_game into get_pairings to add[loser v winner] (v rematch?)
+Todo:
+  Import xml file
+
 ##### Apr 2012:
 
 Modes:
@@ -14,8 +22,6 @@ Modes:
 
   But for now:  Tournament [mode] -> Rounds
     with a mechanism for importing teams/ranks from other tournaments where [owner] is an [admin]
-
-  Got to get this ready for Lex!
 
 Manual game schedule:
   Check BYE v BYE

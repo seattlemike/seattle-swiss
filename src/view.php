@@ -17,7 +17,7 @@
                         header("location:view.php");
                 }
                 else {  // List of public tournaments
-                    $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1", array());
+                    $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
                     disp_tournaments($tlist, 'view.php');
                 }
             ?>

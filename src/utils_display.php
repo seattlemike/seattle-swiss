@@ -113,16 +113,22 @@ function disp_admin_tournament($t, $aid, $idx) {
 }
 
 function disp_tournaments($tlist, $dest='tournament.php') {
+    $mode = array("Swiss", "Single Elim", "Double Elim");
     if ((! $tlist) || (count($tlist) == 0))
         echo "<div class='header'>[no tournaments yet]</div>\n";
     else {
+        echo "<table class='twocolor'>\n";
         foreach ($tlist as $tourney) {
-            if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
-            else                                       { $class = ''; }
-            echo "<div class='line'>\n";
-            echo "<a class='$class button' href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a>";
-            echo "</div>\n";
+            $date = date("m/d/Y", strtotime($tourney['tournament_date']));
+            echo "<tr><td>$date</td><td>{$mode[$tourney['tournament_mode']]}</td>\n";
+            // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
+            // else                                       { $class = ''; }
+            //echo "<div class='line'>\n";
+            echo "<td><a class='$class' href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a></td>";
+            echo "</tr>\n";
+            //echo "</div>\n";
         }
+        echo "</table>\n";
     }
 }
 
