@@ -232,6 +232,7 @@ function disp_standings($tid) {
             disp_places($tid);
         }
         elseif ($mode == 2) {
+            disp_places($tid);
             // TODO: double elimination
         }
     }
@@ -239,7 +240,7 @@ function disp_standings($tid) {
 
 function disp_places($tid) {
     $standings = get_standings($tid);
-    array_multisort(array_map(function($t) {return $t['place'];}, $standings), SORT_NUMERIC, $standings);
+    array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
     echo "<table class='standings'><th>Rank</th><th>Team</th>";
     foreach ($standings as $t) {
         echo "<tr><td>{$t['rank']}</td><td>{$t['name']}</td></tr>";

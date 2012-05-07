@@ -375,7 +375,7 @@ function teams_import($data, $aid) {
     require_privs(tournament_isadmin($data['imp_tid'], $aid));
     $standings = get_standings($data['imp_tid']);
 
-    array_multisort(array_map(function($t) {return $t['place'];}, $standings), SORT_NUMERIC, $standings);
+    array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
     $imp = array_slice($standings,0,$data['imp_num']);
     $status = true;
     foreach ($imp as $k => $t) {

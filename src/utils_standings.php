@@ -88,19 +88,34 @@ class stats {
             $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
         }
         elseif ($this->mode == 2) {   //double-elim
-            $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
+            $this->cmp_methods = array('get_lasted', 'get_seed', 'get_rand');
         }
 
         usort($standings, array($this, 'deep_cmp'));
-        //assign partial ranks on score
-        foreach($standings as $idx => $t) {
-            $this->teams[$t['id']]['place'] = $idx+1;
-            if (isset($prev) && ($prev['score'] == $t['score']))
-                $t['rank'] = $prev['rank'];
-            else $t['rank'] = $idx+1;
-            $this->teams[$t['id']]['rank'] = $t['rank'];
-            $prev = $t;
+
+        // URGENT TODO
+        //TODO: get rid of this partial ranking
+        //  for everyone:  set $t['index'] = deep_cmp index
+        //  for swiss: group by equal score, rank=index
+        //  for elims: rank by get_lasted
+
+        foreach($standings as $idx => $t)
+            $this->teams[$t['id']]['index'] = $idx+1;
+
+        if ($this->mode > 0) {
+            foreach($standings as $idx => $t) {
+                $t['lasted'] = $this->get_lasted($t['id']);
+                if (isset($prev) && ($prev['lasted'] == $t['lasted']))
+                    $t['rank'] = $prev['rank'];
+                else
+                    $t['rank'] = $idx+1;
+
+                $this->teams[$t['id']]['lasted'] = $t['lasted'];
+                $this->teams[$t['id']]['rank']   = $t['rank'];
+                $prev = $t;
+            }
         }
+
         
         if ($this->mode == 0) { //swiss
             foreach ($standings as $idx => $t)
@@ -123,6 +138,18 @@ class stats {
         }
         elseif ($this->mode == 2) { //double-elim
             //oh no!
+            array_multisort(array_map(function($t) {return $t['seed'];}, $standings), SORT_NUMERIC, $standings);
+            $standings[0]['pos'] = 0; //redundant
+
+            $bsize = pow(2, ceil(log(count($standings),2)));
+            foreach ($standings as $idx => $t) {
+                if ($idx > 0) {
+                    $c = pow(2,ceil(log($idx+1,2)));
+                    $del = $bsize / $c;
+                    $standings[$idx]['pos'] = $standings[$c - ($idx+1)]['pos'] + $del;
+                    $this->teams[$t['id']]['pos'] = $standings[$idx]['pos'];
+                }
+            }
             
         }
 
@@ -138,6 +165,17 @@ class stats {
     }
     function get_seed($id) {
         return -1 * $this->teams[$id]['seed'];
+    }
+    function get_lasted($id) {
+        $sum = ($this->teams[$id]['result'][0] < 1) ? 1 : 0;
+        $del = 2;
+        foreach ($this->teams[$id]['result'] as $r) {
+            if ($r < 1)
+                $del--;
+            else
+                $sum += $del;
+        }
+        return $sum;
     }
 
     function get_cumulative($id) {

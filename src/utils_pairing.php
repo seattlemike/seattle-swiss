@@ -4,13 +4,13 @@
 //   within a group ORDER IS PRESERVED 
 function semi_group($teams) {
   foreach ($teams as $t) {
-    if ($semi == $t['rank'])
+    if ($semi == $t['score'])
       $g[] = $t;
     else {
       if (isset($g))
         $groups[] = $g;
         //$groups[] = array_reverse($g); 
-      $semi = $t['rank'];
+      $semi = $t['score'];
       $g = array($t);
     } 
   }
@@ -81,37 +81,104 @@ function tournament_get_pairings($tid) {
 }
 
 function get_dblelim_pairings($tid) {
-    $pairs=array();
-    $standings = get_standings($tid);
 
-    $teams = array_filter($standings, function ($t) { return ($t['status'] == 1); });
-    // sort losers by ... BLARG!
-    array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
-    // figure out who may have a bye
-    $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
-    $wmatch = consec_matching(array_filter($teams, function ($t) use ($nbye) { return ($t['seed'] > $nbye); }));
-    // add matches to the list
-    array_merge($pairs, $wmatch);
-    $byes = array_filter($teams, function($t) use ($nbye) { return ($t['seed'] <= $nbye); });
-    // add byes to list
-    foreach ($byes as $t)
-        $pairs[] = array($t);
+    // standings array of all teams not disabled
+    $standings = array_filter(get_standings($tid), function ($t) { return ($t['status'] >= 0); });
+
+    // computer number of teams with a bye in winners bracket & losers bracket
+    $nbye_win  = pow(2, ceil(log(count($standings), 2))) - count($standings);
+    $nlose = (count($standings) - $nbye_win) / 2;
+    $nbye_lose = pow(2, ceil(log($nlose, 2))) - $nlose;
+    $sum_win  = count($standings) + $nbye_win + 1;
+
+    $lbracket  = array_filter($standings, function ($t) { return ($t['status'] == 1); });
+    $wbracket = array_filter($standings, function ($t) { return ($t['status'] == 2); });
+
+    // LOSERS' BRACKET MATCHES
+    if (count($lbracket) >= 2) {
+        // MAKE NEW POS CALCULATION
+        //   something that takes into account the whole t['result'] array for _when_ entered losers
+        array_multisort(array_map(function($t) {return $t['pos'];}, $lbracket), SORT_NUMERIC, $lbracket);
+
+        // if only new, we're in the first losers round, if count(old) = 2*count(new) then old only
+        $new = array_values(array_filter($lbracket, function ($t) { return (end($t['result']) == 0); }));
+        $old = array_values(array_filter($lbracket, function ($t) { return (end($t['result']) > 0); }));
+
+        
+        /*
+        echo "count(old) - count(new):  [".count($old)." - ".count($new)."]<br><br>\n";
+        $matches = array();
+        foreach($old as $idx => $team) {
+            $matches[] = array($old[$idx], $new[$idx]);
+            echo "OLD:\n";
+            print_r($old[$idx]);
+            echo "<br>\n";
+            echo "NEW:\n";
+            print_r($new[$idx]);
+            echo "<br>\n";
+            echo "<br>\n";
+        }
+        die();
+       */
+
+        // match everyone if we're a power of two
+        if (count($old) == 0) {
+            if (log(count($new), 2) == intval(log(count($new), 2)))
+                $matches = consec_matching($new);
+            else {
+                // else match everyone who doesn't have a bye
+                $matches = consec_matching(array_filter($new, function ($t) use ($nbye_lose, $sum_win) { return (abs($t['seed']-($sum_win/2)) > $nbye_lose); }));
+                // then add in the byes
+                $byes = array_filter($new, function ($t) use ($nbye_lose, $sum_win) { return (abs($t['seed']-($sum_win/2)) < $nbye_lose); });
+                foreach ($byes as $t)
+                    $matches[] = array($t);
+            }
+        }
+        elseif (count($old) > count($new)) {
+            $matches = consec_matching($old);
+        }
+        elseif (count($old) == count($new)) {
+            if (log(count($new),2) % 2) { $new = array_merge(array_slice($new, count($new)/2),array_slice($new, 0, count($new)/2)); }
+            $matches = array();
+            foreach($old as $idx => $team)
+                $matches[] = array($old[$idx], $new[$idx]);
+        }
+        else {
+            echo "##BAD:  number of teams dropping into losers bracket is greater than number of teams already there.<br>";
+            die();
+        }
+        // update the pairs list
+        $pairs=$matches;
+    }
+    else
+        $pairs = array();
     
+    // Finals Special!
+    if ((count($lbracket) == 1) && (count($wbracket) == 1)) {
+        $pairs[] = array_merge($lbracket, $wbracket);
+    }
 
-    $teams = array_filter($standings, function ($t) { return ($t['status'] == 2); });
-    // sort winners by pos
-    array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
-    // match those who don't have a bye
-    $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
-    $wmatch = consec_matching(array_filter($teams, function ($t) use ($nbye) { return ($t['seed'] > $nbye); }));
+    if (count($lbracket) <= 2*count($wbracket)) {
+        // WINNERS' BRACKET MATCHES [note: only do this on ... rnum=1,2,2n+1]
+        if (count($wbracket) < 2) return $pairs;
+
+        // sort winners by pos
+        array_multisort(array_map(function($t) {return $t['pos'];}, $wbracket), SORT_NUMERIC, $wbracket);
+        // [as above, match everyone if pow2, else figure out who has a bye and match accordingly]
+        if (log(count($wbracket), 2) == intval(log(count($wbracket), 2)))
+            $matches = consec_matching($wbracket);
+        else {
+            $matches = consec_matching(array_filter($wbracket, function ($t) use ($nbye_win) { return ($t['seed'] > $nbye_win); }));
+            $byes = array_filter($wbracket, function($t) use ($nbye_win) { return ($t['seed'] <= $nbye_win); });
+            foreach ($byes as $t)
+                $matches[] = array($t);
+        }
+        $pairs = array_merge($pairs, $matches);
+    }
+
     // add matches to the list
-    array_merge($pairs, $wmatch);
-    $byes = array_filter($teams, function($t) use ($nbye) { return ($t['seed'] <= $nbye); });
-    // add byes to list
-    foreach ($byes as $t)
-        $pairs[] = array($t);
-
     return $pairs;
+
 }
 
 // returns pairings for single elimination
@@ -144,7 +211,7 @@ function get_sglelim_pairings($tid) {
 function get_swiss_pairings($tid) {
     // $teams:  not disabled, ordered BEST TO WORST
     $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); } );
-    array_multisort(array_map(function($t) {return $t['place'];}, $teams), SORT_NUMERIC, $teams);
+    array_multisort(array_map(function($t) {return $t['index'];}, $teams), SORT_NUMERIC, $teams);
     $pairs = array();
 
     // TODO: instead of BYE... something?
