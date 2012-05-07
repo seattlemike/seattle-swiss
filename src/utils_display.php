@@ -119,7 +119,7 @@ function disp_tournaments($tlist, $dest='tournament.php') {
     else {
         echo "<table>\n";
         foreach ($tlist as $tourney) {
-            $date = date("m/d/Y", strtotime($tourney['tournament_date']));
+            $date = date("M d, Y", strtotime($tourney['tournament_date']));
             echo "<tr><td>$date</td><td>{$mode[$tourney['tournament_mode']]}</td>\n";
             // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
             // else                                       { $class = ''; }
