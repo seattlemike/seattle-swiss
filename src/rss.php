@@ -6,8 +6,17 @@
     require_once("utils_pairing.php");
     require_once("utils_standings.php");
 
+    // TODO:  this should be from an include somewhere.  maybe utils_common.  maybe sthg else
+    if (isset($_COOKIE[ini_get('session.name')])) 
+        session_start();
+
     $id = $_GET['id'];
-    if ((! $id) || (! tournament_ispublic($id)))
+
+    if (! $id)
+        header("location:/");
+
+    if (!( (check_login() && tournament_isadmin($id, $_SESSION['admin_id'])) ||
+           (tournament_ispublic($id)) ))
         header("location:/");
 
     $server_url="http://" . $_SERVER["SERVER_NAME"];
