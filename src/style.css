@@ -82,6 +82,8 @@ p, .line { margin: 0.5em 0 0.5em 0; }
 .centerBox {
     display: inline-block;
     min-width: 60%;
+    margin-left: 2em;
+    margin-right: 2em;
 }
 .textbox { 
     display: inline-block;

@@ -113,6 +113,7 @@ function disp_admin_tournament($t, $aid, $idx) {
 }
 
 function disp_tournaments($tlist, $dest='tournament.php') {
+    echo "<div class='mainBox'>\n";
     $mode = array("Swiss", "Single Elim", "Double Elim");
     if ((! $tlist) || (count($tlist) == 0))
         echo "<div class='header'>[no tournaments yet]</div>\n";
@@ -130,6 +131,7 @@ function disp_tournaments($tlist, $dest='tournament.php') {
         }
         echo "</table>\n";
     }
+    echo "</div>\n";
 }
 
 function disp_admins($t, $aid) {
@@ -222,24 +224,26 @@ function disp_standings($tid) {
     $nrounds = get_tournament_nrounds($tid);
 
     if ($nrounds == 0) {
+        echo "<div class='mainBox'>\n";
         echo "<div class='header playing'>Tournament not yet started</div>\n";
         disp_teams_list($tid);
+        echo "</div>\n";
     }
     else {
         if (tournament_is_over($tid)) $title = "Final Standings";
         else                       $title = "Standings [round $nrounds]";
         echo "<div class='header'>$title</div>\n";
         $mode = get_tournament_mode($tid);
-        if ($mode == 0)
+        if ($mode == 0) {
             disp_swiss($tid, $nrounds);
+        }
         elseif ($mode == 1) {
             disp_elim($tid);
-            echo "<div class='header'></div>\n";
             disp_places($tid);
         }
         elseif ($mode == 2) {
+        //    disp_elim($tid);
             disp_places($tid);
-            // TODO: double elimination
         }
     }
 }
@@ -247,11 +251,12 @@ function disp_standings($tid) {
 function disp_places($tid) {
     $standings = get_standings($tid);
     array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
+    echo "<div class='mainBox'>\n";
     echo "<table class='standings'><th>Rank</th><th>Team</th>";
     foreach ($standings as $t) {
         echo "<tr><td class='numeric'>{$t['rank']}</td><td>{$t['name']}</td></tr>";
     }
-    echo "</table>\n";
+    echo "</table>\n</div>\n";
 }
 
 function get_td_color($rnum, $pos) {
@@ -284,6 +289,7 @@ function disp_elim($tid) {
     $nrounds = ceil(log(count($standings),2));
     $bsize = pow(2, $nrounds);
 
+    echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
     echo "<tr><th>Seed</th><th colspan=".(3*$nrounds+2).">Results</th></tr>\n";
     echo "<tr><th colspan='".(3*$nrounds+3)."'> &nbsp;</th></tr>";
@@ -309,7 +315,7 @@ function disp_elim($tid) {
         }
         echo "</tr>\n";
     }
-    echo "</table>\n";
+    echo "</table>\n</div>\n";
 }
 
 function score_str($team, $i) {  // TODO need team id, then put self first
@@ -328,6 +334,7 @@ function disp_swiss($tid, $nrounds) {
     if (count($standings) == 0) { return; }
     array_multisort(array_map(function($t) {return $t['pos'];}, $standings), SORT_NUMERIC, $standings);
 
+    echo "<div class='mainBox'>\n";
     echo "<table class='swiss standings'>\n";
     echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th></tr>\n";
     echo "<tr><th colspan=2></th>\n";
@@ -348,7 +355,7 @@ function disp_swiss($tid, $nrounds) {
         echo "<td class='numeric'>{$team['cumulative']}</td>";
         echo "</tr>\n";
     }
-    echo "</table>\n";
+    echo "</table>\n</div>\n";
 }
 
 function disp_team_score($team) {

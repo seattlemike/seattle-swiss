@@ -15,7 +15,6 @@
 
 <div class="con">
     <div class="centerBox">
-        <div class="mainBox">
             <?php
             if (isset($_GET['super'])) {
                 require_privs(false);
@@ -27,7 +26,6 @@
             if ($tlist) 
                 disp_tournaments($tlist);
             ?>
-        </div>
         <div class="nav line">
             <a class="button" href="create_tournament.php">New Tournament</a>
         </div>
