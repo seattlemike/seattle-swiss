@@ -120,11 +120,15 @@ function disp_tournaments($tlist, $dest='tournament.php') {
     else {
         echo "<table>\n";
         foreach ($tlist as $tourney) {
+            echo "<tr>\n";
             $date = date("M d, Y", strtotime($tourney['tournament_date']));
-            echo "<tr><td>$date</td><td>{$mode[$tourney['tournament_mode']]}</td>\n";
+            echo "<td>$date</td><td>{$mode[$tourney['tournament_mode']]}</td>\n";
             // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
             // else                                       { $class = ''; }
             //echo "<div class='line'>\n";
+            echo "<td class='btnCtr'>\n";
+            echo "<a href='/rss/{$tourney['tournament_id']}/' title='Subscribe to Tournament RSS Feed'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
+            echo "</td>\n";
             echo "<td><a href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a></td>";
             echo "</tr>\n";
             //echo "</div>\n";

@@ -191,10 +191,22 @@ td.center{ text-align: center; }
     
 
     /* Links and Buttons */
+        .btnCtr {
+            min-width: 30px;
+            text-align: center;
+        }
+        .btnRSS {
+            background: url(/img/feed-icon-28x28.png) no-repeat;
+            height: 28px;
+            width: 28px;
+            display: block;
+        }
+
         a:visited, a:active, a:link {
             text-decoration:none;
             color: #224365;
         }
+
         .button:hover, a:hover { color: #68819b; }
 
         .button.disabled {
