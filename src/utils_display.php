@@ -81,10 +81,10 @@ function disp_tournament_details($tourney = null) {
 
     $modes = array("Swiss Rounds", "Single Elimination", "Double Elimination");
     $def = "class='wide' type='text' maxlength='40'";
-    $inputs = array("Name" => "<input $def name='tournament_name' value='{$tourney['tournament_name']}' />",
-                    "City" => "<input $def name='tournament_city' value='{$tourney['tournament_city']}' />",
+    $inputs = array("Name" => "<input $def name='tournament_name' value=\"{$tourney['tournament_name']}\" />",
+                    "City" => "<input $def name='tournament_city' value=\"{$tourney['tournament_city']}\" />",
                     "Date" => "<input $def name='tournament_date' value='$date' />", 
-                    "Mode" => "<input $def name='tournament_mode' value='{$modes[$tourney['tournament_mode']]}' DISABLED />",
+                    "Mode" => "<input $def name='tournament_mode' value=\"{$modes[$tourney['tournament_mode']]}\" DISABLED />",
                     "Public" => "<input type='checkbox' name='is_public' value='public' $ispublic />",
                     "Finished" => "<input type='checkbox' name='is_over' value='finished' $isover />");
                     
@@ -164,9 +164,9 @@ function disp_team_edit($team) {
 
     if (!$team['team_uid'])   { $team['team_uid'] = ""; }
     if (!$team['team_init'])  { $team['team_init'] = ""; }
-    echo "<td><input type='text' name='name_$tid' value='{$team['team_name']}'></td>\n";
-    echo "<td><input type='text' name='text_$tid' value='{$team['team_text']}'></td>\n";
-    echo "<td><input class='numeric' type='text' name='uid_$tid' value='{$team['team_uid']}'></td>\n";
+    echo "<td><input type='text' name='name_$tid' value=\"{$team['team_name']}\"></td>\n";
+    echo "<td><input type='text' name='text_$tid' value=\"{$team['team_text']}\"></td>\n";
+    echo "<td><input class='numeric' type='text' name='uid_$tid' value=\"{$team['team_uid']}\"></td>\n";
     echo "<td><input class='numeric' type='text' name='init_$tid' value='{$team['team_init']}'></td>\n";
 
     echo "<td>";

@@ -9,7 +9,8 @@
 			echo "<div class='header warning'>Wrong Email or Password</div>";
   }
   elseif ($_POST['action'] == 'create') {
-    list($status, $msg) = create_admin( $db, $_POST['email'], $_POST['name'], $_POST['location'], $_POST['password'] );
+    // on success, note about 'click link in verification email to enable account'
+    list($status, $msg) = admin_create($_POST);
 		if ($status)
 			echo "<div class='header warning'>Admin ".$_POST['name']." successfully created.</div>";
 		else

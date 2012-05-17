@@ -16,8 +16,11 @@
                 $redir || die("Failed tournament delete!");
             } else { $confirm='true'; }
         }
-        elseif ($_POST['action'] == 'update_tournament')
-            tournament_edit($_POST, $_SESSION['admin_id']);
+        elseif ($_POST['action'] == 'update_tournament') {
+            tournament_update($_POST, $_SESSION['admin_id']);
+            if (htmlspecialchars($_POST['tournament_name']) != $tname)
+                $redir='main_menu.php';
+        }
         elseif ($_POST['action'] == 'add_admin') {
             if (! tournament_add_admin($_POST, $_SESSION['admin_id']))
                 echo "<div class='header warning'>Failed to add admin</div>";

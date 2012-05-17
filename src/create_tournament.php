@@ -4,7 +4,7 @@
 	require_login();
 
     if ($_POST['action'] == 'new_tournament') {
-        if (create_tournament($_POST, $_SESSION['admin_id']))
+        if (tournament_create($_POST, $_SESSION['admin_id']))
             header("location:main_menu.php");
         else die("Failed to create new tournament");
     }

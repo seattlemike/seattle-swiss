@@ -83,16 +83,19 @@ function tournament_ispublic($tid) {
 // Admin functions
 //
 // returns (bool STATUS, str DETAILS)
-function create_admin($db, $email, $name, $city, $pass) {
-    $count = sql_select_one('SELECT COUNT(*) FROM tblAdmin WHERE admin_email = :email', array(':email' => $email));
+function admin_create($data) {
+    // TODO: validate data? 
+    //       should add admin to tblPending and move to tblAdmin on email confirmation
+    //       (email doesn't get htmlspecialchars - should we watch for injection?)
+    $count = sql_select_one('SELECT COUNT(*) FROM tblAdmin WHERE admin_email = :email', array(':email' => $data['email']));
     if (!$count)
-        return array(false, "Database access failed on create_admin attempt");
+        return array(false, "Database access failed on Admin Creation attempt");
     elseif ($count[0] > 0)
         return array(false, "Admin account with that email already exists");
-    // TODO: validate input data
     $success = sql_try('INSERT INTO tblAdmin (admin_name, admin_city, admin_pass, admin_type, admin_email) values (?,?,?,?,?)',
-                    array($name, $city, salt_pass($pass), "tournament", $email));
-    return array($success, "New admin INSERT");
+                       array(htmlspecialchars($data['name']), htmlspecialchars($data['location']), 
+                             salt_pass($data['password']), "tournament", $data['email']));
+    return array($success, "New admin entry added to database");
 }
 
 //
@@ -189,8 +192,8 @@ function tournament_remove_admin($data, $aid) {
     return sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($data['tournament_id'], $data['admin_id']));
 }
 
-function create_tournament($data, $aid) {
-    $bind_vars = array(':tname' => $data['tournament_name'],
+function tournament_create($data, $aid) {
+    $bind_vars = array(':tname' => htmlspecialchars($data['tournament_name']),
         ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
         ':aid' => $aid);
     if (in_array($data['tournament_mode'], range(0,2)))
@@ -207,10 +210,10 @@ function create_tournament($data, $aid) {
     return $success;
 }
 
-function tournament_edit($data, $aid) {
+function tournament_update($data, $aid) {
     require_privs(tournament_isadmin($data['tournament_id'], $aid));  //already done?
-    $bind_vars = array(':tname' => $data['tournament_name'],
-        ':tcity' => $data['tournament_city'],
+    $bind_vars = array(':tname' => htmlspecialchars($data['tournament_name']),
+        ':tcity' => htmlspecialchars($data['tournament_city']),
         ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
         ':tpub' => isset($data['is_public']),
         ':tover' => isset($data['is_over']),
@@ -389,12 +392,13 @@ function teams_import($data, $aid) {
     return $status;
 }
 
-//TODO: shouldn't fail silently on !$data['add_name']
+// ASSERT: require_privs($data['tournament_id'], $aid)
 function team_add($data) {
-    $bind_vars = array(':tname' => $data['name_add'], 
-                       ':tuid'  => $data['uid_add'], 
-                       ':tinit' => $data['init_add'], 
-                       ':ttext' => $data['text_add'], 
+    $bind_vars = array(':tname' => htmlspecialchars($data['name_add']), 
+                       ':tuid'  => htmlspecialchars($data['uid_add']), 
+                       ':tinit' => intval($data['init_add']), 
+                       ':ttext' => htmlspecialchars($data['text_add']), 
+
                        ':toid'  => $data['tournament_id']);
     $query = "INSERT INTO tblTeam (team_name, tournament_id, team_text, team_uid, team_init) 
               VALUES (:tname, :toid, :ttext, :tuid, :tinit)";
@@ -417,11 +421,12 @@ function team_update($data) {
     $tid = $data['team_id'];
     $bind_vars = array(':tid'   => $tid,
                        ':toid'  => $data["tournament_id"],
-                       ':tname' => $data["name_$tid"],
-                       ':tuid'  => $data["uid_$tid"],
-                       ':tinit' => $data["init_$tid"],
-                       ':ttext' => $data["text_$tid"]);
-    // checking both :tid and :toid against tid phishing
+
+                       ':tname' => htmlspecialchars($data["name_$tid"]),
+                       ':tuid'  => htmlspecialchars($data["uid_$tid"]),
+                       ':tinit' => intval($data["init_$tid"]),
+                       ':ttext' => htmlspecialchars($data["text_$tid"]));
+    // checking :tid/:toid against tournament_id phishing
     $success = sql_try("UPDATE tblTeam SET team_name = :tname, team_text = :ttext, team_uid = :tuid,
                         team_init = :tinit WHERE team_id = :tid AND tournament_id = :toid", $bind_vars);
     return $success;
