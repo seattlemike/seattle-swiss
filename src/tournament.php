@@ -111,6 +111,11 @@
                             echo "<option value='{$t['tournament_id']}'>{$t['tournament_name']}</option>";
                 ?>
                 </select>
+
+                <br>
+
+                Import teams from web URL <input type='text' name='imp_url' >
+
                 <input type='hidden' name='action' value='import_teams' />
                 <p><input class='button' type='submit' name='submit' value='Import' /></p>
            </form>

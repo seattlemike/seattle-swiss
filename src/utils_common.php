@@ -375,22 +375,65 @@ function team_delete($data) {
 }
 
 function teams_import($data, $aid) {
-    require_privs(tournament_isadmin($data['imp_tid'], $aid));
-    $standings = get_standings($data['imp_tid']);
+    $status = false;
 
-    array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
-    $imp = array_slice($standings,0,$data['imp_num']);
-    $status = true;
-    foreach ($imp as $k => $t) {
+    if (! $data['imp_tid'])
+        return false;
 
-        $status &= team_add( array('name_add' => $t['name'],
-                                   'uid_add'  => $t['uid'],
-                                   'init_add' => $k+1,
-                                   'text_add' => $t['text'],
-                                   'tournament_id' => $data['tournament_id']) );
+    if (intval($data['imp_num'] > 0)) {
+        require_privs(tournament_isadmin($data['imp_tid'], $aid));
+        $standings = get_standings($data['imp_tid']);
+
+        array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
+        $imp = array_slice($standings,0,intval($data['imp_num']));
+        $status = true;
+        foreach ($imp as $k => $t) {
+            $status &= team_add( array('name_add' => $t['name'],
+                                    'uid_add'  => $t['uid'],
+                                    'init_add' => $k+1,
+                                    'text_add' => $t['text'],
+                                    'tournament_id' => $data['tournament_id']) );
+        }
+    }
+    elseif (strlen($data['imp_url']))
+        $status = teams_import_xml($data);
+    return $status;
+}
+
+function validate_url($attempt) {
+    $allowed_schemes = array('http','https');
+    $url = parse_url($attempt);
+    if (! $url['host'])   return false;
+    if (! in_array($url['scheme'], $allowed_schemes))   return false;
+    $build_url = "{$url['scheme']}://{$url['host']}/{$url['path']}";
+    if ($url['query'])    $build_url="$build_url?{$url['query']}";
+    if ($url['fragment']) $build_url="$build_url#{$url['fragment']}";
+    return $build_url;
+}
+
+function teams_import_xml($data) {
+    // make sure we've got a well-formed url for import
+    $status = false;
+    $url = validate_url($data['imp_url']);
+    if ($url) {
+        $xml = simplexml_load_file($url);
+        if ($xml) {
+            $status = true;
+            $team = array('tournament_id' => $data['tournament_id'], 'init_add' => 0);
+            foreach ($xml->team as $t) {
+                $text = array();
+                foreach ($t->player as $p)
+                    $text[] = (string) $p;
+                $team['name_add'] = (string) $t['name'];
+                $team['uid_add'] = (string) $t['id'];
+                $team['text_add'] = implode($text, ", ");
+                $status &= team_add($team);
+            }
+        }
     }
     return $status;
 }
+
 
 // ASSERT: require_privs($data['tournament_id'], $aid)
 function team_add($data) {
