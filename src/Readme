@@ -17,8 +17,8 @@ Todo:
 
 Want:
   Auto add-matches for elim
-  Better import from other sections
-  Fault tolerance in XML team import [and maybe a link to the spec?]
+  #[sort of done]Better import from other sections
+  Some fault-checking in XML team import [and maybe a link to the spec?]
 
 ##### Apr 2012:
 

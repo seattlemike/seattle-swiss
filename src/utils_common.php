@@ -382,15 +382,19 @@ function teams_import($data, $aid) {
 
     if (intval($data['imp_num'] > 0)) {
         require_privs(tournament_isadmin($data['imp_tid'], $aid));
-        $standings = get_standings($data['imp_tid']);
+        $standings = get_standings($data['imp_tid'], true);
 
         array_multisort(array_map(function($t) {return $t['index'];}, $standings), SORT_NUMERIC, $standings);
         $imp = array_slice($standings,0,intval($data['imp_num']));
         $status = true;
         foreach ($imp as $k => $t) {
+            $nrounds = count($t['opponents']);
+            // calculate an init value that can be compared over multiple tournaments
+            if ($nrounds == 0) $init = $k+1;
+            else               $init = 1000*($k+1)+1000*(1 - $t['score'] / $nrounds) +100*(1 - $t['buchholz'] / ($nrounds * $nrounds))+10*(1 - $t['berger'] / ($nrounds * $nrounds));
             $status &= team_add( array('name_add' => $t['name'],
                                     'uid_add'  => $t['uid'],
-                                    'init_add' => $k+1,
+                                    'init_add' => intval($init),
                                     'text_add' => $t['text'],
                                     'tournament_id' => $data['tournament_id']) );
         }

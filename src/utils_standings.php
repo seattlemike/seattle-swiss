@@ -1,16 +1,32 @@
 <?php
 
-function make_rand ($seed ) {
-    srand($seed);
-    return rand();
-}
 
 // class used to calculate standings based on game results
 class stats {
     public $teams;
-    function __construct($tid) {
+    function __construct($tid, $teams = NULL) {
         $this->teams = array();
-        $this->mode = get_tournament_mode($tid);
+        if ($tid) {
+            $this->mode = get_tournament_mode($tid);
+            $this->tid = $tid;
+        }
+        if ($teams) {
+            foreach ($teams as $t)
+                $this->add_team($t);
+        }
+        $this->build_seeds();
+
+        switch ($this->mode) {
+            case 0:  // swiss
+                $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed');
+                break;
+            case 1:  // single-elim
+                $this->cmp_methods = array('get_score', 'get_seed');
+                break;
+            case 2:  // double-elim
+                $this->cmp_methods = array('get_lasted', 'get_seed');
+                break;
+        }
     }
     // adds team information to the stats array and initialize fields
     function add_team($team) {
@@ -19,41 +35,50 @@ class stats {
             array('name' => $team['team_name'], // team name
                 'id'   => $team['team_id'], // team id
                 'text' => $team['team_text'], // players' names
-                // -1 if disabled, 0 if eliminated, 1 or 2 if still in
+                'init' => $team['team_init'],
+                // -1 if disabled, 0 if eliminated, 1 or 2 if still in play
                 'status' => $team['is_disabled'] ? -1 : 2,
-                // initial seed if seed is set, otherwise rand(seed=team_id)
-                // seeding with team_id so the result is consistent
-                'init' => $team['team_init'] ? $team['team_init'] : make_rand($team['team_id']),
-                'rand' => make_rand($team['team_id']), // returns rand(seed=team_id)
                 'opponents' => array(), // list of opponents faced in order
                 'result' => array(), // outcomes of games in order
                 'score' => 0, // sum of results
                 'pos' => 0 ); // table row for the view
     }
 
-    // used to seed for single/double elim bracket
+    // create a master tiebreak from init and rand(seed=$team['team_id'])
     function build_seeds() {
-        // sort by $team['init'] and assign index+1 to $team['seed']
-        $teams = array_values($this->teams);
-        array_multisort(array_map(function($t) {return $t['init'];}, $teams), SORT_NUMERIC, $teams);
-        foreach ($teams as $idx => $t)
-        $this->teams[$t['id']]['seed'] = $idx + 1;
+        // max+1 of the init values
+        $upper = max(array_map(function($t) {return $t['init'];}, $this->teams)) + 1;
+
+        // three arrays to sort in parallel
+        $inits = array_map(function($t) use ($upper) { return ($t['init']) ? $t['init'] : $upper; }, $this->teams);
+        $rands = array_map(function($t) { return(crc32($t['id'])); }, $this->teams);
+        $teamids = array_keys($this->teams);
+
+        // sort the ids [ascending] by the first two arrays, and assign seeds accordingly
+        array_multisort($inits, SORT_NUMERIC, $rands, $teamids);
+        foreach ($teamids as $idx => $id)
+            $this->teams[$id]['seed'] = $idx + 1;
     }
 
     function add_result($game) {
         foreach ($game as $g)
-            $score[$g['team_id']] = $g['score'];
+            $scores[$g['team_id']] = $g['score'];
+
+        // if game is unfinished non-bye, return false
+        if ((count($scores) > 1) && (min($scores) < 0))
+            return false;
 
         if (count($game) == 1)
-            $this->add_team_result($game[0]['team_id'], 1, -1, $score);
+            $this->add_team_result($game[0]['team_id'], 1, -1, $scores);
         else {
             if ($game[0]['score'] < $game[1]['score'])      $res = array(0,1);
             else if ($game[0]['score'] > $game[1]['score']) $res = array(1,0);
             else                                            $res = array(0.5,0.5);
 
             foreach (array(0,1) as $idx)
-                $this->add_team_result($game[$idx]['team_id'], $res[$idx], $game[($idx+1)%2]['team_id'], $score);
+                $this->add_team_result($game[$idx]['team_id'], $res[$idx], $game[($idx+1)%2]['team_id'], $scores);
         }
+        return true;
     }
 
     function add_team_result($my_id, $res, $opp_id, $score) {
@@ -79,21 +104,10 @@ class stats {
     // Calculate standings and return array of teams sorted by Display Table Row
     function team_array() {
 
-        $this->build_seeds();
         $standings = array_values($this->teams);
-        if ($this->mode == 0) {  //swiss
-            $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed', 'get_rand');
-        }
-        elseif ($this->mode == 1) {   //single-elim
-            $this->cmp_methods = array('get_score', 'get_seed', 'get_rand');
-        }
-        elseif ($this->mode == 2) {   //double-elim
-            $this->cmp_methods = array('get_lasted', 'get_seed', 'get_rand');
-        }
 
         usort($standings, array($this, 'deep_cmp'));
 
-        // URGENT TODO
         //TODO: get rid of this partial ranking
         //  for everyone:  set $t['index'] = deep_cmp index
         //  for swiss: group by equal score, rank=index
@@ -158,10 +172,6 @@ class stats {
 
     function get_score($id) {
         return $this->teams[$id]['score'];
-    }
-
-    function get_rand($id) {
-        return $this->teams[$id]['rand'];
     }
     function get_seed($id) {
         return -1 * $this->teams[$id]['seed'];
@@ -245,16 +255,15 @@ class stats {
         }
         return $tb;
     }
+
+    function tiebreaks() {
+        foreach (array_keys($this->teams) as $id)
+            foreach ($this->cmp_methods as $method)
+                $this->$method($id);
+    }
 }
 
-// returns teams array indexed by team_id
-function order_by($ary, $idx) {
-  $ret = array();
-  foreach ($ary as $entry)
-    $ret[$entry[$idx]] = $entry;
-  return $ret;
-}
-
+// groups elements of $ary with element[$idx] as key
 function group_by($ary, $idx) {
   $ret = array();
   foreach ($ary as $entry)
@@ -262,27 +271,28 @@ function group_by($ary, $idx) {
   return $ret;
 }
 
-// teams ordered best to worst
-function get_standings($tid) {
-    $stats = new stats($tid);
+// from tournament_id, foreach round, foreach game, add game result to stats
+function build_stats($tid) {
     ($db = connect_to_db()) || die("Couldn't connect to database for tournament standings");
-
-    //TODO:  handle disabled v non-disabled for elim tournaments
-    // [redacted: ] add all non-disabled teams to $stats  //if (! $team['is_disabled'])
-    $team_query = "SELECT * FROM tblTeam WHERE tournament_id = :tid";
-    foreach (sql_select_all($team_query, array(":tid" => $tid), $db) as $team) 
-        $stats->add_team($team);
-  
-    foreach (sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number ASC", array(":tid" => $tid), $db)
-             as $round) {
-        $games = group_by(sql_select_all("SELECT * FROM tblGame JOIN tblGameTeams USING (game_id) WHERE tblGame.round_id = :rid", array(":rid" => $round['round_id']), $db),
-                      'game_id');
-        foreach ($games as $match)
-            if ((count($match) == 1) || min($match[0]['score'], $match[1]['score']) >= 0)
-                $stats->add_result($match);
+    //TODO:  handle disabled v non-disabled for elim tournaments?
+    $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid", array(":tid" => $tid), $db);
+    $stats = new stats($tid, $teams);
+    
+    $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number ASC", array(":tid" => $tid), $db);
+    foreach ($rounds as $r) {
+        // TODO: should SELECT WHERE tblGame.finished = true
+        $games = sql_select_all("SELECT * FROM tblGame JOIN tblGameTeams USING (game_id) WHERE tblGame.round_id = :rid", array(":rid" => $r['round_id']), $db);
+        foreach (group_by($games, 'game_id') as $match)
+            $stats->add_result($match);
     }
-  
     $db = null;
+    return $stats;
+}
+
+// teams ordered best to worst
+function get_standings($tid, $tiebreaks = false) {
+    $stats = build_stats($tid);
+    if ($tiebreaks) $stats->tiebreaks();
     return $stats->team_array();
 }
 
