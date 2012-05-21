@@ -154,8 +154,10 @@ td.right { text-align: right; }
 td.center{ text-align: center; }
 
 /* Run Tournament */
-    .rematch { background: #9af; }
+    .losers, .rematch { background: #9af; }
     .played { background: #ccc; }
+    .played.losers { background: #aaa; }
+
     .playing { background: #ebb; }
     .game * { vertical-align: middle; }
     .middle { vertical-align: bottom; }

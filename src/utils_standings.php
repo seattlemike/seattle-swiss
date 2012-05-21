@@ -21,7 +21,7 @@ class stats {
                 $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed');
                 break;
             case 1:  // single-elim
-                $this->cmp_methods = array('get_score', 'get_seed');
+                $this->cmp_methods = array('get_lasted', 'get_seed');
                 break;
             case 2:  // double-elim
                 $this->cmp_methods = array('get_lasted', 'get_seed');
@@ -101,70 +101,68 @@ class stats {
         }
     }
 
+    function bracket_index($teams, $tricky = false) {
+        // TRICKY: takes into account all of t['result'] for losers bracket teams
+        // TODO: write TRICKY part
+
+        // iterate over seeds
+        array_multisort(array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
+        $teams[0]['bracket_idx'] = 0; // root position
+
+        $bsize = pow(2, (int) ceil(log(count($teams),2)));
+        foreach ($teams as $idx => $t) {
+            if ($idx > 0) {
+                $c = pow(2, (int) ceil(log($idx+1,2)));
+                $del = $bsize / $c;
+                $teams[$idx]['bracket_idx'] = $teams[$c - ($idx+1)]['bracket_idx'] + $del;
+            }
+            $this->teams[$t['id']]['bracket_idx'] = $teams[$idx]['bracket_idx'];
+        }
+    }
+
+    // make 'rank' equal for all teams who have the same value for ['$field']
+    function level_ranks($field) {
+        $teams = array_values($this->teams);
+        array_multisort(array_map(function($t) {return $t['rank'];}, $teams), SORT_NUMERIC, $teams);
+        
+        foreach($teams as $idx => $t) {
+            if (isset($prev) && ($prev[$field] == $t[$field])) {
+                $this->teams[$t['id']]['rank'] = $prev['rank'];
+                $t['rank'] = $prev['rank'];
+            }
+            $prev = $t;
+        }
+    }
+
     // Calculate standings and return array of teams sorted by Display Table Row
     function team_array() {
-
         $standings = array_values($this->teams);
 
-        usort($standings, array($this, 'deep_cmp'));
-
-        //TODO: get rid of this partial ranking
-        //  for everyone:  set $t['index'] = deep_cmp index
-        //  for swiss: group by equal score, rank=index
-        //  for elims: rank by get_lasted
+        // TODO: I think faster would be an array_multisort with a long list of all tiebreaks...
+        //       but that wouldn't have the nice side-effect of populating only those tiebreak fields
+        //       that were used in the comparison
+        usort($standings, array($this, 'deep_cmp'));  // sort with tie-breaks
 
         foreach($standings as $idx => $t)
-            $this->teams[$t['id']]['index'] = $idx+1;
+            $this->teams[$t['id']]['rank'] = $idx+1;
 
-        if ($this->mode > 0) {
-            foreach($standings as $idx => $t) {
-                $t['lasted'] = $this->get_lasted($t['id']);
-                if (isset($prev) && ($prev['lasted'] == $t['lasted']))
-                    $t['rank'] = $prev['rank'];
-                else
-                    $t['rank'] = $idx+1;
-
-                $this->teams[$t['id']]['lasted'] = $t['lasted'];
-                $this->teams[$t['id']]['rank']   = $t['rank'];
-                $prev = $t;
-            }
-        }
-
-        
-        if ($this->mode == 0) { //swiss
-            foreach ($standings as $idx => $t)
-                $this->teams[$t['id']]['pos'] = $idx;
-        }
-        elseif ($this->mode == 1) { //single-elim
-            //now re-sort by seed to generate positions
-            array_multisort(array_map(function($t) {return $t['seed'];}, $standings), SORT_NUMERIC, $standings);
-            $standings[0]['pos'] = 0; //redundant
-
-            $bsize = pow(2, ceil(log(count($standings),2)));
-            foreach ($standings as $idx => $t) {
-                if ($idx > 0) {
-                    $c = pow(2,ceil(log($idx+1,2)));
-                    $del = $bsize / $c;
-                    $standings[$idx]['pos'] = $standings[$c - ($idx+1)]['pos'] + $del;
-                    $this->teams[$t['id']]['pos'] = $standings[$idx]['pos'];
-                }
-            }
-        }
-        elseif ($this->mode == 2) { //double-elim
-            //oh no!
-            array_multisort(array_map(function($t) {return $t['seed'];}, $standings), SORT_NUMERIC, $standings);
-            $standings[0]['pos'] = 0; //redundant
-
-            $bsize = pow(2, ceil(log(count($standings),2)));
-            foreach ($standings as $idx => $t) {
-                if ($idx > 0) {
-                    $c = pow(2,ceil(log($idx+1,2)));
-                    $del = $bsize / $c;
-                    $standings[$idx]['pos'] = $standings[$c - ($idx+1)]['pos'] + $del;
-                    $this->teams[$t['id']]['pos'] = $standings[$idx]['pos'];
-                }
-            }
-            
+        switch ($this->mode) {
+            case 0:  //swiss
+                // anything?
+                break;
+            case 1:  // single-elim
+                $this->level_ranks('lasted');
+                $this->bracket_index($this->teams);
+                break;
+            case 2:  // and double-elim
+                $this->level_ranks('lasted');
+                $wbracket = array_filter($this->teams, function ($t) { return ($t['status'] == 2); });
+                $this->bracket_index($wbracket, false);
+                $lbracket = array_filter($this->teams, function ($t) { return ($t['status'] == 1); });
+                $this->bracket_index($lbracket, true); // tricky!
+                break;
+            default:
+                debug_error(200, "Unexpected tournament mode", "team_array");
         }
 
         return array_values($this->teams);
@@ -177,6 +175,9 @@ class stats {
         return -1 * $this->teams[$id]['seed'];
     }
     function get_lasted($id) {
+        if (isset($this->teams[$id]['lasted']))  // return cached result if we have one
+            return $this->teams[$id]['lasted'];
+
         $sum = ($this->teams[$id]['result'][0] < 1) ? 1 : 0;
         $del = 2;
         foreach ($this->teams[$id]['result'] as $r) {
@@ -185,6 +186,8 @@ class stats {
             else
                 $sum += $del;
         }
+
+        $this->teams[$id]['lasted'] = $sum;  // cache for later
         return $sum;
     }
 

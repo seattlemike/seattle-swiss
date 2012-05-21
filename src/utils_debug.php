@@ -1,5 +1,11 @@
 <?php
 
+function debug_error( $errnum, $msg, $fname=null) {
+    $msg = "<div class='warning'>Error $errnum" . ($fname ? " [$fname]" : "") . ": $msg</div>\n";
+    echo $msg;
+    die();
+}
+
 function dump_array( $a ) {
   echo "<table>";
   foreach ($a as $k => $v)
