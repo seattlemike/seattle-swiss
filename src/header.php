@@ -5,7 +5,7 @@
 
 //Globals we might be using for our display:
 //  $header_text : displayed in topHeader bar
-//  $title_text  : goes after Seattle Swiss in <title>
+//  $title_text  : goes after 20Swiss in <title>
 //  $page_name   : way of id'ing where we are currently
 
 // Someone's server complained until I did this.  lcdradio, I think
@@ -72,7 +72,7 @@ if (isset($title_text) && (! isset($header_text)))  { $header_text = $title_text
         <link rel='stylesheet' type='text/css' href='/style.css' />
         <script src="swiss.js" type="text/javascript"></script>
         <?php 
-            $title = "Seattle Swiss";
+            $title = "20Swiss";
             if (isset($title_text)) { $title .= " : $title_text"; }
         ?>
         <title><?echo $title;?></title>  

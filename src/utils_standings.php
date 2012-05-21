@@ -1,7 +1,16 @@
 <?php
 
+// TODO: rewrite class structure to utilize inheritance
+//         class swiss_tourney   extends stats
+//         class robin_tourney   extends stats
+//         class elim_stats      extends stats
+//         class sglelim_tourney extends elim_stats
+//         class dblelim_tourney extends elim_stats
+//       then we can offload things like elim_stats into their own utils_elim.php
+//         and get rid of all these switch ($this->mode) {} statements
 
-// class used to calculate standings based on game results
+
+// stats class used to calculate standings based on game results
 class stats {
     public $teams;
     function __construct($tid, $teams = NULL) {

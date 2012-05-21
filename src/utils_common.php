@@ -23,6 +23,7 @@ function require_privs($stmt, $warning='') {
 
 // checks to see if an admin is set
 function check_login() {
+    // MIKE TODO IMMEDIATE timeout here
     return isset($_SESSION['admin_id']);
 }
 
@@ -33,16 +34,44 @@ function require_login() {
     }
 }
 
+// generate hash and email for password reset / initial email confirmation
+function email_confirm ( $aid ) {
+    // TODO: ResetInterval / MaxnReset from utils_settings.php?
+    $MaxnReset = 2;      // at most [2] password resets allowed
+    $ResetInterval = 6;  // in any [6] hour window
+
+    $admin = sql_select_one('SELECT * FR6 hours?OM tblAdmin WHERE admin_id = :aid', array(':aid' => $admin_id));
+    $preset = sql_select_one('SELECT COUNT(*) FROM tblPassReset WHERE admin_id = :aid AND request_time > NOW() - :interval', 
+                             array(':aid' => $admin_id, ':interval' => $ResetInterval * 3600));
+    if ($preset[0] >= $MaxnReset)
+        debug_error(900, "At most $MaxnReset password reset attempt(s) allowed in any $ResetInterval hour span");
+    else {
+        $confirmation = md5($admin['admin_pass']);
+        $success = sql_try('INSERT INTO tblPassReset(admin_name, admin_city, admin_pass, admin_type, admin_email) values (?,?,?,?,?)',
+                       array(htmlspecialchars($data['name']), htmlspecialchars($data['location']), 
+                             salt_pass($data['password']), "tournament", $data['email']));
+        
+    }
+    
+    // check timestamp of last request to change password - max [2?] request in [6?] hrs
+    // generate an unpredictable string (maybe md5 of last password hash) and add to [tblPassReset? tblAdmin?]
+    // new page checks confirm=[hash] and gives a new password entry box [or two, for confirm]
+    // [maybe new page will be the settings page, and the hash will let the user bypass the pass-check]
+}
+
+
+
+
 // returns credentials row or FALSE if no matches
 function get_credentials($user, $pass) {
     return sql_select_one('SELECT * FROM tblAdmin WHERE admin_email = :name and admin_pass = :pass',
-            array(':name' => $user, ':pass' => salt_pass($pass)));
+            array(':name' => strtolower($user), ':pass' => salt_pass($pass)));
 }
 
 function login($user, $pass) {
     if ($creds = get_credentials($user, $pass)) {
-        //TODO: should make sure that a second session_start isn't going to ever
-        //      be an issue
+        //TODO: should check session_start documentation to make sure that a (potential)
+        //      second call to the function without session_end isn't going to ever be an issue
         session_start();
         $_SESSION['admin_id'] = $creds['admin_id'];
         $_SESSION['admin_type'] = $creds['admin_type'];
@@ -294,24 +323,20 @@ function tournament_insert_score($gid, $tid, $score=-1, $db=null) {
                         array($gid, $tid, $score), $db);
 }
 
+// Add a tournament game to the database
 function tournament_add_game($rid, $list, $db=null) {
-    echo "## Add game";
+    ($db) || ($db = connect_to_db());  // make sure we've got a connection
+
+    // deletes bye v bye, and makes team v bye into just array(team)
+    // TODO: don't like.  should've already done this. it's just here for manual game add
     foreach ($list as $idx => $team) {
         if ((! isset($team['id'])) || ($team['id'] == -1))
             unset($list[$idx]);
     }
     if (count($list) == 0) return;
-    
-    ($db) || ($db = connect_to_db());  // make sure we've got a connection
 
     $gid = sql_insert("INSERT INTO tblGame (round_id) VALUES (:rid)", array(":rid" => $rid), $db);
     $gid || die("failed game insert while populating round");
-
-    // MIKE DEBUG
-    if (count($list) == 1)
-        echo "## Adding a game that's a bye";
-
-
     if (count($list) == 1)  $score = 0;
     else                    $score = -1;
     foreach ($list as $team)

@@ -14,35 +14,43 @@
         require_login();
         require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
 
-        if ($_POST['action'] == 'add_round') {
-            if ($rid=tournament_add_round($tid))
-                header("location:play_tournament.php?id=$tid&round_id=$rid");
-        } 
-        elseif ($_POST['action'] == 'update_score') {
-            //TODO validate:  $game_id is a member of tournament $tid
-            tournament_update_score($_POST['game_id'], $_POST);
-        } 
-        elseif ($_POST['action'] == 'remove_round') {
-            if (tournament_delete_round($rid, $_SESSION['admin_id']))
-                header("location:play_tournament.php?id=$tid");
-        }
-        elseif ($_POST['action'] == 'empty_round') {
-            tournament_empty_round($rid, $_SESSION['admin_id']);
-        }
-        elseif ($_POST['action'] == 'populate_round') {
-            //TODO URGENT: only "next round" if doesn't already exist
-            $pop_rid = tournament_populate_round($tid, $_POST['populate_id'], $_SESSION['admin_id']);
-            if ($pop_rid != $rid)
-                header("location:play_tournament.php?id=$tid&round_id=$pop_rid");
-        }
-        elseif ($_POST['action'] == 'add_game') {
-            tournament_add_game($rid, array( array("id" => $_POST['team_a']), array( "id" => $_POST['team_b']) ));
-        }
-        elseif ($_POST['action'] == 'toggle_oncourt') {
-            tournament_toggle_court($_POST['game_id']);
-        }
-        elseif ($_POST['action'] == 'delete_game') {
-            tournament_delete_game($_POST['game_id']);
+        switch ($_POST['action']) {
+            case 'add_round':
+                if ($rid=tournament_add_round($tid))
+                    header("location:play_tournament.php?id=$tid&round_id=$rid");
+                break;
+            case 'update_score':
+                //TODO validate:  $game_id is a member of tournament $tid
+                tournament_update_score($_POST['game_id'], $_POST);
+                break;
+            case 'remove_round':
+                // TODO validate: make sure $rid in $tid
+                if (tournament_delete_round($rid, $_SESSION['admin_id']))
+                    header("location:play_tournament.php?id=$tid");
+                break;
+            case 'empty_round':
+                // TODO validate: make sure $rid in $tid
+                tournament_empty_round($rid, $_SESSION['admin_id']);
+                break;
+            case 'populate_round':
+                //URGENT
+                //MIKE TODO IMMEDIATE: only "next round" if doesn't already exist
+                $pop_rid = tournament_populate_round($tid, $_POST['populate_id'], $_SESSION['admin_id']);
+                if ($pop_rid != $rid)
+                    header("location:play_tournament.php?id=$tid&round_id=$pop_rid");
+                break;
+            case 'add_game':
+                // TODO validate: make sure team_id is a member of tournament
+                tournament_add_game($rid, array( array("id" => $_POST['team_a']), array( "id" => $_POST['team_b']) ));
+                break;
+            case 'toggle_oncourt':
+                // TODO validate: make sure game_id is a member of tournament
+                tournament_toggle_court($_POST['game_id']);
+                break;
+            case 'delete_game':
+                // TODO validate: make sure game_id is a member of tournament
+                tournament_delete_game($_POST['game_id']);
+                break;
         }
     }
 

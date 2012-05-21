@@ -188,10 +188,9 @@ function get_dblelim_pairings($tid) {
 
 // returns pairings for single elimination
 function get_sglelim_pairings($tid) {
-    // undefeated teams, sorted BY GAME ORDER
     $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); });
 
-    if (count($teams) < 2) return array();  //bail if we've got fewer than 2 teams
+    if (count($teams) < 2) return array();  // bail if we've got fewer than 2 teams
     array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
 
     if (log(count($teams), 2) == intval(log(count($teams), 2))) {

@@ -8,7 +8,7 @@
     <div class='centerBox textbox'>
         <div class='mainBox'> 
             <div class="header">About Tournaments</div>
-            <p>Seattle Swiss is Tournament Software, meant as a flexible, robust system to 
+            <p>20Swiss ("Two Oh Swiss") is Tournament Software, meant as a flexible, robust system to 
             coordinate rounds in which teams are paired up for matches.  It's simple and it's free,
             but it's still solidly in that in-development phase.  We do <a
             href="http://en.wikipedia.org/wiki/Swiss-system_tournament">Swiss-style</a> pairing

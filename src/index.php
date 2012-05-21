@@ -1,5 +1,5 @@
 <?php 
-$header_text = "Seattle Swiss";
+$header_text = "Two Oh Swiss";
 include("header.php"); 
 ?>
 
