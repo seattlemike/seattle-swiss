@@ -13,7 +13,7 @@ Todo:
   Auto-detect tourney done
   Finish no-rematches-alg for swiss
   add/update team and set/update score should return to anchor links
-  Fix Session-Timeout [before we've been kicked but after timeout we can still do >= 1 thing]
+  #[done] Fix Session-Timeout [before we've been kicked but after timeout we can still do >= 1 thing]
 
 Want:
   Auto add-matches for elim

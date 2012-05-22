@@ -24,7 +24,6 @@ ob_start();
 // Don't start session unless we've already logged in as an Admin
 if (isset($_COOKIE[ini_get('session.name')])) {
     session_start();
-
     if (check_login()) {
         // Check that we haven't timed out our login
         if (isset($_SESSION['timeout']) && (max_session_life() < (time() - $_SESSION['timeout'])))

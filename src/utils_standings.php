@@ -49,6 +49,7 @@ class stats {
                 'status' => $team['is_disabled'] ? -1 : 2,
                 'opponents' => array(), // list of opponents faced in order
                 'result' => array(), // outcomes of games in order
+                'rounds' => array(), // array of round data TODO IMMEDIATE: rename
                 'score' => 0, // sum of results
                 'pos' => 0 ); // table row for the view
     }
@@ -69,44 +70,58 @@ class stats {
             $this->teams[$id]['seed'] = $idx + 1;
     }
 
-    function add_result($game) {
-        foreach ($game as $g)
+    function simple_cmp($a, $b) {
+        if ($a > $b) return 1;  // win
+        else         return ($a < $b) ? 0 : 0.5;  // loss : tie
+    }
+
+    // ASSERT: count($game) > 0
+    function add_result($game, $rnum) {
+        foreach ($game as $idx => $g) {
             $scores[$g['team_id']] = $g['score'];
+            $game[$idx]['name'] = $this->teams[$g['team_id']]['name'];
+        }
+        if (min($scores) < 0) return false;  // unfinished, so don't add result
 
-        // if game is unfinished non-bye, return false
-        if ((count($scores) > 1) && (min($scores) < 0))
-            return false;
-
-        if (count($game) == 1)
-            $this->add_team_result($game[0]['team_id'], 1, -1, $scores);
-        else {
-            if ($game[0]['score'] < $game[1]['score'])      $res = array(0,1);
-            else if ($game[0]['score'] > $game[1]['score']) $res = array(1,0);
-            else                                            $res = array(0.5,0.5);
-
-            foreach (array(0,1) as $idx)
-                $this->add_team_result($game[$idx]['team_id'], $res[$idx], $game[($idx+1)%2]['team_id'], $scores);
+        switch (count($game)) {
+            case 1:
+                $bye = array('team_id' => -1, 'score' => -1, 'name' => 'BYE');
+                $this->add_team_result($game[0], $bye, $scores, $rnum);
+                break;
+            case 2:
+                $this->add_team_result($game[0], $game[1], $scores, $rnum);
+                $this->add_team_result($game[1], $game[0], $scores, $rnum);
+                break;
+            default:
+                debug_error(201,"Unexpected number of teams in game_id {$game[0]['game_id']}","add_result");
         }
         return true;
     }
 
-    function add_team_result($my_id, $res, $opp_id, $score) {
-        if ($opp_id == -1) $opp_name = "BYE";
-        else               $opp_name = $this->teams[$opp_id]['name'];
-        //echo "add team result $my_id, $res, $opp_id<br>";
-        $this->teams[$my_id]['opponents'][] = $opp_id;
-        $this->teams[$my_id]['opp_name'][] = $opp_name;
-        $this->teams[$my_id]['result'][] = $res;
-        $this->teams[$my_id]['score'] += $res;
-        $this->teams[$my_id]['games'][] = $score;
+    function add_team_result($a, $b, $score, $rnum) {
+        $id = $a['team_id'];
+        $res = $this->simple_cmp($a['score'], $b['score']);
 
-        if ($this->mode == 1) {     // single-elim, 2=bracket 0=eliminated
-            if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
-                $this->teams[$my_id]['status'] = 0;
-        }
-        elseif ($this->mode == 2) {  // double-elim, 2=winners 1=loser 0=eliminated 
-            if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
-                $this->teams[$my_id]['status']--;
+        $this->teams[$id]['opponents'][] = $b['team_id'];
+        $this->teams[$id]['opp_name'][]  = $b['name'];
+        $this->teams[$id]['result'][]    = $res;
+        $this->teams[$id]['score']      += $res;
+        $this->teams[$id]['games'][]     = $score;
+        $this->teams[$id]['rounds'][]    = array('rnum'     => $rnum, 
+                                                 'res'      => $res, 
+                                                 'score'    => $score, 
+                                                 'opp_name' => $b['name'],
+                                                 'opp_id'   => $b['team_id'] );
+
+        switch ($this->mode) {
+            case 1:  // single-elim, 2=bracket 0=eliminated
+                if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
+                    $this->teams[$my_id]['status'] = 0;
+                break;
+            case 2:  // double-elim, 2=winners 1=loser 0=eliminated 
+                if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
+                    $this->teams[$my_id]['status']--;
+                break;
         }
     }
 
@@ -285,7 +300,7 @@ function group_by($ary, $idx) {
 
 // from tournament_id, foreach round, foreach game, add game result to stats
 function build_stats($tid) {
-    ($db = connect_to_db()) || die("Couldn't connect to database for tournament standings");
+    ($db = connect_to_db()) || debug_error("Couldn't connect to database for tournament standings");
     //TODO:  handle disabled v non-disabled for elim tournaments?
     $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid", array(":tid" => $tid), $db);
     $stats = new stats($tid, $teams);
@@ -293,9 +308,12 @@ function build_stats($tid) {
     $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number ASC", array(":tid" => $tid), $db);
     foreach ($rounds as $r) {
         // TODO: should SELECT WHERE tblGame.finished = true
-        $games = sql_select_all("SELECT * FROM tblGame JOIN tblGameTeams USING (game_id) WHERE tblGame.round_id = :rid", array(":rid" => $r['round_id']), $db);
-        foreach (group_by($games, 'game_id') as $match)
-            $stats->add_result($match);
+        $games = sql_select_all("SELECT g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = :rid", array(":rid" => $r['round_id']), $db);
+        foreach (group_by($games, 'game_id') as $match) {
+
+            if (min(array_map( function ($s) { return $s['score']; }, $match )) > -1)
+                $stats->add_result($match, $r['round_number']);
+        }
     }
     $db = null;
     return $stats;

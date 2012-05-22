@@ -23,7 +23,6 @@ function require_privs($stmt, $warning='') {
 
 // checks to see if an admin is set
 function check_login() {
-    // MIKE TODO IMMEDIATE timeout here
     return isset($_SESSION['admin_id']);
 }
 
@@ -86,6 +85,8 @@ function logout() {
     setcookie(ini_get('session.name'),'',1,'/');
     session_destroy();
     header("location:index.php");
+    ob_end_flush();
+    die();
 }
 
 // checks to see if the admin logged in has privileges for the tournament
