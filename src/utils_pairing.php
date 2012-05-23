@@ -215,7 +215,8 @@ function get_sglelim_pairings($tid) {
 function get_swiss_pairings($tid) {
     // $teams:  not disabled, ordered BEST TO WORST
     $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); } );
-    array_multisort(array_map(function($t) {return $t['index'];}, $teams), SORT_NUMERIC, $teams);
+    array_multisort(array_map(function($t) {return $t['rank'];}, $teams), SORT_NUMERIC, $teams);
+
     $pairs = array();
 
     // TODO: instead of BYE... something?

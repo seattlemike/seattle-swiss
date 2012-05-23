@@ -1,20 +1,19 @@
 <?php
 
+function debug_alert( $str ) {
+    echo "<div class='warning'>$str</div>\n";
+}
+
 function debug_error( $errnum, $msg, $fname=null) {
-    $msg = "<div class='warning'>Error $errnum" . ($fname ? " [$fname]" : "") . ": $msg</div>\n";
-    echo $msg;
+    debug_alert("Error $errnum" . ($fname ? " [$fname]" : "") . ": $msg");
     die();
 }
 
 function dump_array( $a ) {
-  echo "<table>";
-  foreach ($a as $k => $v)
-    echo "<tr><td>$k</td><td>$v</td></tr>";
-  echo "</table>";
-}
-
-function debug_alert( $str ) {
-  echo "<h3>$str</h3><br>\n";
+    echo "<table>";
+    foreach ($a as $k => $v)
+        echo "<tr><td>$k</td><td>$v</td></tr>";
+    echo "</table>";
 }
 
 function debug_phpinfo() {

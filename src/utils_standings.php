@@ -49,7 +49,7 @@ class stats {
                 'status' => $team['is_disabled'] ? -1 : 2,
                 'opponents' => array(), // list of opponents faced in order
                 'result' => array(), // outcomes of games in order
-                'rounds' => array(), // array of round data TODO IMMEDIATE: rename
+                'results' => array(), // array of round data
                 'score' => 0, // sum of results
                 'pos' => 0 ); // table row for the view
     }
@@ -107,11 +107,13 @@ class stats {
         $this->teams[$id]['result'][]    = $res;
         $this->teams[$id]['score']      += $res;
         $this->teams[$id]['games'][]     = $score;
-        $this->teams[$id]['rounds'][]    = array('rnum'     => $rnum, 
+        $this->teams[$id]['results'][]   = array('rnum'     => $rnum, 
                                                  'res'      => $res, 
                                                  'score'    => $score, 
                                                  'opp_name' => $b['name'],
-                                                 'opp_id'   => $b['team_id'] );
+                                                 'opp_id'   => $b['team_id'],
+                                                 'score'    => array($a['score'], $b['score']),
+                                                 );
 
         switch ($this->mode) {
             case 1:  // single-elim, 2=bracket 0=eliminated

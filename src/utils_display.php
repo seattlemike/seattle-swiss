@@ -326,12 +326,8 @@ function disp_elim($tid) {
 
 function score_str($result) {  // TODO need team id, then put self first
     $s = $result['score'];
-    if (count($s) > 1) {
-        // making use of implode order -- should do better
-        $s[0] = $s[$result['opp_id']];
-        unset($s[$result['opp_id']]);
+    if (count($s) > 1)
         return implode(" - ", $s)." vs {$result['opp_name']}";
-    }
     else 
         return "BYE";
 }
@@ -359,7 +355,8 @@ function disp_swiss($tid, $nrounds) {
         echo "<td class='bold'><span title='{$team['text']}'>{$team['name']}</span></td>\n";
         for ($i = 0; $i < $nrounds; $i++) {
             echo "<td class='numeric'>";
-            $results = array_filter($team['rounds'], function ($r) use ($i) { return $r['rnum'] == $i+1; });
+            // results from round $i
+            $results = array_filter($team['results'], function ($r) use ($i) { return $r['rnum'] == $i+1; });
             if (count($results)) {
                 $result_str = array_map(function ($r) { return score_str($r); }, $results);
                 echo "<span class='result' title='".implode("\n",$result_str)."'>";
