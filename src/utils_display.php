@@ -271,21 +271,6 @@ function get_td_color($rnum, $pos) {
     return $color;
 }
 
-function disp_color_td($team, $round, $y) {
-    $mod = pow(2, $round+2);
-    $div = pow(2, $round+1);
-    $color = intval(($y % $mod) / $div) ? "light" : "dark";
-
-    echo "<td class='$color'>";
-    echo "<div class='result' title='{$team['text']}'>{$team['name']}</div>";
-    echo "</td>\n";
-    echo "<td class='$color numeric'>";
-    if (($team['opponents'][$round] != -1) && ($team['id'] != -1))   // Game is not a BYE
-        echo "<div class='score'>{$team['games'][$round][$team['id']]}</div>";
-    echo "</td>\n";
-}
-
-
 function disp_elim($tid) {
     $standings = get_standings($tid);
 
@@ -310,24 +295,21 @@ function disp_elim($tid) {
         }
     }
 
-    // $bracket is ordered by columns (rounds), so let's order by rows for $table
-
+    // $bracket is ordered by columns (rounds), $table will be ordered by table-row
     // initialize table with $bsize many blank rows
     $table = array_map(function ($r) {return array();}, range(1, $bsize));
     // loop through bracket columns and add to appropriate table row
-    foreach ($bracket as $rnum => $results) {
-        foreach ($results as $i => $r) {
-            $table[$i][$rnum] = $r;
+    foreach ($bracket as $colnum => $results) {
+        foreach ($results as $rownum => $r) {
+            $table[$rownum][$colnum] = $r;
         }
     }
 
-    // display that table!
     echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
     echo "<tr><th>Seed</th><th colspan=".(3*$nrounds+2).">Results</th></tr>\n";
     echo "<tr><th colspan='".(3*$nrounds+3)."'> &nbsp;</th></tr>";
-    // MIKE TODO IMMEDIATE
-    //$bye = array( 'id' => -1, 'name' => 'BYE', 'result' => array() );
+    // TODO: do we want any text for BYE games?
     foreach ($table as $idx => $row) {
         echo "<tr>";
         echo "<td class='numeric'>{$team['seed']}</td>\n";
@@ -346,9 +328,10 @@ function disp_team($team, $rnum) {
 
     echo "<td class='$color'>\n";
     if ($team)
-        echo "<div class='result' title='{$team['text']}'>{$team['name']}</div>";
+        echo "<div class='result' title=\"{$team['text']}\">{$team['name']}</div>";
     echo "</td>\n<td class='numeric $color'>\n";
-    if ($team && $team['results'][$rnum])
+    // disp score if $team, and 'results'[$rnum] , and not BYE
+    if ($team && $team['results'][$rnum] && ($team['results'][$rnum]['opp_id'] != -1))
         echo "<div class='score'>{$team['results'][$rnum]['score'][0]}</div>";
     echo "</td>\n";
 }
@@ -378,14 +361,14 @@ function disp_swiss($tid, $nrounds) {
     foreach ($standings as $rank => $team) {
         echo "<tr>";
         echo "<td class='numeric'>".($rank+1)."</td>";
-        echo "<td class='bold'><span title='{$team['text']}'>{$team['name']}</span></td>\n";
+        echo "<td class='bold'><span title=\"{$team['text']}\">{$team['name']}</span></td>\n";
         for ($i = 0; $i < $nrounds; $i++) {
             echo "<td class='numeric'>";
             // results from round $i
             $results = array_filter($team['results'], function ($r) use ($i) { return $r['rnum'] == $i+1; });
             if (count($results)) {
                 $result_str = array_map(function ($r) { return score_str($r); }, $results);
-                echo "<span class='result' title='".implode("\n",$result_str)."'>";
+                echo "<span class='result' title=\"".implode("\n",$result_str)."\">";
                 echo implode("/", array_map(function ($r) { return $r['res']; }, $results));
                 echo "</span>\n";
             }
@@ -407,7 +390,7 @@ function disp_team_score($team) {
         $score = $team['score'];
 
     echo "<div class='team'>";
-    echo "<span title='{$team['team_text']}'>{$team['team_name']}</span>\n";
+    echo "<span title=\"{$team['team_text']}\">{$team['team_name']}</span>\n";
     echo "<br><input type='text' class='short' name='score_{$team['team_id']}' value='$score'} />";
     echo "</div>";
 
