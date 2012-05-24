@@ -51,7 +51,7 @@ class stats {
                 'result' => array(), // outcomes of games in order
                 'results' => array(), // array of round data
                 'score' => 0, // sum of results
-                'pos' => 0 ); // table row for the view
+                ); // table row for the view ['pos'] deleted!
     }
 
     // create a master tiebreak from init and rand(seed=$team['team_id'])
@@ -117,23 +117,23 @@ class stats {
 
         switch ($this->mode) {
             case 1:  // single-elim, 2=bracket 0=eliminated
-                if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
-                    $this->teams[$my_id]['status'] = 0;
+                if (($res < 1) && ($this->teams[$id]['status'] > 0))
+                    $this->teams[$id]['status'] = 0;
                 break;
             case 2:  // double-elim, 2=winners 1=loser 0=eliminated 
-                if (($res < 1) && ($this->teams[$my_id]['status'] > 0))
-                    $this->teams[$my_id]['status']--;
+                if (($res < 1) && ($this->teams[$id]['status'] > 0))
+                    $this->teams[$id]['status']--;
                 break;
         }
     }
 
     function bracket_index($teams, $tricky = false) {
         // TRICKY: takes into account all of t['result'] for losers bracket teams
-        // TODO: write TRICKY part
+        // TODO IMMEDIATE: write TRICKY part
 
         // iterate over seeds
         array_multisort(array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
-        $teams[0]['bracket_idx'] = 0; // root position
+        $teams[0]['bracket_idx'] = 0; // root position for top team
 
         $bsize = pow(2, (int) ceil(log(count($teams),2)));
         foreach ($teams as $idx => $t) {

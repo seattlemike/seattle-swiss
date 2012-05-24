@@ -168,7 +168,7 @@ function get_dblelim_pairings($tid) {
         if (count($wbracket) < 2) return $pairs;
 
         // sort winners by pos
-        array_multisort(array_map(function($t) {return $t['pos'];}, $wbracket), SORT_NUMERIC, $wbracket);
+        array_multisort(array_map(function($t) {return $t['bracket_idx'];}, $wbracket), SORT_NUMERIC, $wbracket);
         // [as above, match everyone if pow2, else figure out who has a bye and match accordingly]
         if (log(count($wbracket), 2) == intval(log(count($wbracket), 2)))
             $matches = consec_matching($wbracket);
@@ -191,7 +191,7 @@ function get_sglelim_pairings($tid) {
     $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); });
 
     if (count($teams) < 2) return array();  // bail if we've got fewer than 2 teams
-    array_multisort(array_map(function($t) {return $t['pos'];}, $teams), SORT_NUMERIC, $teams);
+    array_multisort(array_map(function($t) {return $t['bracket_idx'];}, $teams), SORT_NUMERIC, $teams);
 
     if (log(count($teams), 2) == intval(log(count($teams), 2))) {
         return consec_matching($teams);
