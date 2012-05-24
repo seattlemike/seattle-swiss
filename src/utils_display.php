@@ -326,16 +326,13 @@ function disp_elim($tid) {
 
 function score_str($result) {  // TODO need team id, then put self first
     $s = $result['score'];
-    if (count($s) > 1)
-        return implode(" - ", $s)." vs {$result['opp_name']}";
-    else 
+    if ($result['opp_id'] == -1)
         return "BYE";
+    else 
+        return implode(" - ", $s)." vs {$result['opp_name']}";
 }
 
 function disp_swiss($tid, $nrounds) {
-    //MIKE TODO IMMEDIATE:  make sure results actually sit in the round in which they occur
-    //  what if a team plays twice in a round?  
-    //     then: highlight and display the full results in title-text
     $standings = get_standings($tid);
     if (count($standings) == 0) { return; }
     array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
