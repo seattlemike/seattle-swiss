@@ -235,10 +235,9 @@ function disp_standings($tid) {
     }
     else {
         if (tournament_is_over($tid)) $title = "Final Standings";
-        else                       $title = "Standings [round $nrounds]";
+        else                          $title = "Standings [round $nrounds]";
         echo "<div class='header'>$title</div>\n";
-        $mode = get_tournament_mode($tid);
-        switch ($mode) {
+        switch (get_tournament_mode($tid)) {
             case 0:
                 disp_swiss($tid, $nrounds);
                 break;
@@ -287,41 +286,72 @@ function disp_color_td($team, $round, $y) {
 }
 
 
-// standings are BEST TO WORST
 function disp_elim($tid) {
     $standings = get_standings($tid);
 
-    array_multisort(array_map(function($t) {return $t['bracket_idx'];}, $standings), SORT_NUMERIC, $standings);
-    $nrounds = ceil(log(count($standings),2));
+    $bracket = array();
+    $nrounds = intval(ceil(log(count($standings),2)));
     $bsize = pow(2, $nrounds);
 
+    // build the display $bracket
+    foreach (range(0, $nrounds) as $rnum) {
+        $bracket[$rnum] = array();
+        $psize = pow(2, $rnum);
+        foreach ($standings as $t) {
+            if (($rnum == 0) || ($t['results'][$rnum-1]['res'])) {
+                $idx = $t['bracket_idx'];
+
+                $is_upper = ($idx % (2 * $psize)) - ($idx % $psize);
+                if ($is_upper)
+                    $offset = -1 * ($idx % $psize);
+                else
+                    $offset = (($psize-1-$idx) % $psize);
+                $bracket[$rnum][$idx+$offset] = $t;
+            }
+        }
+    }
+
+    // $bracket is ordered by columns (rounds), so let's order by rows for $table
+
+    // initialize table with $bsize many blank rows
+    $table = array_map(function ($r) {return array();}, range(1, $bsize));
+    // loop through bracket columns and add to appropriate table row
+    foreach ($bracket as $rnum => $results) {
+        foreach ($results as $i => $r) {
+            $table[$i][$rnum] = $r;
+        }
+    }
+
+    // display that table!
     echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
     echo "<tr><th>Seed</th><th colspan=".(3*$nrounds+2).">Results</th></tr>\n";
     echo "<tr><th colspan='".(3*$nrounds+3)."'> &nbsp;</th></tr>";
-    // Pad table with 'blank's up to bsize for nice pow2 display
-    $bye = array( 'id' => -1, 'name' => 'BYE', 'result' => array() );
-    $blank = array( 'id' => -1, 'result' => array() );
-    foreach (range(0, $bsize-1) as $pos) {
-        if ($standings[$pos-$del]['bracket_idx'] != $pos) {
-            $table[] = $bye;
-            $del++;
-        } else
-            $table[] = $standings[$pos-$del];
-    }
-    foreach ($table as $idx => $team) {
+    // MIKE TODO IMMEDIATE
+    //$bye = array( 'id' => -1, 'name' => 'BYE', 'result' => array() );
+    foreach ($table as $idx => $row) {
         echo "<tr>";
         echo "<td class='numeric'>{$team['seed']}</td>\n";
-
-        disp_color_td($team, 0, $idx);
-        for ($i = 0; $i < $nrounds; $i++) {
-            echo "<td class='spacer'></td>";  //spacer
-            if ($team['result'][$i]) disp_color_td($team, $i+1, $idx);
-            else                     disp_color_td($blank, $i+1, $idx);
+        foreach (range(0, $nrounds) as $rnum) {
+            disp_team($row[$rnum], $rnum, get_td_color($rnum, $idx));
         }
         echo "</tr>\n";
     }
     echo "</table>\n</div>\n";
+}
+
+function disp_team($team, $rnum, $color) {
+    $color = get_td_color(0, $team['bracket_idx']);
+    if ($rnum) echo "<td class='spacer'></td>\n";
+    if (! $team) $color = "";
+
+    echo "<td class='$color'>\n";
+    if ($team)
+        echo "<div class='result' title='{$team['text']}'>{$team['name']}</div>";
+    echo "</td>\n<td class='numeric $color'>\n";
+    if ($team && $team['results'][$rnum])
+        echo "<div class='score'>{$team['results'][$rnum]['score'][0]}</div>";
+    echo "</td>\n";
 }
 
 function score_str($result) {  // TODO need team id, then put self first
