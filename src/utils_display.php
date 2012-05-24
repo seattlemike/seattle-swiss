@@ -297,15 +297,14 @@ function disp_elim($tid) {
     foreach (range(0, $nrounds) as $rnum) {
         $bracket[$rnum] = array();
         $psize = pow(2, $rnum);
+        if ($rnum == $nrounds) // for the tournament winner, keep in line with previous round's entry
+            $psize /= 2;
         foreach ($standings as $t) {
             if (($rnum == 0) || ($t['results'][$rnum-1]['res'])) {
                 $idx = $t['bracket_idx'];
-
                 $is_upper = ($idx % (2 * $psize)) - ($idx % $psize);
-                if ($is_upper)
-                    $offset = -1 * ($idx % $psize);
-                else
-                    $offset = (($psize-1-$idx) % $psize);
+                if ($is_upper) $offset = -1 * ($idx % $psize);
+                else           $offset = (($psize-1-$idx) % $psize);
                 $bracket[$rnum][$idx+$offset] = $t;
             }
         }
@@ -332,18 +331,18 @@ function disp_elim($tid) {
     foreach ($table as $idx => $row) {
         echo "<tr>";
         echo "<td class='numeric'>{$team['seed']}</td>\n";
-        foreach (range(0, $nrounds) as $rnum) {
-            disp_team($row[$rnum], $rnum, get_td_color($rnum, $idx));
-        }
+        foreach (range(0, $nrounds) as $rnum)
+            disp_team($row[$rnum], $rnum);
         echo "</tr>\n";
     }
     echo "</table>\n</div>\n";
 }
 
-function disp_team($team, $rnum, $color) {
-    $color = get_td_color(0, $team['bracket_idx']);
+function disp_team($team, $rnum) {
     if ($rnum) echo "<td class='spacer'></td>\n";
-    if (! $team) $color = "";
+
+    if ($team)
+        $color = get_td_color(0, $team['bracket_idx']);
 
     echo "<td class='$color'>\n";
     if ($team)
