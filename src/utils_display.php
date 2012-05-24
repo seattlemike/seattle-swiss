@@ -307,14 +307,13 @@ function disp_elim($tid) {
 
     echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
-    echo "<tr><th>Seed</th><th colspan=".(3*$nrounds+2).">Results</th></tr>\n";
+    echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*$nrounds).">Results</th></tr>\n";
     echo "<tr><th colspan='".(3*$nrounds+3)."'> &nbsp;</th></tr>";
     // TODO: do we want any text for BYE games?
     foreach ($table as $idx => $row) {
         echo "<tr>";
-        echo "<td class='numeric'>{$team['seed']}</td>\n";
-        foreach (range(0, $nrounds) as $rnum)
-            disp_team($row[$rnum], $rnum);
+        foreach (range(0, $nrounds) as $colnum)
+            disp_team($row[$colnum], $colnum);
         echo "</tr>\n";
     }
     echo "</table>\n</div>\n";
@@ -323,17 +322,19 @@ function disp_elim($tid) {
 function disp_team($team, $rnum) {
     if ($rnum) echo "<td class='spacer'></td>\n";
 
-    if ($team)
+    if ($team) {
         $color = get_td_color(0, $team['bracket_idx']);
+        echo "<td class='$color'>";
+        echo "<span class='tiny'>{$team['seed']}</span>";
+        echo "<span class='result' title=\"{$team['text']}\">{$team['name']}</span> </td>\n";
+        echo "<td class='numeric $color'>\n";
+        if ($team['results'][$rnum] && ($team['results'][$rnum]['opp_id'] != -1))
+            echo "<span class='score'>{$team['results'][$rnum]['score'][0]}</span>";
+        echo "</td>\n";
+    }
+    else
+        echo "<td colspan=2></td>";
 
-    echo "<td class='$color'>\n";
-    if ($team)
-        echo "<div class='result' title=\"{$team['text']}\">{$team['name']}</div>";
-    echo "</td>\n<td class='numeric $color'>\n";
-    // disp score if $team, and 'results'[$rnum] , and not BYE
-    if ($team && $team['results'][$rnum] && ($team['results'][$rnum]['opp_id'] != -1))
-        echo "<div class='score'>{$team['results'][$rnum]['score'][0]}</div>";
-    echo "</td>\n";
 }
 
 function score_str($result) {  // TODO need team id, then put self first

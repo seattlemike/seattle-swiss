@@ -121,6 +121,13 @@ td {
 td.spacer  { min-width: 5px; }
 td.numeric { min-width: 40px; }
 td.numeric { text-align: center; }
+.tiny{ 
+    font-size: 0.9em;
+    padding-right: 0.5em;
+    font-style: italic;
+    position: relative;
+    top: 0.3em;
+}
 
 .twocolor tr:nth-child(2n) { background: #ddd; }
 .twocolor tr:nth-child(2n+1) { background: #aaa; }
@@ -149,7 +156,7 @@ td.numeric { text-align: center; }
 /*  TODO: get rid of these ASAP */
 table { border-collapse:collapse; }
 table.list { width: 100%; }
-th { text-align: center; padding: 0.2em; }
+th { text-align: center; padding: 0.2em; font-size: 1.2em; }
 td { padding: 0 5px 0 5px; }
 td.right { text-align: right; }
 td.center{ text-align: center; }
