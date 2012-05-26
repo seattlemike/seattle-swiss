@@ -109,10 +109,10 @@ class stats {
         $this->teams[$id]['games'][]     = $score;
         $this->teams[$id]['results'][]   = array('rnum'     => $rnum, 
                                                  'res'      => $res, 
-                                                 'score'    => $score, 
                                                  'opp_name' => $b['name'],
                                                  'opp_id'   => $b['team_id'],
                                                  'score'    => array($a['score'], $b['score']),
+                                                 'status'   => $this->teams[$id]['status'],
                                                  );
 
         switch ($this->mode) {
@@ -127,22 +127,36 @@ class stats {
         }
     }
 
+    //TODO (IMMEDIATE?): bracket_idx for winners, loser_idx[$rnum] for losers?
     function bracket_index($teams, $tricky = false) {
-        // TRICKY: takes into account all of t['result'] for losers bracket teams
-        // TODO IMMEDIATE: write TRICKY part
+        if (! count($teams)) return;
 
-        // iterate over seeds
+        $bsize = pow(2, (int) ceil(log(count($teams),2)));
         array_multisort(array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
         $teams[0]['bracket_idx'] = 0; // root position for top team
 
-        $bsize = pow(2, (int) ceil(log(count($teams),2)));
+        // iterate over teams in seed order with ever smaller $del hops
         foreach ($teams as $idx => $t) {
+            // bracket_idx
             if ($idx > 0) {
                 $c = pow(2, (int) ceil(log($idx+1,2)));
                 $del = $bsize / $c;
                 $teams[$idx]['bracket_idx'] = $teams[$c - ($idx+1)]['bracket_idx'] + $del;
             }
             $this->teams[$t['id']]['bracket_idx'] = $teams[$idx]['bracket_idx'];
+            //loser_idx
+
+            $this->teams[$t['id']]['loser_idx'] = 2*$teams[$idx]['bracket_idx'];
+            foreach ($t['results'] as $r) {
+                if ($r['res'] == 0) {
+                    // MIKE IMMEDIATE DEBUG
+                    //debug_alert($t['name']." lost on round {$r['rnum']}");
+                    if (($r['rnum'] == 2) || (($r['rnum'] > 1) && ($r['rnum'] % 4 == 2)))
+                        $this->teams[$t['id']]['loser_idx'] = 2*($bsize - $teams[$idx]['bracket_idx']) - 1;
+                }
+            }
+            //MIKE IMMEDIATE DEBUG
+            //debug_alert("w_idx: {$teams[$idx]['bracket_idx']}, l_idx: {$this->teams[$t['id']]['loser_idx']}");
         }
     }
 
@@ -182,10 +196,12 @@ class stats {
                 break;
             case 2:  // and double-elim
                 $this->level_ranks('lasted');
+                $this->bracket_index($this->teams);
+                // foreach ($lbracket as $t) {
+                //
+                break;
                 $wbracket = array_filter($this->teams, function ($t) { return ($t['status'] == 2); });
                 $this->bracket_index($wbracket, false);
-                $lbracket = array_filter($this->teams, function ($t) { return ($t['status'] == 1); });
-                $this->bracket_index($lbracket, true); // tricky!
                 break;
             default:
                 debug_error(200, "Unexpected tournament mode", "team_array");

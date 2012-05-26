@@ -242,11 +242,13 @@ function disp_standings($tid) {
                 disp_swiss($tid, $nrounds);
                 break;
             case 1:
-                disp_elim($tid);
+                disp_sglelim($tid);
                 disp_places($tid);
                 break;
-            default:
+            case 2:
+                //disp_dblelim($tid);
                 disp_places($tid);
+                break;
         }
     }
 }
@@ -271,9 +273,22 @@ function get_td_color($rnum, $pos) {
     return $color;
 }
 
-function disp_elim($tid) {
-    $standings = get_standings($tid);
+function disp_dblelim($tid) {
+    // final => special display at the top
 
+    $teams = get_standings($tid);
+    // winners bracket
+    disp_elim($teams);
+
+    // losers bracket
+    //  augh.
+}
+
+function disp_sglelim($tid) {
+    disp_elim(get_standings($tid));
+}
+
+function disp_elim($standings) {
     $bracket = array();
     $nrounds = intval(ceil(log(count($standings),2)));
     $bsize = pow(2, $nrounds);
@@ -289,7 +304,7 @@ function disp_elim($tid) {
                 $idx = $t['bracket_idx'];
                 $is_upper = ($idx % (2 * $psize)) - ($idx % $psize);
                 if ($is_upper) $offset = -1 * ($idx % $psize);
-                else           $offset = (($psize-1-$idx) % $psize);
+                else           $offset = $psize-1-($idx % $psize);
                 $bracket[$rnum][$idx+$offset] = $t;
             }
         }
@@ -309,7 +324,6 @@ function disp_elim($tid) {
     echo "<table class='elim standings'>\n";
     echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*$nrounds).">Results</th></tr>\n";
     echo "<tr><th colspan='".(3*$nrounds+3)."'> &nbsp;</th></tr>";
-    // TODO: do we want any text for BYE games?
     foreach ($table as $idx => $row) {
         echo "<tr>";
         foreach (range(0, $nrounds) as $colnum)
@@ -321,7 +335,7 @@ function disp_elim($tid) {
 
 function disp_team($team, $rnum) {
     if ($rnum) echo "<td class='spacer'></td>\n";
-
+    if (!$rnum && !$team) $team = array("name" => "BYE");
     if ($team) {
         $color = get_td_color(0, $team['bracket_idx']);
         echo "<td class='$color'>";
@@ -412,8 +426,10 @@ function disp_game($game, $t) {
     $gid = $game['game_id'];
     $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid", array(":gid" => $gid), $t['db']);
 
-    if (array_product(array_map('check_team_score', $teams)))
+    if (array_product(array_map('check_team_score', $teams))) {
+        $is_finished = true;
         $outer = "played";
+    }
     else {
         if ($t['mode'] == 0)  // flag rematches with blue if we're in SWISS mode
             if (game_is_rematch($teams)) $outer = "rematch";
@@ -450,7 +466,7 @@ function disp_game($game, $t) {
 
     if ($t['isadmin']) {
         echo "<div class='team'>";
-        if ($outer == 'played')
+        if ($is_finished)
             disp_tournament_button('Update', 'update_score');
         else {
             disp_toggle_button($gid, $game['playing'] ? "1" : "");

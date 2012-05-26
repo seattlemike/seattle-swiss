@@ -84,79 +84,56 @@ function tournament_get_pairings($tid) {
     }
 }
 
-function bracket_match($teams) {
-
-    debug_error(0, "Please write function", "bracket_match");
-
-    if (pow(2, intval(log(count($teams), 2))) != count($teams))
-        debug_error(101, "Expected power of 2 many teams", "bracket_match");
-
-    // calculate pos vals?
-
-    // returns an array of $nbye-many teams with ['seed'] closest to $center
-    if (log(count($new), 2) == intval(log(count($new), 2)))
-        $matches = consec_matching($new);
-    else {
-        $matches = consec_matching(array_filter($new, 
-                      function ($t) use ($nbye_lose, $sum_win) 
-                              { return (abs($t['seed']-($sum_win/2)) > $nbye_lose); }));
-        // then add in the byes
-        $byes = array_filter($new, function ($t) use ($nbye_lose, $sum_win) 
-                                       { return (abs($t['seed']-($sum_win/2)) < $nbye_lose); });
-        foreach ($byes as $t)
-            $matches[] = array($t);
-    }
-}
-
+//TODO MIKE IMMEDIATE
 function get_dblelim_pairings($tid) {
-    // standings array of all teams not disabled
     $standings = array_filter(get_standings($tid), function ($t) { return ($t['status'] >= 0); });
-
-    // number of teams with a first-round bye in each of winners bracket & losers bracket
-    $n = pow(2, intval(log(count($standings),2)));
-    $msg .= "2^intval(log_2(count)): $n\n<br>type: ".gettype($n)."\n";
-    debug_error(0, $msg);
-
-    $nbye_win  = count($standings) - pow(2, ceil(log(count($standings), 2))) - count($standings);
-    $nlose = (count($standings) - $nbye_win) / 2;
-    $nbye_lose = pow(2, ceil(log($nlose, 2))) - $nlose;
-    $sum_win  = count($standings) + $nbye_win + 1;
 
     $lbracket = array_filter($standings, function ($t) { return ($t['status'] == 1); });
     $wbracket = array_filter($standings, function ($t) { return ($t['status'] == 2); });
 
     // LOSERS' BRACKET MATCHES
-    if (count($lbracket) >= 2) {
-        // sort by what index we are in the losers bracket
-        array_multisort(array_map(function($t) {return $t['bracket_idx'];}, $lbracket), SORT_NUMERIC, $lbracket);
+    if (count($lbracket) < 2)
+        $pairs = array();
+    else {
+        // flip bracket_idx on odd-rounds to avoid rematches
+        // if (log(count($new),2) % 2) { $new = array_merge(array_slice($new, count($new)/2),array_slice($new, 0, count($new)/2)); }
+        
         // newly minted losers / existing losers
-        $new = array_values(array_filter($lbracket, function ($t) { return (end($t['result']) == 0); }));
-        $old = array_values(array_filter($lbracket, function ($t) { return (end($t['result']) > 0); }));
+        $new = array_values(array_filter($lbracket, function ($t) { $a = end($t['results']); return ($a['res'] == 0); }));
+        $old = array_values(array_filter($lbracket, function ($t) { $a = end($t['results']); return ($a['res'] > 0); }));
 
         // if count(old) = 2*count(new) then old v old
         // if count(old) = count(new)   then old v new
         // if count(old) = 0            then new v new [Round2, the first losers round]
         if (count($old) == 0) {  // Round2
+            // compute number of teams with a first-round bye in each of winners bracket & losers bracket
+            $n = pow(2, (int) ceil(log(count($standings),2))-1);
+            $nbye_win = 2 * $n - count($standings);
+            $nlose = count($standings) - $n;
+            $nbye_lose = $n - $nlose;
+            $seed_center = (count($standings) + $nbye_win + 1) / 2;
+            //MIKE IMMEDIATE DEBUG print statement
+            //debug_alert( "n: $n, nteams: ".count($standings).", nbye_win: $nbye_win, seed_center: $seed_center, nlose: $nlose, nbye_lose: $nbye_lose");
+
             // for n teams with k byes, give byes to those seeded closest to (n-k)/2
             //   i.e. whoever would be the highest seeded _if games go according to seed_
-            $matches = bracket_match($new);  // possible byes
+            if ($nbye_lose)
+                $bye_filter = function ($t) use ($nbye_lose, $seed_center) { return (abs($t['seed']-$seed_center) > $nbye_lose); };
+            $matches = bracket_match($new, 'loser_idx', $bye_filter);
         }
         elseif (count($old) == 2*count($new)) {
-            $matches = consec_matching($old);
+            $matches = bracket_match($old, 'loser_idx');
         }
         elseif (count($old) == count($new)) {
-            if (log(count($new),2) % 2) { $new = array_merge(array_slice($new, count($new)/2),array_slice($new, 0, count($new)/2)); }
-            $matches = array();
-            foreach($old as $idx => $team)
-                $matches[] = array($old[$idx], $new[$idx]);
+            $matches = bracket_match(array_merge($old, $new), 'loser_idx');
         }
-        else
+        else {
+            debug_alert("LIKELY: round 3 has byes in losers bracket.  FIX");
             debug_error(100, "Unexpected number of old/new losers bracket teams", "get_dblelim_pairings");
+        }
         // update the pairs list
         $pairs=$matches;
     }
-    else
-        $pairs = array();
     
     // Finals Special!
     if ((count($lbracket) == 1) && (count($wbracket) == 1)) {
@@ -186,26 +163,56 @@ function get_dblelim_pairings($tid) {
 
 }
 
-// returns pairings for single elimination
-function get_sglelim_pairings($tid) {
-    $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); });
-
+function bracket_match($teams, $sort_field, $bye_filter=null) {
     if (count($teams) < 2) return array();  // bail if we've got fewer than 2 teams
-    array_multisort(array_map(function($t) {return $t['bracket_idx'];}, $teams), SORT_NUMERIC, $teams);
 
-    if (log(count($teams), 2) == intval(log(count($teams), 2))) {
-        return consec_matching($teams);
-    } else {
-        // filter out all teams ranked at least nbye, pair the rest
-        $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
-        $pairs = consec_matching(array_filter($teams, function ($t) use ($nbye) { return ($t['seed'] > $nbye); }));
-        $byes = array_filter($teams, function($t) use ($nbye) { return ($t['seed'] <= $nbye); });
-        foreach ($byes as $t)
-            $pairs[] = array($t);
-        return $pairs;
+    /*
+    debug_alert("Sort field: $sort_field"); 
+    debug_alert("unsorted teams");
+    foreach($teams as $t) {
+        debug_alert($t['name'].": ".$t[$sort_field]);
+        print_r($t);
     }
+    */
+
+    // sort $teams by [$sort_field]
+    array_multisort(array_map(function($t) use ($sort_field) {return $t[$sort_field];}, $teams), SORT_NUMERIC, $teams);
+
+    // determine byes using $bye_filter callback
+    if ($bye_filter) {
+        $to_pair = array_filter($teams, $bye_filter);
+        $to_bye = array_filter($teams, function ($t) use ($bye_filter) { return (! $bye_filter($t)); });
+    }
+    else {
+        $to_pair = $teams;
+        $to_bye = array();
+    }
+    /*
+    MIKE IMMEDIATE DEBUG
+    debug_alert("<br>To pair ".count($to_pair).":<br>");
+    print_r($to_pair);
+    debug_alert("<br>To bye ".count($to_bye).":<br>");
+    print_r($to_bye);
+    die();
+    */
+    
+    // match pairs, encapsulate the byes, and return the two arrays merged
+    $pairs = consec_matching($to_pair);
+    $byes  = array_map(function ($t) { return array($t); }, $to_bye);
+    return array_merge($pairs, $byes);
 }
 
+// returns pairings for single elimination
+function get_sglelim_pairings($tid) {
+    $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 1); });
+
+    // filter out all teams ranked at least nbye, pair the rest
+    $nbye = pow(2, ceil(log(count($teams), 2))) - count($teams);
+    $bye_filter = function ($t) use ($nbye) { return ($t['seed'] > $nbye); };
+    return bracket_match($teams, 'bracket_idx', $bye_filter);
+}
+
+// MIKE TODO IMMEDIATE:  implement?  ugh.
 // NEW IDEA:  goal is to avoid eventual rematches in the bottom chunk of the tourney
 //  create a weighted edge-graph - teams as vertices, edges for teams who have not yet met
 //    higher weights for less desirable pairings
