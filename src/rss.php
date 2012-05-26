@@ -41,7 +41,7 @@
 
 <?php  //ASSERT: ispublic($id)
 
-function disp_team($team, $s, $r) {
+function rss_disp_team($team, $s, $r) {
     echo "<polo:team>\n";
     $out = array( "uid" => $team['team_uid'], 
                   "name" => $team['team_name'], 
@@ -58,7 +58,7 @@ function disp_item($scores, $teams, $game_id) {
     echo "<item>\n";
     if (count($scores) == 1) {
         echo "<title>{$teams[$scores[0]['team_id']]['team_name']} gets a bye</title>\n";
-        disp_team($teams[$scores[0]['team_id']], -1, 1);
+        rss_disp_team($teams[$scores[0]['team_id']], -1, 1);
     }
     // result should be derived in some more clever way
     elseif (count($scores) > 1) {
@@ -68,7 +68,7 @@ function disp_item($scores, $teams, $game_id) {
         $scale = count(array_filter($scores, function ($s) use ($max) { return $s['score'] == $max; }));
         //count(array_filter($scores, function ($s) { return ($s['score'] == $max); }));
         foreach($scores as $s)
-            disp_team($teams[$s['team_id']], $s['score'], ($s['score'] == $max) ? (1/$scale) : 0);
+            rss_disp_team($teams[$s['team_id']], $s['score'], ($s['score'] == $max) ? (1/$scale) : 0);
 
         if ($scale > 1)
             $text = "Tie game: $max-$max";
