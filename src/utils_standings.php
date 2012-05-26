@@ -143,16 +143,19 @@ class stats {
                 $del = $bsize / $c;
                 $teams[$idx]['bracket_idx'] = $teams[$c - ($idx+1)]['bracket_idx'] + $del;
             }
-            $this->teams[$t['id']]['bracket_idx'] = $teams[$idx]['bracket_idx'];
-            //loser_idx
 
-            $this->teams[$t['id']]['loser_idx'] = 2*$teams[$idx]['bracket_idx'];
+            $this->teams[$t['id']]['bracket_idx'] = $teams[$idx]['bracket_idx'];
+            $this->teams[$t['id']]['loser_idx']   = 2 * $teams[$idx]['bracket_idx'];
+
+            // for teams entering loser_bracket, flip on R2, R5, R9, ..., R[4n+1]
+            //  (i.e. flip every other time) to stretch time between rematches
             foreach ($t['results'] as $r) {
                 if ($r['res'] == 0) {
                     // MIKE IMMEDIATE DEBUG
                     //debug_alert($t['name']." lost on round {$r['rnum']}");
                     if (($r['rnum'] == 2) || (($r['rnum'] > 1) && ($r['rnum'] % 4 == 2)))
-                        $this->teams[$t['id']]['loser_idx'] = 2*($bsize - $teams[$idx]['bracket_idx']) - 1;
+                        $this->teams[$t['id']]['loser_idx'] = (2*$teams[$idx]['bracket_idx']+$bsize+1) % (2*$bsize);
+                    break;
                 }
             }
             //MIKE IMMEDIATE DEBUG
@@ -268,9 +271,8 @@ class stats {
         if (isset($this->teams[$id]['berger']))
             return $this->teams[$id]['berger'];
 
-        if (! $this->teams[$id]['opponents'])
-            $tbscore = 0;
-        else {
+        $tbscore = 0;
+        if ($this->teams[$id]['opponents']) {
             foreach ($this->teams[$id]['opponents'] as $idx => $opp_id) {
                 if ($opp_id != -1) {
                     $result = $this->teams[$id]['result'][$idx];

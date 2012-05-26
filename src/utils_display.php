@@ -405,6 +405,8 @@ function disp_team_score($team) {
         $score = $team['score'];
 
     echo "<div class='team'>";
+    //MIKE TODO IMMEDIATE DEBUG
+    //echo "<span title=\"{$team['team_text']}\">{$team['team_name']} [{$team['bracket_idx']}:{$team['loser_idx']}]</span>\n";
     echo "<span title=\"{$team['team_text']}\">{$team['team_name']}</span>\n";
     echo "<br><input type='text' class='short' name='score_{$team['team_id']}' value='$score'} />";
     echo "</div>";
@@ -425,6 +427,12 @@ function disp_toggle_button($gid, $tog) {
 function disp_game($game, $t) {
     $gid = $game['game_id'];
     $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid", array(":gid" => $gid), $t['db']);
+    /*
+    foreach ($teams as $idx => $score) {
+        $teams[$idx]['loser_idx'] = $st[$score['team_id']]['loser_idx'];
+        $teams[$idx]['bracket_idx'] = $st[$score['team_id']]['bracket_idx'];
+    }
+    */
 
     if (array_product(array_map('check_team_score', $teams))) {
         $is_finished = true;
@@ -460,7 +468,7 @@ function disp_game($game, $t) {
     if ($t['isadmin'])
         disp_tournament_button('Delete', 'delete_game');
 
-    $stat_ary = array_map('disp_team_score', $teams);
+    $stat_ary = array_map('disp_team_score', $teams); // Display Team and Score Input 
     if (count($teams) == 1) // this game is a BYE
       echo "<div class='team'>BYE</div>";
 
@@ -490,6 +498,13 @@ function disp_games($togs, $tid, $rid, $aid=null) {
     $t['url']     = "play_tournament.php?id=$tid&round_id=$rid";
     $t['db']      = $db;
     $t['rnum']    = $round['round_number'];
+
+    /*
+    $tmp = get_standings($tid);
+    $st = array();
+    foreach ($tmp as $st_team)
+        $st[$st_team['id']] = $st_team;
+    */
 
     $game_list = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid),$db);
     if ($game_list) {

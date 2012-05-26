@@ -8,6 +8,7 @@
     <div class='centerBox'>
         <?php 
             ($tid = $_GET['id']) || ($tid = $_POST['tournament_id']);
+
             if ($tid) {
                 if ((tournament_ispublic($tid)) || 
                     (check_login() && tournament_isadmin($tid, $_SESSION['admin_id'])))
