@@ -506,17 +506,39 @@ function team_update($data) {
 }
 
 function tournament_update_score( $gid, $data) {
-  // TODO: adjust timestamp for last-modified
-  // grab tournament_id corresponding to $gid, then require_privs
-  $teams = sql_select_all("SELECT * FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
-  foreach ($teams as $team) {
-    $tid = $team['team_id'];
-    $score = $data["score_$tid"];
-    if ($score == "") { $score = -1; }
-    else          { $score = intval($score); }
-    sql_try("UPDATE tblGameTeams SET score = :score WHERE game_id = :gid AND team_id = :tid", 
-            array(":score" => $score, ":gid" => $gid, ":tid" => $tid));
-  }
+    // TODO: adjust timestamp for last-modified
+    // grab tournament_id corresponding to $gid, then require_privs
+    $mode = get_tournament_mode($data['tournament_id']);
+    $teams = sql_select_all("SELECT * FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
+
+    // Make sure we're not a tie if in elim mode
+    if (($mode == 1) || ($mode == 2)) {
+        $tie = true;
+        foreach ($teams as $team) {
+            $tid = $team['team_id'];
+            $score = $data["score_$tid"];
+            if ($score == "") { $score = -1; }
+            else              { $score = intval($score); }
+
+            if (isset($check) && ($score != $check))
+                $tie = false;
+            $check = $score;
+        }
+        if ($tie && ($score != -1)) {
+            debug_alert("Tie game not permitted in elimination tournament");
+            return;
+        }
+
+    }
+
+    foreach ($teams as $team) {
+        $tid = $team['team_id'];
+        $score = $data["score_$tid"];
+        if ($score == "") { $score = -1; }
+        else              { $score = intval($score); }
+        sql_try("UPDATE tblGameTeams SET score = :score WHERE game_id = :gid AND team_id = :tid", 
+                array(":score" => $score, ":gid" => $gid, ":tid" => $tid));
+    }
 }
 
 //ASSERT require_privs($tid,$aid)

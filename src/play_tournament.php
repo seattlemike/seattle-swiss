@@ -13,6 +13,7 @@
     if (isset($_POST['action'])) {
         require_login();
         require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+        $_POST['tournament_id'] = $tid;
 
         switch ($_POST['action']) {
             case 'add_round':
