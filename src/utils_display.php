@@ -409,7 +409,7 @@ function get_finals($standings, $rounds) {
             if ($idx) {
                 if (($t['results'][$rounds[0]]['status'] == 2) && ($t['results'][$rounds[0]]['res'] == 0))
                     $t['color'] = 'bold';
-                if (($t['results'][$rnum-1] == 1) || ($t['results'][$rnum-1]['status'] == 2))
+                if (($t['results'][$rnum-1]['res'] == 1) || ($t['results'][$rnum-1]['status'] == 2))
                     $bracket[$idx][$center + $t['upper']] = $t;
             }
             else
