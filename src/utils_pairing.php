@@ -142,20 +142,9 @@ function get_dblelim_pairings($tid) {
 
     // WINNERS' BRACKET MATCHES (scheduled for rounds 1,2,[all 2n+1])
     if (count($lbracket) <= 2*count($wbracket)) {
-        if (count($wbracket) < 2) return $pairs;
-
-        // sort winners by pos
-        array_multisort(array_map(function($t) {return $t['bracket_idx'];}, $wbracket), SORT_NUMERIC, $wbracket);
-        // [as above, match everyone if pow2, else figure out who has a bye and match accordingly]
-        if (log(count($wbracket), 2) == intval(log(count($wbracket), 2)))
-            $matches = consec_matching($wbracket);
-        else {
-            $matches = consec_matching(array_filter($wbracket, function ($t) use ($nbye_win) { return ($t['seed'] > $nbye_win); }));
-            $byes = array_filter($wbracket, function($t) use ($nbye_win) { return ($t['seed'] <= $nbye_win); });
-            foreach ($byes as $t)
-                $matches[] = array($t);
-        }
-        $pairs = array_merge($pairs, $matches);
+        $nbye = pow(2, (int) ceil(log(count($wbracket), 2))) - count($wbracket);
+        $bye_filter = function ($t) use ($nbye) { return ($t['seed'] > $nbye); };
+        $pairs = array_merge($pairs, bracket_match($wbracket, 'bracket_idx', $bye_filter));
     }
 
     // add matches to the list
