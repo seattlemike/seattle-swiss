@@ -73,7 +73,7 @@ if (isset($rid)) $url .= "&round_id=$rid";
     <div class="centerBox"> 
         <div class='mainBox'>
             <div class="header">Rounds</div>
-            <div class="line nav">
+            <div class="nav">
                 <form name='play_tournament' action='<?echo $url;?>' method='post'>
                     <input type='hidden' name='action' value=''>
                     <input type='hidden' name='populate_id' value=''>
@@ -84,7 +84,7 @@ if (isset($rid)) $url .= "&round_id=$rid";
                         ?>
                     </div>
                     <div class="lHead">
-                        <? disp_round_nav($tid, $rid, $_SESSION['admin_id']); ?>
+                        <? disp_admin_round_nav($tid, $rid, $_SESSION['admin_id']); ?>
                     </div>
                 </form>
             </div>

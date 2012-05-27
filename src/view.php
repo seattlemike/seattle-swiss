@@ -7,12 +7,12 @@
 <div class='con'>
     <div class='centerBox'>
         <?php 
-            ($tid = $_GET['id']) || ($tid = $_POST['tournament_id']);
+            ($tid  = $_GET['id'])   || ($tid = $_POST['tournament_id']);
 
             if ($tid) {
                 if ((tournament_ispublic($tid)) || 
                     (check_login() && tournament_isadmin($tid, $_SESSION['admin_id'])))
-                    disp_standings($tid);
+                    disp_standings($tid, $_GET['view']);
                 else
                     header("location:view.php");
             }

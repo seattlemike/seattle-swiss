@@ -183,73 +183,117 @@ function disp_team_edit($team) {
     echo "</tr>\n";
 }
 
-// displays the navigation for a round
-function disp_round_nav($tid, $rid, $aid=null) {
-  if ($aid) $isadmin = tournament_isadmin($tid, $aid);
-  //if ($isadmin) $url = "play_tournament.php";
-  //else          $url = "view_games.php";
-
-  $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number",
-                           array(":tid" => $tid));
-  if ( $rounds != false ) { // if rounds exist, show nav buttons for them
-    foreach ($rounds as $r) {
-      if ($r['round_id'] == $rid) $class = "selected";
-      else                        $class = "";
-      echo "<a class='button $class' href='play_tournament.php?id=$tid&round_id={$r['round_id']}'>";
-      echo "Round {$r['round_number']}</a>";
+function disp_admin_round_nav($tid, $rid, $aid) {
+    require_privs(tournament_isadmin($tid, $aid));
+    $url = "play_tournament.php?id=$tid&round_id=";
+    if ( disp_round_nav($tid, $rid, $url) ) {
+        disp_tournament_button("+", "add_round"); 
     }
-    if ($isadmin) disp_tournament_button("+", "add_round"); 
-  }
-  else { // if rounds don't exist, show nav button to start 1st round
-    echo "<div class='line'>";
-    if ($isadmin) disp_tournament_button("Start","populate_round");
-    echo "</div>\n";
-  }
+    else {
+        if ($is_admin) {
+            echo "<div class='line'>"; // just want to center it...
+            disp_tournament_button("Start","populate_round");
+            echo "</div>\n";
+        }
+    }
+}
+
+// displays the navigation for a round
+function disp_round_nav($tid, $rid, $url) {
+    $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number", array(":tid" => $tid));
+    if ($rounds) {
+        foreach ($rounds as $r) {
+            if ($r['round_id'] == $rid) $class = "selected";
+            else                        $class = "";
+            echo "<a class='button $class' href='$url{$r['round_id']}'>Round {$r['round_number']}</a>";
+        }
+    }
+
+    return (bool) $rounds; //MIKE TODO IMMEDIATE make sure this is right
 }
 
 function disp_teams_list($tid) {
-  //TODO: grey out teams that have been disabled
-  //TODO: if team_init is nonzero, display this somewhere
-  echo "<div class='header'>Teams</div>\n";
-  $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid ORDER BY team_name ASC", array(":tid" => $tid));
-  if (!$teams) return;
-  echo "<div class='cbox'>\n";
-  foreach ($teams as $t) {
-    echo "<p>{$t['team_name']} : <i>{$t['team_text']}</i></p>\n";
-  }
-  echo "</div>\n";
+    //TODO: grey out teams that have been disabled
+    //TODO: if team_init is nonzero, display this somewhere
+    echo "<div class='mainbox'>\n<div class='header'>Teams</div>\n<div class='cbox'>\n";
+    $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid ORDER BY team_name ASC", array(":tid" => $tid));
+    if ($teams) {
+        foreach ($teams as $t) {
+            if ($t['team_text']) $text = " : <i>{$t['team_text']}</i>";
+            else                 $text = "";
+            echo "<p>{$t['team_name']}$text</p>\n";
+        }
+    }
+    echo "</div></div>\n";
 }
 
 //
 // **STANDINGS**
 //
 
-function disp_standings($tid) {
+function disp_view_nav($tid, $is_started, $url, $view=null) {
+    echo "<div class='nav'>";
+    $mode = get_tournament_mode($tid);
+    $views = array("teams" => "Teams","games" => "Games");
+    switch ($mode) {
+        case 0:
+            $views["results"] = "Results";
+            break;
+        case 1:
+            $views["bracket"] = "Bracket";
+            break;
+        case 2:
+            $views["wbracket"] = "Winners Bracket";
+            $views["lbracket"] = "Losers Bracket";
+            break;
+    }
+    $views["standings"] = "Standings";
+
+    foreach ($views as $v => $text) {
+        if ($is_started || $v == "teams") {
+            if ($view == $v) $class = "selected";
+            else             $class = "";
+            echo "<a class=\"button $class\" href=\"$url{$v}\">$text</a>";
+        }
+        else
+            echo "<a class=\"button disabled\">$text</a>";
+
+    }
+    echo "</div>";
+}
+
+// ASSERT: check is_public/has_privs has already happened
+function disp_standings($tid, $view=null) {
     $nrounds = get_tournament_nrounds($tid);
 
-    if ($nrounds == 0) {
-        echo "<div class='mainBox'>\n";
-        echo "<div class='header playing'>Tournament not yet started</div>\n";
-        disp_teams_list($tid);
-        echo "</div>\n";
-    }
-    else {
-        if (tournament_is_over($tid)) $title = "Final Standings";
-        else                          $title = "Standings [round $nrounds]";
-        echo "<div class='header'>$title</div>\n";
-        switch (get_tournament_mode($tid)) {
-            case 0:
-                disp_swiss($tid, $nrounds);
-                break;
-            case 1:
-                disp_sglelim($tid);
-                disp_places($tid);
-                break;
-            case 2:
-                //disp_dblelim($tid);
-                disp_places($tid);
-                break;
-        }
+    // view_nav_buttons [mostly greyed out when nrounds=0]
+    disp_view_nav($tid, ($nrounds > 0), "view.php?id=$tid&view=", $view);
+
+    if ($nrounds == 0)
+        debug_alert("Tournament not yet started");
+
+    // MIKE TODO IMMEDIATE: ADD VIEW MODES - teams, games, [brackets/results], standings
+    switch ($view) {
+        case "teams":
+            disp_teams_list($tid);
+            break;
+        case "games":
+            disp_round_nav($tid, $_GET['rid'], "view.php?id=$tid&view=games&rid=");
+            echo "<div id='games'>";
+            disp_games("", $tid, $_GET['rid']);   // disp_games checks ($rid in $tid)
+            echo "</div>";
+            break;
+        case "bracket":
+            if (($nrounds > 0) && (get_tournament_mode($tid) == 1)) disp_sglelim($tid);
+            break;
+        case "lbracket":
+            break;
+        case "results":
+            if (($nrounds > 0) && (get_tournament_mode($tid) == 0)) disp_swiss($tid, $nrounds);
+            break;
+        case "standings":
+            if ($nrounds > 0) disp_places($tid);
+            break;
     }
 }
 
@@ -398,20 +442,18 @@ function disp_swiss($tid, $nrounds) {
     echo "</table>\n</div>\n";
 }
 
-function disp_team_score($team) {
-    if ($team['score'] < 0)
-        $score = "";
-    else
-        $score = $team['score'];
-
+function disp_scores($team, $disabled="DISABLED") {
+    if ($team['score'] < 0) $score = "";
+    else                    $score = $team['score'];
     echo "<div class='team'>";
-    //MIKE TODO IMMEDIATE DEBUG
-    //echo "<span title=\"{$team['team_text']}\">{$team['team_name']} [{$team['bracket_idx']}:{$team['loser_idx']}]</span>\n";
-    echo "<span title=\"{$team['team_text']}\">{$team['team_name']}</span>\n";
-    echo "<br><input type='text' class='short' name='score_{$team['team_id']}' value='$score'} />";
+    echo "<span title=\"{$team['team_text']}\">{$team['team_name']}</span>";
+    if (($team['team_id'] != -1) && ($team['opp_id'] != -1))
+        echo "<br><input type='text' class='short' name='score_{$team['team_id']}' value='$score'} $disabled/>";
     echo "</div>";
+}
 
-    return ($score != "");
+function disp_score_inputs($team) {
+    disp_scores($team, "");
 }
 
 function check_team_score($team) {
@@ -457,22 +499,30 @@ function disp_game($game, $t) {
             $q = sql_select_one($query, array(":tid" => $x['team_id'], ":rnum" => $t['rnum'])); 
             $is_loser &= ($q && $q['min'] && ($q['min']<0));  //min=0 [tie] shouldn't ever happen
         }
-        if ($is_loser)
+
+        $comment = "<span class='disabled'>[".($is_loser ? "L" : "W")."B]</span>";
+        if ($is_loser) 
             $outer .= " losers";
+
     }
 
     echo "<div class='line game $outer'>";
-    echo "<form class='$inner' id='game_$gid' name='game_$gid' action='{$t['url']}' method='post' onsubmit='postToggles(this)'>";
-    echo "<input type='hidden' name='action' value='' />";
-    echo "<input type='hidden' name='game_id' value='$gid' />";
-    if ($t['isadmin'])
-        disp_tournament_button('Delete', 'delete_game');
+    echo $comment;  // [wb/lb] only when mode=2  TODO: put this somewhere better
 
-    $stat_ary = array_map('disp_team_score', $teams); // Display Team and Score Input 
-    if (count($teams) == 1) // this game is a BYE
-      echo "<div class='team'>BYE</div>";
+    if (count($teams) == 1) {
+        $teams[0]['opp_id'] = -1;
+        $teams[] = array("team_name" => "BYE", "team_id" => -1);
+    }
 
     if ($t['isadmin']) {
+        echo "<form class='$inner' id='game_$gid' name='game_$gid' action='{$t['url']}' method='post' onsubmit='postToggles(this)'>";
+        echo "<input type='hidden' name='action' value='' />";
+        echo "<input type='hidden' name='game_id' value='$gid' />";
+        disp_tournament_button('Delete', 'delete_game');
+
+        // Display the team names and score input boxes
+        $stat_ary = array_map('disp_score_inputs', $teams);
+
         echo "<div class='team'>";
         if ($is_finished)
             disp_tournament_button('Update', 'update_score');
@@ -481,9 +531,12 @@ function disp_game($game, $t) {
             echo "<br>";
             disp_tournament_button('Set Score', 'update_score');
         }
-        echo "</div>";
+        echo "</div></form>";
     }
-    echo "</form>\n</div>\n";
+    else 
+        $stat_ary = array_map('disp_scores', $teams);
+
+    echo "</div>\n";
 }
 
 function disp_games($togs, $tid, $rid, $aid=null) {

@@ -27,6 +27,8 @@ body {
     font-size: 1em;
 }
 
+span.disabled { color: #224365; }
+
 .cHead, .line, .topHeader, .header, .footer { text-align: center; }
 .lHead, .subBox, label, p, .textbox { text-align: left; }
 
@@ -43,6 +45,10 @@ ol {
     padding-left: 1em;
 }
 ol.spaced li {
+    margin-bottom: 0.5em;
+}
+.centerBox .nav {
+    margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
 
@@ -106,6 +112,8 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     padding: 0.2em;
     margin-left: 0.5em;
 }
+
+.game { min-height: 3em; }
 
 /* tabulated display */
 table {
@@ -177,7 +185,7 @@ td.center{ text-align: center; }
 
 
 /* Forms and Input */
-    form { margin: 0; }
+    form { margin: 0; display: inline;}
     input, .nav a, .button, select {
         /*margin: 0.1em;*/
         /*padding: 0.1em 0.2em 0.1em 0.2em;*/
