@@ -320,8 +320,8 @@ function get_td_color($rnum, $pos) {
 }
 
 function disp_sglelim($tid) {
-    $nrounds = intval(ceil(log(count($standings),2)));
     $st = get_standings($tid);
+    $nrounds = intval(ceil(log(count($st),2)));
     // rewrite standings results arrays to be indexed by round number
     foreach ($st as $i => $t) {
         $tmp = array();
@@ -330,8 +330,8 @@ function disp_sglelim($tid) {
         $st[$i]['results'] = $tmp;
     }
 
-    $bracket = get_bracket($st, range(1, $nrounds+1) );
-    disp_elim( $bracket, pow(2,$nrounds), range(1,$nrounds+1) );
+    $bracket = get_bracket($st, range(1, $nrounds) );
+    disp_elim( $bracket, pow(2,$nrounds), range(1,$nrounds) );
 }
 
 function disp_dblelim_wbracket($tid, $rnum) {
@@ -357,7 +357,7 @@ function disp_dblelim_wbracket($tid, $rnum) {
     if ($rnum >= 2*$nrounds)
         $fin = range(2*$nrounds, $rnum+1);
     $bracket = array_merge( get_bracket($st, $rounds), get_finals($st, $fin) );
-    disp_elim($bracket, pow(2,$nrounds), $rounds);
+    disp_elim($bracket, pow(2,$nrounds), array_merge($rounds, $fin));
 }
 
 function disp_dblelim_lbracket($tid, $rnum) {
@@ -390,7 +390,8 @@ function get_finals($standings, $rounds) {
     $finals = array();
     foreach ($standings as $t) {
         if ($t['results'][$rnum-1]['res']) {  // winner of LB
-            $standings[$i]['upper'] = 1;
+            $t['upper'] = 1;
+            $t['color'] = 'bold';
             $finals[] = $t;
         }
         else if (($t['results'][$rnum-3]['res']) && ($t['results'][$rnum-3]['status'] == 2)) { // winner of WB
@@ -400,12 +401,19 @@ function get_finals($standings, $rounds) {
 
     // add teams [if any] to bracket
     $bracket = array();
-    $idx = pow(2,(int) ceil(log(count($standings),2)-1));
+    $center = pow(2,(int) ceil(log(count($standings),2)-1));
     foreach ($rounds as $idx => $rnum) {
-        $bracket[] = array();
+        $bracket[$idx] = array();
         foreach ($finals as $t) {
-            debug_alert("late round: $rnum for {$t['name']}");
-            $bracket[$idx][$idx + $t['upper']] = $t;
+            //debug_alert("late round: $rnum for {$t['name']}");
+            if ($idx) {
+                if (($t['results'][$rounds[0]]['status'] == 2) && ($t['results'][$rounds[0]]['res'] == 0))
+                    $t['color'] = 'bold';
+                if (($t['results'][$rnum-1] == 1) || ($t['results'][$rnum-1]['status'] == 2))
+                    $bracket[$idx][$center + $t['upper']] = $t;
+            }
+            else
+                $bracket[$idx][$center + $t['upper']] = $t;
         }
     }
     return $bracket;
@@ -493,11 +501,11 @@ function disp_elim($bracket, $height, $rounds) {
     // print the table
     echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
-    echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*count($rounds)).">Results</th></tr>\n";
-    echo "<tr><th colspan='".(3 + 3 * count($rounds))."'> &nbsp;</th></tr>";
+    echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*count($rounds)-2).">Results</th></tr>\n";
+    echo "<tr><th colspan='".(1 + 3 * count($rounds))."'> &nbsp;</th></tr>";
     foreach ($table as $row) {
         echo "<tr>";
-        foreach (range(0, count($rounds)) as $colnum)
+        foreach (range(0, count($rounds)-1) as $colnum)
             disp_team($row[$colnum], $colnum, $rounds[$colnum]);
         echo "</tr>\n";
     }
