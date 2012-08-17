@@ -709,7 +709,9 @@ function disp_game($game, $t, $st) {
         echo "<form class='$inner' id='form_$gid' name='game_$gid' action='{$t['url']}#box_$gid' method='post' onsubmit='postToggles(this)'>";
         echo "<input type='hidden' name='action' value='' />";
         echo "<input type='hidden' name='game_id' value='$gid' />";
-        disp_tournament_button('Delete', 'delete_game');
+        
+        if (is_poweruser())
+            disp_tournament_button('Delete', 'delete_game', "this.form.action=\"#edit_round\"");
 
         // Display the team names and score input boxes
         $stat_ary = array_map('disp_score_inputs', $teams);

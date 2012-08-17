@@ -88,7 +88,7 @@
                     <input type='hidden' name='populate_id' value=''>
                     <div class="lHead">
                         <?
-                            disp_round_nav($tid, $rid, "", true); 
+                            disp_round_nav($tid, $rid, true); 
                         ?>
                     </div>
                 </form>
