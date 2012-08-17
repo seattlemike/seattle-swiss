@@ -675,7 +675,7 @@ function disp_game($game, $t, $st) {
     else {
         if ($t['mode'] == 0)  // flag rematches with blue if we're in SWISS mode
             if (game_is_rematch($teams)) $outer = "rematch";
-        if ($game['playing'])  $inner = "playing";
+        if ($game['playing'])  $outer .= "playing";
     }
 
     // if double-elim, add 'losers' designation for losers-bracket games
