@@ -96,8 +96,8 @@
         </div>
 
         <div class="mainBox">
-            <div class="header">Teams</div>
-            <form name='admin' method='post' action=''>
+            <div id='teams' class="header">Teams</div>
+            <form name='admin' method='post' action='#teams'>
                 <input type='hidden' name='team_id' value=''>
                 <input type='hidden' name='action' value='' />
                 <table>

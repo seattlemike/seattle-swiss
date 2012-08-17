@@ -36,16 +36,18 @@ function postToggles(form) {
 }
 
 function togOnCourt(gid) {
-    var form = document.getElementById("game_"+gid);
+    var box = document.getElementById("box_"+gid);
+    var form = document.getElementById("form_"+gid);
     if (form.elements.toggle.value) {
         form.elements.tog_btn.value = "On Court";
-        form.className = "";
         form.elements.toggle.value = "";
+        box.className = box.className.replace(/\bplaying\b/,"");
     }
     else {
         form.elements.tog_btn.value = "Off Court";
-        form.className = "playing";
         form.elements.toggle.value = "1";
+        if (! box.className.match(/\bplaying\b/) )
+            box.className += " playing";
     }
     return true;
 }

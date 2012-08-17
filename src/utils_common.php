@@ -78,9 +78,6 @@ function email_confirm ( $aid ) {
     // [maybe new page will be the settings page, and the hash will let the user bypass the pass-check]
 }
 
-
-
-
 // returns credentials row or FALSE if no matches
 function get_credentials($user, $pass) {
     return sql_select_one('SELECT * FROM tblAdmin WHERE admin_email = :name and admin_pass = :pass',
@@ -92,9 +89,8 @@ function login($user, $pass) {
         //TODO: should check session_start documentation to make sure that a (potential)
         //      second call to the function without session_end isn't going to ever be an issue
         session_start();
-        $_SESSION['admin_id'] = $creds['admin_id'];
-        $_SESSION['admin_type'] = $creds['admin_type'];
-        $_SESSION['admin_name'] = $creds['admin_name'];
+        foreach ($creds as $k => $v)
+            $_SESSION[$k] = $v;
         return true;
     }
     return false;
@@ -146,6 +142,10 @@ function admin_create($data) {
                        array(htmlspecialchars($data['name']), htmlspecialchars($data['location']), 
                              salt_pass($data['password']), "tournament", $data['email']));
     return array($success, "New admin entry added to database");
+}
+
+function is_poweruser() {
+    return $_SESSION['admin_controls'];
 }
 
 //

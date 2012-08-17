@@ -37,7 +37,7 @@ body {
 
 /* Text Effects */
 .warning { color: #b22; }
-.header, .footer { font-size: 1.2em; }
+.header, .footer { font-size: 1.2em; font-style: italic;}
 .topHeader { font-size: 1.5em; margin: 0px; }
 .button, .nav a {
     font-weight: normal;

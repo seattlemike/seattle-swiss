@@ -37,7 +37,7 @@
     <div class="centerBox">
             <?php
             if (isset($_GET['super'])) {
-                require_privs(false);
+                require_privs(false);  // dies unless $_SESSION['admin_type']=='super'
                 $tlist = sql_select_all( "SELECT * FROM tblTournament ORDER BY tournament_date DESC", array() );
             }
             else

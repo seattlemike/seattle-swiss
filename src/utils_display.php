@@ -673,7 +673,7 @@ function disp_game($game, $t, $st) {
 
     }
 
-    echo "<div class='line game $outer'>";
+    echo "<div id='box_$gid' class='line game $outer'>";
     echo $comment;  // [wb/lb] only when mode=2  TODO: put this somewhere better
 
     if (count($teams) == 1) {
@@ -682,7 +682,7 @@ function disp_game($game, $t, $st) {
     }
 
     if ($t['isadmin']) {
-        echo "<form class='$inner' id='game_$gid' name='game_$gid' action='{$t['url']}' method='post' onsubmit='postToggles(this)'>";
+        echo "<form class='$inner' id='form_$gid' name='game_$gid' action='{$t['url']}' method='post' onsubmit='postToggles(this)'>";
         echo "<input type='hidden' name='action' value='' />";
         echo "<input type='hidden' name='game_id' value='$gid' />";
         disp_tournament_button('Delete', 'delete_game');

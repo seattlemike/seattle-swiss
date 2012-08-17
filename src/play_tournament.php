@@ -86,11 +86,6 @@
                 <form name='play_tournament' action='<?echo $url;?>' method='post'>
                     <input type='hidden' name='action' value=''>
                     <input type='hidden' name='populate_id' value=''>
-                    <div class="rHead">
-                        <?php
-                        if (($mode == 'edit') && isset($rid) && tournament_round_is_done($rid))
-                        ?>
-                    </div>
                     <div class="lHead">
                         <?
                             disp_round_nav($tid, $rid, true); 
@@ -105,9 +100,9 @@
             } ?>
         </div>
             
-        <?php if (isset($rid) && ($mode == 'edit')) { ?>
+        <?php if (isset($rid) && (is_poweruser($_SESSION['admin_id']))) { ?>
             <div class="mainBox">
-                <div class="header">Edit Round</div> 
+                <div class="header">Edit Round Controls</div> 
                 <form name='populate_tournament' action='<? echo $url?>' method='post'>
                     <input type='hidden' name='action' value=''>
                     <input type='hidden' name='populate_id' value=''>

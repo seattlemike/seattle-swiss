@@ -37,7 +37,7 @@
             below for a thorough warning against expecting things to be perfect)</p>
         </div>
         <div class='mainBox'>
-            <div class="header">About The Software [<a href="https://github.com/seattlemike/seattle-swiss">source</a>]</div>
+            <div class="header">About The Software [<a href="https://github.com/seattlemike/seattle-swiss">src</a>]</div>
             <p>20Swiss is intended to be a flexible, robust system to coordinate a tournament via
             the mechanism of rounds in which teams are paired up for matches.  It's simple and it's
             free, but it's still solidly in that in-development phase.</p>

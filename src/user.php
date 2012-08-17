@@ -23,6 +23,7 @@
 	include("header.php");  // sets $tid if valid tournament
 	require_login();
 
+    // TODO URGENT: remember, reload $_SESSION['admin_whatever'] things from login
     if (isset($_POST['action'])) {
         if ($redir) header("location:main_menu.php");
     }
