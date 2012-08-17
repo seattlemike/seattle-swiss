@@ -1,5 +1,25 @@
 <?php
 
+/*  
+    Copyright 2011, 2012 Mike Bell and Paul Danos
+
+    This file is part of 20Swiss.
+    
+    20Swiss is free software: you can redistribute it and/or modify it under the
+    terms of the GNU Affero General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    20Swiss is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+    more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+
 //
 //  Disp utilities.  Should sort these a bit.
 //
@@ -9,6 +29,10 @@
 //
 
 // button with onclick that modifies form.action
+function disp_disabled_button($value, $name="submit") {
+    echo "<input class='button' name='$name' value='$value' DISABLED />";
+}
+
 function disp_tournament_button($value, $action, $extra='', $class='') {
     $onclick = "this.form.elements[\"action\"].value=\"$action\"; $extra";
     echo "<input onclick='$onclick' class='button $class' type='submit' name='submit' value='$value' />";
@@ -183,21 +207,9 @@ function disp_team_edit($team) {
     echo "</tr>\n";
 }
 
-function disp_admin_round_nav($tid, $rid, $aid) {
-    require_privs(tournament_isadmin($tid, $aid));
-    $url = "play_tournament.php?id=$tid&round_id=";
-    if ( disp_round_nav($tid, $rid, $url) ) {
-        disp_tournament_button("+", "add_round"); 
-    }
-    else {
-    echo "<div class='line'>"; // just want to center it...
-    disp_tournament_button("Start","populate_round");
-    echo "</div>\n";
-    }
-}
-
 // displays the navigation for a round
-function disp_round_nav($tid, $rid, $url) {
+function disp_round_nav($tid, $rid, $admin=false) {
+    $url="{$_SERVER['PHP_SELF']}?id=$tid&round_id=";
     $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number", array(":tid" => $tid));
     if ($rounds) {
         foreach ($rounds as $r) {
@@ -206,8 +218,24 @@ function disp_round_nav($tid, $rid, $url) {
             echo "<a class='button $class' href='$url{$r['round_id']}'>Round {$r['round_number']}</a>";
         }
     }
-
-    return (bool) $rounds; //MIKE TODO IMMEDIATE make sure this is right
+    if ($admin) {
+        if ($rounds) {
+            if (isset($rid)) {
+                $next_round = tournament_next_round($rid);
+                if (tournament_round_is_done($rid) && ! $next_round) {
+                    $onclick = " this.form.elements[\"populate_id\"].value=\"{$next_round['round_id']}\";";
+                    disp_tournament_button("Next", "populate_round", $onclick);
+                }
+                else
+                    echo "<a class='button disabled'>Next</a>";
+            }
+        }
+        else {
+            echo "<div class='line'>"; // just want to center it...
+            disp_tournament_button("Start","populate_round");
+            echo "</div>\n";
+        }
+    }
 }
 
 function disp_teams_list($tid) {
@@ -276,7 +304,7 @@ function disp_standings($tid, $view=null) {
             break;
         case "games":
             echo "<div class='mainBox'>\n";
-            disp_round_nav($tid, $_GET['rid'], "view.php?id=$tid&view=games&rid=");
+            disp_round_nav($tid, $_GET['rid'], false);
             echo "<div id='games'>";
             disp_games("", $tid, $_GET['rid']);   // disp_games checks ($rid in $tid)
             echo "</div></div>";
@@ -603,15 +631,17 @@ function disp_toggle_button($gid, $tog) {
     echo "<input class='button' type='button' name='tog_btn' onclick='togOnCourt($gid)' value='$val' \>";
 }
 
-function disp_game($game, $t) {
+function disp_game($game, $t, $st) {
     $gid = $game['game_id'];
     $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid", array(":gid" => $gid), $t['db']);
-    /*
-    foreach ($teams as $idx => $score) {
+    
+    // MIKE TODO IMMEDIATE DEBUG CODE
+    /*foreach ($teams as $idx => $score) {
         $teams[$idx]['loser_idx'] = $st[$score['team_id']]['loser_idx'];
         $teams[$idx]['bracket_idx'] = $st[$score['team_id']]['bracket_idx'];
-    }
-    */
+    }*/
+    // END DEBUG CODE
+    
 
     if (array_product(array_map('check_team_score', $teams))) {
         $is_finished = true;
@@ -689,18 +719,19 @@ function disp_games($togs, $tid, $rid, $aid=null) {
     $t['db']      = $db;
     $t['rnum']    = $round['round_number'];
 
-    /*
-    $tmp = get_standings($tid);
+    // MIKE DEBUG CODE 
+    /* $tmp = get_standings($tid);
     $st = array();
     foreach ($tmp as $st_team)
         $st[$st_team['id']] = $st_team;
     */
+    // END DEBUG CODE
 
     $game_list = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid),$db);
     if ($game_list) {
         foreach ($game_list as $g) {
             $g['playing'] = (strpos($togs, $g['game_id']) > -1);
-            disp_game($g, $t);
+            disp_game($g, $t, $st);
         }
     }
     return true;
@@ -716,10 +747,5 @@ function disp_team_select($tid, $name) {
 }
 
 function disp_next_round_button($tid, $rid) {
-  $next_round = tournament_next_round($rid);
-  if ((! $next_round) || (tournament_round_is_empty($next_round['round_id']))) {
-    $onclick = " this.form.elements[\"populate_id\"].value=\"{$next_round['round_id']}\";";
-    disp_tournament_button("Run Next Round", "populate_round", $onclick);
-  }
 }
 ?>

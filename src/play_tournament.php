@@ -1,19 +1,38 @@
 <?php
+
+/*  
+    Copyright 2011, 2012 Mike Bell and Paul Danos
+
+    This file is part of 20Swiss.
+    
+    20Swiss is free software: you can redistribute it and/or modify it under the
+    terms of the GNU Affero General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    20Swiss is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+    more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
+*/
+
     $page_name = "Run";
     include("header.php");
 
-	// require tournament & on its admin list
+	// require tournament & admin
 	$tid     || header("location:main_menu.php");
+    require_login();
+    require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
 
     if ($rid == -1) unset($rid);  // set in header if round not found with rid
-
     
     // TODO this doesn't look nice.  how can we make this look nicer?
     // check POST actions
     if (isset($_POST['action'])) {
-        require_login();
-        require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
-        $_POST['tournament_id'] = $tid;
+        $_POST['tournament_id'] = $tid;  // sanitizing $_POST['tournament_id']
 
         switch ($_POST['action']) {
             case 'add_round':
@@ -21,20 +40,19 @@
                     header("location:play_tournament.php?id=$tid&round_id=$rid");
                 break;
             case 'update_score':
-                //TODO validate:  $game_id is a member of tournament $tid
+                // MIKE TODO IMMEDIATE validate:  $game_id is a member of tournament $tid
                 tournament_update_score($_POST['game_id'], $_POST);
                 break;
             case 'remove_round':
-                // TODO validate: make sure $rid in $tid
+                // MIKE TODO IMMEDIATE validate: make sure $rid in $tid
                 if (tournament_delete_round($rid, $_SESSION['admin_id']))
                     header("location:play_tournament.php?id=$tid");
                 break;
             case 'empty_round':
-                // TODO validate: make sure $rid in $tid
+                // MIKE TODO IMMEDIATE validate: make sure $rid in $tid
                 tournament_empty_round($rid, $_SESSION['admin_id']);
                 break;
             case 'populate_round':
-                //URGENT
                 //MIKE TODO IMMEDIATE: only "next round" if doesn't already exist
                 $pop_rid = tournament_populate_round($tid, $_POST['populate_id'], $_SESSION['admin_id']);
                 if ($pop_rid != $rid)
@@ -55,19 +73,9 @@
         }
     }
 
-  //TODO:  Tournament Structure!
-  // ASSERT:  NO PRIVS CHECKED YET
-// sets the view/edit mode based on the admin's privileges
-if (check_login() && tournament_isadmin($tid, $_SESSION['admin_id']))
-    $mode = 'edit';
-elseif (tournament_ispublic($tid))
-    $mode = 'view';
-else
-	header("location:view.php");
-
-// adds a round id to the url if rounds exist
-$url = "play_tournament.php?id=$tid";
-if (isset($rid)) $url .= "&round_id=$rid";
+    // adds a round id to the url if rounds exist
+    $url = "play_tournament.php?id=$tid";
+    if (isset($rid)) $url .= "&round_id=$rid";
 
 ?>
 <div class="con">
@@ -81,11 +89,12 @@ if (isset($rid)) $url .= "&round_id=$rid";
                     <div class="rHead">
                         <?php
                         if (($mode == 'edit') && isset($rid) && tournament_round_is_done($rid))
-                            disp_next_round_button($tid, $rid); 
                         ?>
                     </div>
                     <div class="lHead">
-                        <? disp_admin_round_nav($tid, $rid, $_SESSION['admin_id']); ?>
+                        <?
+                            disp_round_nav($tid, $rid, true); 
+                        ?>
                     </div>
                 </form>
             </div>

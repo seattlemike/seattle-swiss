@@ -1,0 +1,15 @@
+20Swiss ("Two Oh Swiss") is a piece of tournament software by Paul Danos and
+Mike Bell, realeased under the GNU AGPL (see COPYING for a copy of this license,
+and information on how to use / modify / redistribute this source).  Mike and
+Paul can be reached by email at, respectively, [ mike at seattleswiss dot com ]
+and [ paul at seattleswiss dot com ].
+
+20Swiss is designed to be a free, public system on which users can host and run
+tournaments of varying types, with an option for public display of the results.
+As of v0.2 we support Swiss Rounds, Single Elimination, and Double Elimination
+tournaments.
+
+20Swiss v0.x is written mostly in (PHP)[http://php.net/] with a smattering of
+(Javascript)[https://en.wikipedia.org/wiki/JavaScript] to help a bit with the
+flow.  Almost all of the processing takes place on the server, with HTML Forms
+mediating client/server communication.  This will change significantly for v1.0.
