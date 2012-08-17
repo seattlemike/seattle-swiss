@@ -60,7 +60,7 @@
                 break;
             case 'add_game':
                 // TODO validate: make sure team_id is a member of tournament
-                tournament_add_game($rid, array( array("id" => $_POST['team_a']), array( "id" => $_POST['team_b']) ));
+                tournament_add_game($rid, array( array("id" => $_POST['team_b']), array( "id" => $_POST['team_a']) ));
                 break;
             case 'toggle_oncourt':
                 // TODO validate: make sure game_id is a member of tournament
@@ -88,7 +88,7 @@
                     <input type='hidden' name='populate_id' value=''>
                     <div class="lHead">
                         <?
-                            disp_round_nav($tid, $rid, true); 
+                            disp_round_nav($tid, $rid, "", true); 
                         ?>
                     </div>
                 </form>
@@ -102,9 +102,9 @@
             
         <?php if (isset($rid) && (is_poweruser($_SESSION['admin_id']))) { ?>
             <div class="mainBox">
-                <div class="header">Edit Round Controls</div> 
-                <form name='populate_tournament' action='<? echo $url?>' method='post'>
-                    <input type='hidden' name='action' value=''>
+                <div class="header" id="edit_round">Edit Round Controls</div> 
+                <form name='populate_tournament' action='<? echo "$url#edit_round"?>' method='post'>
+                    <input type='hidden' name='action' value='#edit_round'>
                     <input type='hidden' name='populate_id' value=''>
                     <div class="line">
                         <?php

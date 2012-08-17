@@ -210,6 +210,7 @@ function disp_team_edit($team) {
 // displays the navigation for a round
 function disp_round_nav($tid, $rid, $admin=false) {
     $url="{$_SERVER['PHP_SELF']}?id=$tid&round_id=";
+
     $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number", array(":tid" => $tid));
     if ($rounds) {
         foreach ($rounds as $r) {
@@ -291,8 +292,32 @@ function disp_view_nav($tid, $is_started, $url, $view=null) {
 // ASSERT: check is_public/has_privs has already happened
 function disp_standings($tid, $view=null) {
     $nrounds = get_tournament_nrounds($tid);
+    $mode = get_tournament_mode($tid);
+
+    // default view if nothing explicitly chosen
+    if (! $view)
+        if ($nrounds == 0)
+            $view = "teams";
+        else {
+            if (isset($_GET['round_id']))
+                $view = "games";
+            else
+                switch ($mode) {
+                    case 0:
+                        $view = "results";
+                        break;
+                    case 1:
+                        $view = "bracket";
+                        break;
+                    case 2:
+                        $view = "wbracket";
+                        break;
+                }
+        }
+
 
     // view_nav_buttons [mostly greyed out when nrounds=0]
+    // TODO URGENT: $nrounds should be passed as is for disp_view_nav to grey out lbracket when ==1
     disp_view_nav($tid, ($nrounds > 0), "view.php?id=$tid&view=", $view);
 
     if ($nrounds == 0)
@@ -304,22 +329,22 @@ function disp_standings($tid, $view=null) {
             break;
         case "games":
             echo "<div class='mainBox'>\n";
-            disp_round_nav($tid, $_GET['rid'], false);
+            disp_round_nav($tid, $_GET['round_id'], false);
             echo "<div id='games'>";
-            disp_games("", $tid, $_GET['rid']);   // disp_games checks ($rid in $tid)
+            disp_games("", $tid, $_GET['round_id']);   // disp_games checks ($rid in $tid)
             echo "</div></div>";
             break;
         case "bracket":
-            if (($nrounds > 0) && (get_tournament_mode($tid) == 1)) disp_sglelim($tid);
+            if (($nrounds > 0) && ($mode == 1)) disp_sglelim($tid);
             break;
         case "wbracket":
-            if (($nrounds > 0) && (get_tournament_mode($tid) == 2)) disp_dblelim_wbracket($tid, $nrounds);
+            if (($nrounds > 0) && ($mode == 2)) disp_dblelim_wbracket($tid, $nrounds);
             break;
         case "lbracket":
-            if (($nrounds > 1) && (get_tournament_mode($tid) == 2)) disp_dblelim_lbracket($tid, $nrounds);
+            if (($nrounds > 1) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
             break;
         case "results":
-            if (($nrounds > 0) && (get_tournament_mode($tid) == 0)) disp_swiss($tid, $nrounds);
+            if (($nrounds > 0) && ($mode == 0)) disp_swiss($tid, $nrounds);
             break;
         case "standings":
             if ($nrounds > 0) disp_places($tid);
@@ -675,14 +700,13 @@ function disp_game($game, $t, $st) {
 
     echo "<div id='box_$gid' class='line game $outer'>";
     echo $comment;  // [wb/lb] only when mode=2  TODO: put this somewhere better
-
     if (count($teams) == 1) {
         $teams[0]['opp_id'] = -1;
         $teams[] = array("team_name" => "BYE", "team_id" => -1);
     }
 
     if ($t['isadmin']) {
-        echo "<form class='$inner' id='form_$gid' name='game_$gid' action='{$t['url']}' method='post' onsubmit='postToggles(this)'>";
+        echo "<form class='$inner' id='form_$gid' name='game_$gid' action='{$t['url']}#box_$gid' method='post' onsubmit='postToggles(this)'>";
         echo "<input type='hidden' name='action' value='' />";
         echo "<input type='hidden' name='game_id' value='$gid' />";
         disp_tournament_button('Delete', 'delete_game');
