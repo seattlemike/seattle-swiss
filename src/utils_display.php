@@ -344,7 +344,14 @@ function disp_standings($tid, $view=null) {
             if (($nrounds > 1) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
             break;
         case "results":
-            if (($nrounds > 0) && ($mode == 0)) disp_swiss($tid, $nrounds);
+            if (($nrounds > 0) && ($mode == 0)) 
+                if (isset($_GET['round_id'])) {
+                    $r = get_tournament_round($tid, $_GET['round_id']);
+                    if ($r)
+                        disp_swiss($tid, $r['round_number'], true);
+                }
+                else
+                    disp_swiss($tid, $nrounds);
             break;
         case "standings":
             if ($nrounds > 0) disp_places($tid);
