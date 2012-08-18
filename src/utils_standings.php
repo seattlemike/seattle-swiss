@@ -339,7 +339,7 @@ function group_by($ary, $idx) {
 }
 
 // from tournament_id, foreach round, foreach game, add game result to stats
-function build_stats($tid) {
+function build_stats($tid, $nrounds) {
     ($db = connect_to_db()) || debug_error("Couldn't connect to database for tournament standings");
     //TODO:  handle disabled v non-disabled for elim tournaments?
     $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid", array(":tid" => $tid), $db);
@@ -347,12 +347,13 @@ function build_stats($tid) {
     
     $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number ASC", array(":tid" => $tid), $db);
     foreach ($rounds as $r) {
-        // TODO: should SELECT WHERE tblGame.finished = true
-        $games = sql_select_all("SELECT g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = :rid", array(":rid" => $r['round_id']), $db);
-        foreach (group_by($games, 'game_id') as $match) {
-
-            if (min(array_map( function ($s) { return $s['score']; }, $match )) > -1)
-                $stats->add_result($match, $r['round_number']);
+        if (($nrounds == -1) || ($nrounds >= $r['round_number'])) {  // nrounds > -1 means partial stats computation
+            // TODO: should SELECT WHERE tblGame.finished = true
+            $games = sql_select_all("SELECT g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = :rid", array(":rid" => $r['round_id']), $db);
+            foreach (group_by($games, 'game_id') as $match) {
+                if (min(array_map( function ($s) { return $s['score']; }, $match )) > -1)
+                    $stats->add_result($match, $r['round_number']);
+            }
         }
     }
     $db = null;
@@ -360,9 +361,9 @@ function build_stats($tid) {
 }
 
 // teams ordered best to worst
-function get_standings($tid, $tiebreaks = false) {
-    $stats = build_stats($tid);
-    if ($tiebreaks) $stats->tiebreaks();
+function get_standings($tid, $all_tiebreaks = false, $nrounds = -1) {
+    $stats = build_stats($tid, $nrounds);
+    if ($all_tiebreaks) $stats->tiebreaks();
     return $stats->team_array();
 }
 

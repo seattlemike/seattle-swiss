@@ -593,8 +593,8 @@ function score_str($result) {  // TODO need team id, then put self first
         return implode(" - ", $s)." vs {$result['opp_name']}";
 }
 
-function disp_swiss($tid, $nrounds) {
-    $standings = get_standings($tid);
+function disp_swiss($tid, $nrounds, $all_breaks = false) {
+    $standings = get_standings($tid, $all_breaks, $nrounds);
     if (count($standings) == 0) { return; }
     array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
 
@@ -658,7 +658,7 @@ function disp_toggle_button($gid, $tog) {
 
 function disp_game($game, $t, $st) {
     $gid = $game['game_id'];
-    $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid", array(":gid" => $gid), $t['db']);
+    $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid ORDER BY tblGameTeams.score_id DESC", array(":gid" => $gid), $t['db']);
     
     // MIKE TODO IMMEDIATE DEBUG CODE
     /*foreach ($teams as $idx => $score) {
