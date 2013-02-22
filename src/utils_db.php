@@ -45,23 +45,23 @@ function db_execute( $query, $values, $db=null) {
 }
 
 function sql_try( $query, $values, $db=null) {
-  list($success, , ) = db_execute($query, $values, $db);
-  return $success;
+    list($success, , ) = db_execute($query, $values, $db);
+    return $success;
 }
 
 // insert a record into the db
 function sql_insert( $query, $values, $db=null) {
-  list($success, , $lastid) = db_execute($query, $values, $db);
-  if ($success) return $lastid;
-  else          return false;
+    list($success, , $lastid) = db_execute($query, $values, $db);
+    if ($success) return $lastid;
+    else          return false;
 }
 
 // returns only the top result from a query
 function sql_select_one($query, $values, $db=null) {
 	try {
-    list($success,$stmt,) = db_execute($query, $values, $db);
-    if ($success) return $stmt->fetch();
-    else          return false;
+        list($success,$stmt,) = db_execute($query, $values, $db);
+        if ($success) return $stmt->fetch();
+        else          return false;
 	}
 	catch(PDOException $e) { die ($e->getMessage()); }
 }
@@ -69,9 +69,9 @@ function sql_select_one($query, $values, $db=null) {
 // returns all records from a query
 function sql_select_all($query, $values, $db=null) {
 	try {
-    list($success,$stmt,) = db_execute($query, $values, $db);
-    if ($success) return $stmt->fetchAll();
-    else          return false;
+        list($success,$stmt,) = db_execute($query, $values, $db);
+        if ($success) return $stmt->fetchAll();
+        else          return false;
 	}
 	catch(PDOException $e) { die ($e->getMessage()); }
 }

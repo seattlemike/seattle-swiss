@@ -325,7 +325,9 @@ function disp_standings($tid, $view=null) {
 
     switch ($view) {
         case "teams":
+            echo "<div class='mainBox'>\n";
             disp_teams_list($tid);
+            echo "</div>";
             break;
         case "games":
             echo "<div class='mainBox'>\n";

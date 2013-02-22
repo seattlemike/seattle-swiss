@@ -1,15 +1,23 @@
 *Readme* - major stuff
 
+##### Feb 2013:
+  Urgent: 
+    Make sure double elim works for 24-31 teams (or was it 17-24?)
+
+##### Aug 2012:
+  view.php?id=$tid&round_id=$rid&view=results - partial results view clicking on R1,R2,etc 
+         sorted for the round and with the subsequent round results visible but greyed out
+
 ##### May 2012:
 Urgent:
-  Get double elim team pairings working.
-    To do this move pos over to display.
-  [done? added LvW-bracket to display] Also move add_game into get_pairings to add[loser v winner] (v rematch?)
+  #[partial done] Get double elim team pairings working.
+  #                  To do this move pos over to display.
+  #[done? added LvW-bracket to display] Also move add_game into get_pairings to add[loser v winner] (v rematch?)
   #[done] Check apostrophes (htmlentities) in all fields [team names break]
 
 Todo:
   #[done] Import xml file
-  Different modes for view.php [overall rank, bracket, etc]
+  #[done] Different modes for view.php [overall rank, bracket, etc]
   Auto-detect tourney done
   Finish no-rematches-alg for swiss
   add/update team and set/update score should return to anchor links

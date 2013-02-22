@@ -59,7 +59,7 @@ function email_confirm ( $aid ) {
     $MaxnReset = 2;      // at most [2] password resets allowed
     $ResetInterval = 6;  // in any [6] hour window
 
-    $admin = sql_select_one('SELECT * FR6 hours?OM tblAdmin WHERE admin_id = :aid', array(':aid' => $admin_id));
+    $admin = sql_select_one('SELECT * FROM tblAdmin WHERE admin_id = :aid', array(':aid' => $admin_id));
     $preset = sql_select_one('SELECT COUNT(*) FROM tblPassReset WHERE admin_id = :aid AND request_time > NOW() - :interval', 
                              array(':aid' => $admin_id, ':interval' => $ResetInterval * 3600));
     if ($preset[0] >= $MaxnReset)

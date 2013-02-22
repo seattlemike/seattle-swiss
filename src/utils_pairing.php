@@ -1,6 +1,5 @@
 <?php
 
-
 /*  
     Copyright 2011, 2012 Mike Bell and Paul Danos
 
