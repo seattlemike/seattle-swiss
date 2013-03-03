@@ -438,11 +438,13 @@ function disp_dblelim_lbracket($tid, $rnum) {
     $nrounds = intval(ceil(log(count($st),2)));
     foreach ($st as $idx => $t) {
         // add blank next-games where needed
-        //w1->l2, w2->l3, w3->l5, w4->l7
+        //w1->l2, w2->l3, w3->l5, w5->l7
         foreach ($t['results'] as $rnum => $r) {
-            if ($rnum == 1)            $next = 2;
-            elseif ($r['status'] == 2) $next = 2 * $rnum - 1;
-            else                       $next = $rnum + 1;
+            if (($r['status'] == 2) && ($rnum > 2))
+                $next = $rnum + 2;
+            else
+                $next = $rnum + 1;
+
 
             if ((($r['status'] == 2) && ($r['res'] == 0)) || 
                 (($r['status'] == 1) && ($r['res'] == 1)))
@@ -518,7 +520,7 @@ function get_lbracket($standings, $rounds) {
 
                     $is_upper = (! $t['results'][$rnum-1]['res']);
                     if ($is_upper) { 
-                        $offset --;
+                        $offset--;
                         $t['color'] = 'dark';
                     }
                 } else {  // fighting it out among the already-losers
