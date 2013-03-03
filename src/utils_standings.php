@@ -65,7 +65,7 @@ class stats {
                 'id'   => $team['team_id'], // team id
                 'text' => $team['team_text'], // players' names
                 'init' => $team['team_init'],
-                // -1 if disabled, 0 if eliminated, 1 or 2 if still in play
+                // -1 if disabled, 0 if eliminated, 2 if in winners bracket, 1 if in losers bracket
                 'status' => $team['is_disabled'] ? -1 : 2,
                 'opponents' => array(), // list of opponents faced in order
                 'result' => array(), // outcomes of games in order
@@ -147,7 +147,12 @@ class stats {
         }
     }
 
-    //TODO (IMMEDIATE?): bracket_idx for winners, loser_idx[$rnum] for losers?
+    // TODO: This shouldn't be in utils_standings, but in utils_display -- unfortunately it depends on results
+    //       Should possibly just add a team['first_loss'] round number [or compute that in utils_disp]
+    // annoying:  here's where we set where the team goes in the respective brackets
+    //            loser_idx subsequently changes if we fall on a 1mod4 round and we need to flip
+    //  team['bracket_idx'] is the winners bracket original pos (vertically)
+    //  team['loser_idx'] is the losers bracket original pos (adjusted for flip)
     function bracket_index($teams, $tricky = false) {
         if (! count($teams)) return;
 

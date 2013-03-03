@@ -110,9 +110,26 @@ function get_dblelim_pairings($tid) {
     $lbracket = array_filter($standings, function ($t) { return ($t['status'] == 1); });
     $wbracket = array_filter($standings, function ($t) { return ($t['status'] == 2); });
 
+    foreach($standings as $k => $t) {
+        debug_alert($k);
+        print_r($t);
+    }
+    debug_alert("LOSERS");
+    foreach($lbracket as $k => $t) {
+        debug_alert($k);
+        print_r($t);
+    }
+
     // LOSERS' BRACKET MATCHES
-    if (count($lbracket) < 2)
+    if (count($lbracket) == 0)
         $pairs = array();
+    elseif (count($lbracket) == 1) {
+        if (count($wbracket) == 1)      // Finals Special!
+            $pairs[] = array_merge($lbracket, $wbracket);
+        else {
+            $pairs = array($lbracket);  // AWKWARD: we have 2^k+1 many teams in the dblelim
+        }
+    }
     else {
         // flip bracket_idx on odd-rounds to avoid rematches
         // if (log(count($new),2) % 2) { $new = array_merge(array_slice($new, count($new)/2),array_slice($new, 0, count($new)/2)); }
@@ -124,6 +141,7 @@ function get_dblelim_pairings($tid) {
         // if count(old) = 2*count(new) then old v old
         // if count(old) = count(new)   then old v new
         // if count(old) = 0            then new v new [Round2, the first losers round]
+        // if count(old) < count(new)   then old v new with some new BYE [Round3-can-be-awkward scenario]
         if (count($old) == 0) {  // Round2
             // compute number of teams with a first-round bye in each of winners bracket & losers bracket
             $n = pow(2, (int) ceil(log(count($standings),2))-1);
@@ -146,18 +164,19 @@ function get_dblelim_pairings($tid) {
         elseif (count($old) == count($new)) {
             $matches = bracket_match(array_merge($old, $new), 'loser_idx');
         }
-        else {
-            debug_alert("LIKELY: round 3 has byes in losers bracket.  FIX");
-            debug_error(100, "Unexpected number of old/new losers bracket teams", "get_dblelim_pairings");
+        else { // Round3 with BYES
+            
+            // classes size [8?]
+            //$indexed[$t['loser_idx']] = $t;
+            foreach (array_merge($new, $old) as $t)
+                $class[(int) ($t['loser_idx']/8)]++;
+            $bye_filter = function ($t) use ($class) { return ($class[(int) ($t['loser_idx']/8)] == 2); };
+            $matches = bracket_match(array_merge($old, $new), 'loser_idx', $bye_filter);
         }
         // update the pairs list
         $pairs=$matches;
     }
     
-    // Finals Special!
-    if ((count($lbracket) == 1) && (count($wbracket) == 1)) {
-        $pairs[] = array_merge($lbracket, $wbracket);
-    }
 
     // WINNERS' BRACKET MATCHES (scheduled for rounds 1,2,[all 2n+1])
     if (count($lbracket) <= 2*count($wbracket)) {
@@ -186,7 +205,7 @@ function bracket_match($teams, $sort_field, $bye_filter=null) {
     // sort $teams by [$sort_field]
     array_multisort(array_map(function($t) use ($sort_field) {return $t[$sort_field];}, $teams), SORT_NUMERIC, $teams);
 
-    // determine byes using $bye_filter callback
+    // determine byes using $bye_filter callback [returns true if _NOT_ a team to bye]
     if ($bye_filter) {
         $to_pair = array_filter($teams, $bye_filter);
         $to_bye = array_filter($teams, function ($t) use ($bye_filter) { return (! $bye_filter($t)); });

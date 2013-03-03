@@ -2,7 +2,15 @@
 
 ##### Feb 2013:
   Urgent: 
-    Make sure double elim works for 24-31 teams (or was it 17-24?)
+    Make sure double elim works for 2^k+n teams
+    SRS / Max Likelihood
+    Better view page (games)
+  Soon:
+    Better team add (javascript async, cut/paste, import from various files)
+    Tournament modules
+    Consolidate forms (score, etc) and use javascript for async form update
+    Better game sched page
+    Modal dialogs
 
 ##### Aug 2012:
   view.php?id=$tid&round_id=$rid&view=results - partial results view clicking on R1,R2,etc 

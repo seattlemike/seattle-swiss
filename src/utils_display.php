@@ -343,7 +343,7 @@ function disp_standings($tid, $view=null) {
             if (($nrounds > 0) && ($mode == 2)) disp_dblelim_wbracket($tid, $nrounds);
             break;
         case "lbracket":
-            if (($nrounds > 1) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
+            if (($nrounds > 0) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
             break;
         case "results":
             if (($nrounds > 0) && ($mode == 0)) 
@@ -434,11 +434,25 @@ function disp_dblelim_lbracket($tid, $rnum) {
         $st[$i]['color'] = 'light';
     }
 
+    // number of winners bracket rounds with losers?
     $nrounds = intval(ceil(log(count($st),2)));
     foreach ($st as $idx => $t) {
+        // add blank next-games where needed
+        //w1->l2, w2->l3, w3->l5, w4->l7
+        foreach ($t['results'] as $rnum => $r) {
+            if ($rnum == 1)            $next = 2;
+            elseif ($r['status'] == 2) $next = 2 * $rnum - 1;
+            else                       $next = $rnum + 1;
+
+            if ((($r['status'] == 2) && ($r['res'] == 0)) || 
+                (($r['status'] == 1) && ($r['res'] == 1)))
+                $t['results'][$next]['status'] = 1;  // creates blank if needed.
+        }
+
+        // filter to only return losers bracket games
         $st[$idx]['results'] = array_filter($t['results'], 
             function ($r) use ($nrounds) { 
-                return ((($r['res'] == 0) || ($r['status'] == 1)) && ($r['rnum'] < 2*$nrounds)); });
+                return (($r['status'] == 1) && ($r['rnum'] < 2*$nrounds)); });
     }
     
     $rounds = range(2,2*$nrounds-1);
@@ -481,41 +495,44 @@ function get_finals($standings, $rounds) {
     return $bracket;
 }
 
+// takes $standings, $rounds array, and outputs losers bracket over those rounds
 function get_lbracket($standings, $rounds) {
     $bracket = array();
     $nrounds = intval(ceil(log(count($standings),2)));
     $bsize = pow(2, $nrounds);
 
     $bracket[] = array();
-    foreach(range(1,$bsize) as $i)  // mike immediate: annoying
-        $bracket[0][] = array('results' => array(), 'color' => "");
 
+    // rnum: 2, 3, 4, ..., 2*nrounds-1
     foreach ($rounds as $i => $rnum) {
         if (! $bracket[$i]) $bracket[$i] = array();
-        $psize = pow(2, intval($rnum / 2));
-        $fell_num = ($rnum < 4) ? $rnum-1 : $rnum-2;
-        if ($rnum == 4) $fell_num = 0;
+        $psize = pow(2, intval($rnum / 2)); // pocket size for single space in bracket
 
-        $prev = $rnum - 1;
         foreach ($standings as $t) {
-            if ($t['results'][$prev]['res'] || ($t['results'][$fell_num]['status'] == 2)) {
+            if ($t['results'][$rnum]) {
                 $idx = (int) $t['loser_idx'] / 2;
-                if ($rnum % 2) {
+                if ($rnum % 2) {  // has teams new to losers bracket
                     $old_upper = ($idx % (2 * $psize)) - ($idx % $psize);
                     if ($old_upper) $offset = -1 * ($idx % $psize);
                     else            $offset = $psize-1-($idx % $psize)+1;
 
-                    $is_upper = (! $t['results'][$prev]['res']);
+                    $is_upper = (! $t['results'][$rnum-1]['res']);
                     if ($is_upper) { 
                         $offset --;
                         $t['color'] = 'dark';
                     }
-                } else {
+                } else {  // fighting it out among the already-losers
                     $is_upper = ($idx % (2 * $psize)) - ($idx % $psize);
+                    //debug_alert("Team {$t['name']}, upper $is_upper");
                     if ($is_upper) $offset = -1 * ($idx % $psize);
                     else           $offset = $psize-1-($idx % $psize);
+
+                    $offset++; // shift all losers-only rounds down one step
+                    // if first round & BYE, force upper position
+                    if ($is_upper && ($rnum == 2) && ($t['opponents'][1] == -1))
+                        $offset--;
                 }
-                $bracket[$i][$idx+$offset] = $t;
+                $bracket[$i][$idx+$offset-intval($rnum/2)+1] = $t;
             }
         }
     }
@@ -550,8 +567,53 @@ function get_bracket($standings, $rounds) {
 }
 
 function disp_elim($bracket, $height, $rounds) {
+
+    /*echo "<div>COUNT: ".count($bracket[0])."<br>HEIGHT: $height</div>";
+    foreach($bracket[0] as $n => $r) {
+        echo "<div><div>ROW $n</div>";
+        print_r($r);
+        echo "</div>";
+    }
+    */
+
+    // check if we're displaying a losers bracket
+    if (2 * count($bracket[0]) <= $height)
+        $loser_bracket = true;
+
+    // check if our first round is to weed out a few teams (i.e. at least half byes)
+    if (4 * count($bracket[0]) < 3 * $height)
+        $bye_round = true;
+
+    //if bye_round, don't show "BYE" games
+    if ($bye_round && !$loser_bracket)  {
+        foreach( $bracket[0] as $rownum => $r ) {
+            if (($rownum % 2 == 0) && (! $bracket[0][$rownum+1]))
+                unset($bracket[0][$rownum]);
+        }
+    }
+    // else populate with "BYE" fields
+    else { 
+        if ($loser_bracket) {
+            foreach( $bracket[0] as $rownum => $r ) {
+                if ($r['results'][2]['opp_id'] == -1)
+                    $bracket[0][$rownum+1] = array("name" => "BYE", "color" => "light");
+            }
+            foreach( $bracket[1] as $rownum => $r ) {
+                if ($r['results'][3]['opp_id'] == -1)
+                    $bracket[1][$rownum+1] = array("name" => "BYE", "color" => "light");
+            }
+        } else {
+            foreach( $bracket[0] as $rownum => $r ) {
+                if ($r['results'][1]['opp_id'] == -1)
+                    $bracket[0][$rownum+1] = array("name" => "BYE", "color" => get_td_color(0, $rownum+1));
+            }
+
+        }
+    }
+   
+
     // $bracket is ordered by columns (rounds), $table will be ordered by table-row
-    // initialize table with $heightmany blank rows
+    // initialize table with $height-many blank rows
     $table = array_map(function ($r) {return array();}, range(1, $height));
     // loop through bracket columns and add to appropriate table row
     foreach ($bracket as $colnum => $results) {
@@ -560,38 +622,43 @@ function disp_elim($bracket, $height, $rounds) {
         }
     }
 
+
     // print the table
     echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
     echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*count($rounds)-2).">Results</th></tr>\n";
     echo "<tr><th colspan='".(1 + 3 * count($rounds))."'> &nbsp;</th></tr>";
-    foreach ($table as $row) {
+    foreach ($table as $rownum => $row) {
         echo "<tr>";
-        foreach (range(0, count($rounds)-1) as $colnum)
+        foreach (range(0, count($rounds)-1) as $colnum) {
             disp_team($row[$colnum], $colnum, $rounds[$colnum]);
+        }
         echo "</tr>\n";
     }
     echo "</table>\n</div>\n";
 }
 
 function disp_team($team, $index, $rnum) {
-    if ($index > 0) echo "<td class='spacer'></td>\n";
-    // MIKE TODO IMMEDIATE how to figure out if we're a bye?
-    if (!$index && !$team) $team = array("name" => "BYE");
+    if ($index > 0) echo "<td class='spacer'></td>\n";  // gap between columns
     if ($team) {
+        // figure out color for table entry
         if     (isset($team['color']))   $color = $team['color'];
         elseif ($team['special'])        $color = "bold";
         else                             $color = get_td_color(0, $team['bracket_idx']);
+
+        // team name/seed
         echo "<td class='$color'>";
         echo "<span class='tiny'>{$team['seed']}</span>";
         echo "<span class='result' title=\"{$team['text']}\">{$team['name']}</span> </td>\n";
+
+        // display score
         echo "<td class='numeric $color'>\n";
         if ($team['results'][$rnum] && ($team['results'][$rnum]['opp_id'] != -1))
             echo "<span class='score'>{$team['results'][$rnum]['score'][0]}</span>";
         echo "</td>\n";
     }
     else
-        echo "<td colspan=2></td>";
+        echo "<td colspan=2></td>";  // blank entry in table
 }
 
 function score_str($result) {  // TODO need team id, then put self first
@@ -614,7 +681,7 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
     for ($i = 1; $i <= $nrounds; $i++)
         echo "<th>R$i</th>";
     echo  "\n<th></th>\n";
-    echo  "<th title='Difficulty of all opponents faced'>Buchholz</th><th title='Difficulty of oppoents defeated and drawn'>Berger</th><th title='Integral over time of current win/loss score'>Cumulative</th></tr>\n";
+    echo  "<th title='Difficulty of all opponents faced'>Buchholz</th><th title='Difficulty of oppoents defeated and drawn'>Berger</th><th title='Integral over time of win/loss score'>Cumulative</th></tr>\n";
     
     foreach ($standings as $rank => $team) {
         echo "<tr>";
