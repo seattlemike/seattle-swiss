@@ -51,3 +51,11 @@ function togOnCourt(gid) {
     }
     return true;
 }
+
+function toggleHide(id) {
+    var el = document.getElementById(id)
+    if (el.style.display == "none")
+        el.style.display = ""
+    else el.style.display = "none"
+}
+

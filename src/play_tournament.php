@@ -100,31 +100,32 @@
             } ?>
         </div>
             
-        <?php if (isset($rid) && (is_poweruser($_SESSION['admin_id']))) { ?>
+            <? if ($rid) { ?>
             <div class="mainBox">
-                <div class="header" id="edit_round">Edit Round Controls</div> 
-                <form name='populate_tournament' action='<? echo "$url#edit_round"?>' method='post'>
-                    <input type='hidden' name='action' value='#edit_round'>
-                    <input type='hidden' name='populate_id' value=''>
-                    <div class="line">
-                        <?php
-                        disp_tournament_button("Fill", "populate_round", " this.form.elements[\"populate_id\"].value=\"$rid\";");
-                        disp_tournament_button("Empty", "empty_round");
-                        disp_tournament_button("Delete", "remove_round");
-                        ?>
+                <div class="header" id="edit_round" onclick="toggleHide('edit-round-controls')">Edit Round Controls</div> 
+                    <div id="edit-round-controls" style="display: none;">
+                        <form name='populate_tournament' action='<? echo "$url#edit_round"?>' method='post'>
+                            <input type='hidden' name='action' value='#edit_round'>
+                            <input type='hidden' name='populate_id' value=''>
+                            <div class="line">
+                                <?php
+                                disp_tournament_button("Fill", "populate_round", " this.form.elements[\"populate_id\"].value=\"$rid\";");
+                                disp_tournament_button("Empty", "empty_round");
+                                disp_tournament_button("Delete", "remove_round");
+                                ?>
+                            </div>
+                            <div class="line">
+                                <?php
+                                disp_tournament_button('Add Game', 'add_game');
+                                disp_team_select($tid, 'team_a');
+                                disp_team_select($tid, 'team_b');
+                                ?>
+                            </div>
+                        </form>
                     </div>
-                    <div class="line">
-                        <?php
-                        disp_tournament_button('Add Game', 'add_game');
-                        disp_team_select($tid, 'team_a');
-                        disp_team_select($tid, 'team_b');
-                        ?>
-                    </div>
-                </form>
+                </div>
             </div>
-        <? } 
-        ?>
-    </div>
+            <? } ?>
     </div>
 </div>
 <?php include("footer.php"); ?>
