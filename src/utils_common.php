@@ -438,6 +438,7 @@ function teams_import($data, $aid) {
             // calculate an init value that can be compared over multiple tournaments
             if ($nrounds == 0) $init = $k+1;
             else               $init = 1000*($k+1)+1000*(1 - $t['score'] / $nrounds) +100*(1 - $t['buchholz'] / ($nrounds * $nrounds))+10*(1 - $t['berger'] / ($nrounds * $nrounds));
+            //$init = intval($t['srs'] * -1000+100000);
             $status &= team_add( array('name_add' => $t['name'],
                                     'uid_add'  => $t['uid'],
                                     'init_add' => intval($init),

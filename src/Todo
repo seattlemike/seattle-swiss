@@ -2,9 +2,11 @@
 
 ##### Feb 2013:
   Urgent: 
-    Make sure double elim works for 2^k+n teams
-    SRS / Max Likelihood
+    #[done] Make sure double elim works for 2^k+n teams
+    #[done sort of] SRS / Max Likelihood
     Better view page (games)
+    Get rid of rematches on swiss matchups
+    use SRS for multi-tournament import (?)
   Soon:
     Better team add (javascript async, cut/paste, import from various files)
     Tournament modules

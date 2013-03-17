@@ -335,25 +335,22 @@ class stats {
     }
 
     function iterateSRS() {
-        $error = 0;
-        $srr = array();
+        $error = 0; $srs = array();
         foreach ($this->teams as $id => $team) {
-            if (! array_key_exists("srs", $team)) {
-                $this->teams[$id]['srs'] = 0;
-                foreach ($team['results'] as $r)
-                    $this->teams[$id]['srs'] += 10 * ($r['res'] - 0.5) + $r['score'][0] - $r['score'][1];
-                $error += abs($this->teams[$id]['srs']);
-            }
-            else {
+            $n = count($team['results']);
                 $team['srs'] = 0;
-                $n = count($team['results']);
                 foreach ($team['results'] as $r) {
-                    $team['srs'] += 10 * ($r['res'] - 0.5) + $r['score'][0] - $r['score'][1];
-                    $team['srs'] += floatval($this->teams[$r['opp_id']]['srs']) / ($n+0.1);
+                    // Goal diff only
+                    $team['srs'] += ($r['score'][0] - $r['score'][1]);
+                    // Win/Loss only
+                    $team['srs'] += 10 * ($r['res'] - 0.5);
+                    // Both
+                    //$team['srs'] += 10 * ($r['res'] - 0.5) + $r['score'][0] - $r['score'][1];
+
+                    $team['srs'] += $this->teams[$r['opp_id']]['srs'] / ($n+0.01);
                 }
                 $error += abs($team['srs'] - $this->teams[$id]['srs']);
                 $srs[$id] = $team['srs'];
-            }
         }
         if (count($srs)) {
             foreach ($srs as $id => $val)
@@ -363,12 +360,28 @@ class stats {
     }
 
     function calcSRS() {
-        $count = 0; $error = 10;
-        while (($count < 10000) && ($error > 0.0001)) {
+        // Create a placeholder "bye" team to calculate SRS
+        foreach ($this->teams as $id => $team)
+            foreach ($team['results'] as $r)
+                if ($r['opp_id'] == -1)
+                    $this->teams[0]['results'][] = array("res" => 0, "opp_id" => $id, "score" => array(0,0));
+    
+        // Iterate
+        $count = 0; $error = 1;
+        while (($count < 10000) && ($error > 0.005)) {
             $count++;
             $error = $this->iterateSRS();
         }
+
+        // normalize SRS values?
         echo "<div class='alert'>SRS Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+        foreach ($this->teams as $team)
+            $sum += $team['srs'];
+        foreach ($this->teams as $id => $team)
+            $this->teams[$id]['srs'] -= $sum / count($this->teams);
+
+        // remove the bye team
+        unset($this->teams[0]);
     }
 }
 
