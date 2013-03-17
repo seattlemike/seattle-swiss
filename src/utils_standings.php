@@ -333,6 +333,43 @@ class stats {
             foreach ($this->cmp_methods as $method)
                 $this->$method($id);
     }
+
+    function iterateSRS() {
+        $error = 0;
+        $srr = array();
+        foreach ($this->teams as $id => $team) {
+            if (! array_key_exists("srs", $team)) {
+                $this->teams[$id]['srs'] = 0;
+                foreach ($team['results'] as $r)
+                    $this->teams[$id]['srs'] += 10 * ($r['res'] - 0.5) + $r['score'][0] - $r['score'][1];
+                $error += abs($this->teams[$id]['srs']);
+            }
+            else {
+                $team['srs'] = 0;
+                $n = count($team['results']);
+                foreach ($team['results'] as $r) {
+                    $team['srs'] += 10 * ($r['res'] - 0.5) + $r['score'][0] - $r['score'][1];
+                    $team['srs'] += floatval($this->teams[$r['opp_id']]['srs']) / ($n+0.1);
+                }
+                $error += abs($team['srs'] - $this->teams[$id]['srs']);
+                $srs[$id] = $team['srs'];
+            }
+        }
+        if (count($srs)) {
+            foreach ($srs as $id => $val)
+                $this->teams[$id]['srs'] = $val;
+        }
+        return $error;
+    }
+
+    function calcSRS() {
+        $count = 0; $error = 10;
+        while (($count < 10000) && ($error > 0.0001)) {
+            $count++;
+            $error = $this->iterateSRS();
+        }
+        echo "<div class='alert'>SRS Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+    }
 }
 
 // groups elements of $ary with element[$idx] as key
@@ -368,8 +405,13 @@ function build_stats($tid, $nrounds) {
 // teams ordered best to worst
 function get_standings($tid, $all_tiebreaks = false, $nrounds = -1) {
     $stats = build_stats($tid, $nrounds);
-    if ($all_tiebreaks) $stats->tiebreaks();
+    if ($all_tiebreaks) {
+        $stats->tiebreaks();
+        $stats->calcSRS();
+    }
+
     return $stats->team_array();
 }
+
 
 ?>
