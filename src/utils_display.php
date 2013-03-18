@@ -683,8 +683,8 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
     echo "<div class='mainBox'>\n";
     echo "<table class='swiss standings'>\n";
     echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th>";
-    if (all_breaks)
-        echo "<th>SRS</th>";
+    if ($all_breaks)
+        echo "<th>SRS</th><th>Max Prob</th>";
     echo "</tr>\n";
     echo "<tr><th colspan=2></th>\n";
     for ($i = 1; $i <= $nrounds; $i++)
@@ -712,8 +712,10 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
         echo "<td class='numeric'>{$team['buchholz']}</td>";
         echo "<td class='numeric'>{$team['berger']}</td>";
         echo "<td class='numeric'>{$team['cumulative']}</td>";
-        if ($all_breaks)
+        if ($all_breaks) {
             echo "<td class='numeric'>".sprintf("%.2f",$team['srs'])."</td>";
+            echo "<td class='numeric'>".sprintf("%.4f",$team['maxprob'])."</td>";
+        }
         echo "</tr>\n";
     }
     echo "</table>\n</div>\n";

@@ -47,7 +47,7 @@ body {
 span.disabled { color: #224365; }
 
 .cHead, .line, .topHeader, .header, .footer { text-align: center; }
-.lHead, .subBox, label, p, .textbox, li, td { text-align: left; }
+.lHead, .subBox, .item, label, p, .textbox, li, td { text-align: left; }
 
 /* Borders */
 .topHeader { border-bottom: 1px solid #aaf; }
@@ -93,6 +93,7 @@ ol.spaced li {
 
 /* Text Layout */
 p, .line { margin: 0.5em 0 0.5em 0; }
+.item { margin: 1em; }
 
 /* Page Layout */
 .con {

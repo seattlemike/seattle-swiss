@@ -338,35 +338,34 @@ class stats {
         $error = 0; $srs = array();
         foreach ($this->teams as $id => $team) {
             $n = count($team['results']);
-                $team['srs'] = 0;
-                foreach ($team['results'] as $r) {
-                    // Goal diff only
-                    $team['srs'] += ($r['score'][0] - $r['score'][1]);
-                    // Win/Loss only
-                    $team['srs'] += 10 * ($r['res'] - 0.5);
-                    // Both
-                    //$team['srs'] += 10 * ($r['res'] - 0.5) + $r['score'][0] - $r['score'][1];
-
-                    $team['srs'] += $this->teams[$r['opp_id']]['srs'] / ($n+0.01);
-                }
-                $error += abs($team['srs'] - $this->teams[$id]['srs']);
-                $srs[$id] = $team['srs'];
+            $srs[$id] = 0;
+            foreach ($team['results'] as $r) {
+                // add goal diff
+                $srs[$id] += ($r['score'][0] - $r['score'][1]);
+                // add +5/0/-5 for Win/Draw/Loss
+                $srs[$id] += 10 * ($r['res'] - 0.5);
+                // add fraction of opponent's SRS value from prior iteration
+                $srs[$id] += $this->teams[$r['opp_id']]['srs'] / ($n+0.01);
+            }
         }
-        if (count($srs)) {
-            foreach ($srs as $id => $val)
-                $this->teams[$id]['srs'] = $val;
+        foreach ($srs as $id => $val) {
+            $error += abs($val - $this->teams[$id]['srs']);
+            $this->teams[$id]['srs'] = $val;
         }
         return $error;
     }
 
-    function calcSRS() {
-        // Create a placeholder "bye" team to calculate SRS
+    function addByeTeam($id) {
+        // Create a placeholder "bye" team with id=$id
         foreach ($this->teams as $id => $team)
             foreach ($team['results'] as $r)
                 if ($r['opp_id'] == -1)
-                    $this->teams[0]['results'][] = array("res" => 0, "opp_id" => $id, "score" => array(0,0));
-    
+                    $this->teams[$id]['results'][] = array("res" => 0, "opp_id" => $id, "score" => array(0,0));
+    }
+
+    function calcSRS() {
         // Iterate
+        $this->addByeTeam(0);
         $count = 0; $error = 1;
         while (($count < 10000) && ($error > 0.005)) {
             $count++;
@@ -383,6 +382,62 @@ class stats {
         // remove the bye team
         unset($this->teams[0]);
     }
+
+    function iterMaxLikelihood() {
+        $error = 0; $probs = array(); 
+        foreach ($this->teams as $id => $team) {
+            $denom = 0;
+            foreach ($team['faced'] as $opp_id => $count)
+                $denom += $count  / ($this->teams[$id]['maxprob'] + $this->teams[$opp_id]['maxprob']);
+            $probs[$id] = $team['adjscore']/ $denom;
+        }
+
+        foreach ($probs as $id => $val) {
+            $error += abs($val - $this->teams[$id]['maxprob']);
+            $this->teams[$id]['maxprob'] = $val;
+        }
+        return $error;
+    }
+
+    function calcMaxLikelihood() {
+        //gue Iterate
+        $count=0; $error=1;
+        foreach($this->teams as $id => $team) {
+            $this->teams[$id]['maxprob'] = 1;  // initialize maxprob
+            //$team['faced'] = array(); $team['performed'] = array();
+            foreach ($team['results'] as $r) {
+                $this->teams[$id]['faced'][$r['opp_id']]++;
+                $this->teams[$id]['performed'][$r['opp_id']] += ($r['res'] - 0.5) * 0.95 + 0.5;
+                // Win is 2/3, Loss is 1/3, Draw is 1/2; goal diff contributes the remaining third
+                $this->teams[$id]['adjscore'] += 1/3 + $r['res'] * 1/6 + ($r['score'][0]-$r['score'][1])/15;
+                //$this->teams[$id]['adjscore'] += ($r['res'] - 0.5) * 0.95 + 0.5;
+            }
+        }
+
+        while (($count < 10000) && ($error > 0.001)) {
+            $count++;
+            $error = $this->iterMaxLikelihood();
+            /*
+            echo "<div class='item'>ROUND $count";
+            foreach ($this->teams as $id => $t)
+                echo "<div>$id={$t['maxprob']}</div> ";
+            echo "</div>";
+            */
+        }
+        echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+        // Normalize
+        $sum = 0;
+        foreach($this->teams as $id => $team)
+            $sum += $team['maxprob'];
+        foreach($this->teams as $id => $team)
+            $this->teams[$id]['maxprob'] = 100 * $this->teams[$id]['maxprob'] / $sum;
+
+
+
+    }
+
+
+
 }
 
 // groups elements of $ary with element[$idx] as key
@@ -421,6 +476,7 @@ function get_standings($tid, $all_tiebreaks = false, $nrounds = -1) {
     if ($all_tiebreaks) {
         $stats->tiebreaks();
         $stats->calcSRS();
+        $stats->calcMaxLikelihood();
     }
 
     return $stats->team_array();
