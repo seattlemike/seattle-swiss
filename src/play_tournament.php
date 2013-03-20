@@ -95,7 +95,7 @@
             </div>
             <? if (isset($rid)) { 
                 echo "<div id='games'>";
-                disp_games($_POST['toggles'], $tid, $rid, $_SESSION['admin_id']); 
+                disp_round_games($_POST['toggles'], $tid, $rid, $_SESSION['admin_id']); 
                 echo "</div>";
             } ?>
         </div>

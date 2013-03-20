@@ -331,9 +331,9 @@ function disp_standings($tid, $view=null) {
             break;
         case "games":
             echo "<div class='mainBox'>\n";
-            disp_round_nav($tid, $_GET['round_id'], false);
+            //disp_round_nav($tid, $_GET['round_id'], false);
             echo "<div id='games'>";
-            disp_games("", $tid, $_GET['round_id']);   // disp_games checks ($rid in $tid)
+            disp_games($tid);
             echo "</div></div>";
             break;
         case "bracket":
@@ -684,7 +684,7 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
     echo "<table class='swiss standings'>\n";
     echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th>";
     if ($all_breaks)
-        echo "<th>SRS</th><th>Max Prob</th>";
+        echo "<th>SRS</th><th>Max Likelihood</th><th>Iterated Buchholz</th>";
     echo "</tr>\n";
     echo "<tr><th colspan=2></th>\n";
     for ($i = 1; $i <= $nrounds; $i++)
@@ -715,6 +715,7 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
         if ($all_breaks) {
             echo "<td class='numeric'>".sprintf("%.2f",$team['srs'])."</td>";
             echo "<td class='numeric'>".sprintf("%.4f",$team['maxprob'])."</td>";
+            echo "<td class='numeric'>".sprintf("%.4f",$team['iterBuchholz'])."</td>";
         }
         echo "</tr>\n";
     }
@@ -821,8 +822,57 @@ function disp_game($game, $t, $st) {
     echo "</div>\n";
 }
 
-function disp_games($togs, $tid, $rid, $aid=null) {
-    ($db = connect_to_db()) || die("Couldn't connect to database for disp_games");
+function disp_oneline($game, $scores) {
+    echo "<div class='item'>";
+
+    if (count($scores) == 1)
+        echo "Bye for <div class='game-team'>{$scores[0]['team_name']}</div>";
+    elseif (count($scores) > 1) {
+        $max = $scores[0]; $min = $scores[1];
+        if ($scores[1]['score'] > $scores[0]['score']) { $max = $scores[1]; $min = $scores[0]; }
+        $victor = "<div class='game-team'><div class='victor'>{$max['team_name']}</div></div>";
+        $score = "<span class='score'>{$max['score']}-{$min['score']}</span>";
+        $loser = "<div class='game-team'>{$min['team_name']}</div>";
+        $normal = "<div class='game-team'>{$max['team_name']}</div> vs. <div class='game-team'>{$min['team_name']}</div>";
+
+        if ($min['score'] == -1) {
+            if ($game['court'] > 0) echo "<div class='on-court'><span class='score'>Now playing:<span> $normal</div>";
+            else                 echo "<span class='score'>Not yet started:</span> $normal";
+        }
+        else if ($min['score'] == $max['score'])
+            echo "$score Tie, $normal";
+        else 
+            echo "$score Win, $victor over $loser";
+    }
+    else
+        echo "PROBLEM: display game invoked with no scores";
+    echo "</div>";
+}
+
+function disp_games($tid) {
+    ($db = connect_to_db()) || die("Couldn't connect to database for Display Games");
+    $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_id DESC", array(":tid" => $tid), $db);
+    $mode = get_tournament_mode($tid);
+    if ($rounds) {
+        echo "<div class='rounds'>";
+        foreach ($rounds as $r) {
+            $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $r['round_id']),$db);
+            if ($games) {
+                echo "<div class='game-box'>";
+                if ($mode == 0) echo "Round {$r['round_number']}";
+                foreach ($games as $g) {
+                    $scores = sql_select_all("SELECT * FROM tblGameTeams a JOIN tblTeam b WHERE a.game_id = :gid AND a.team_id = b.team_id", array(":gid" => $g['game_id']),$db);
+                    disp_oneline($g, $scores);
+                }
+                echo "</div>\n";
+            }
+        }
+        echo "</div>";
+    }
+}
+
+function disp_round_games($togs, $tid, $rid, $aid=null) {
+    ($db = connect_to_db()) || die("Couldn't connect to database for disp_round");
     $round = get_tournament_round($tid, $rid);
     if (! $round)
         return false;

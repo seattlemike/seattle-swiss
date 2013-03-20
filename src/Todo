@@ -4,9 +4,9 @@
   Urgent: 
     #[done] Make sure double elim works for 2^k+n teams
     #[done sort of] SRS / Max Likelihood
-    Better view page (games)
+    #[done] Better view page (games)
     Get rid of rematches on swiss matchups
-    use SRS for multi-tournament import (?)
+    use ??? (iterated buchholz?) for multi-tournament import
   Soon:
     Better team add (javascript async, cut/paste, import from various files)
     Tournament modules
@@ -15,8 +15,9 @@
     Modal dialogs
 
 ##### Aug 2012:
-  view.php?id=$tid&round_id=$rid&view=results - partial results view clicking on R1,R2,etc 
-         sorted for the round and with the subsequent round results visible but greyed out
+  #  [ partially implemented, then discarded? ]
+  #view.php?id=$tid&round_id=$rid&view=results - partial results view clicking on R1,R2,etc 
+  #       sorted for the round and with the subsequent round results visible but greyed out
 
 ##### May 2012:
 Urgent:
@@ -29,7 +30,6 @@ Todo:
   #[done] Import xml file
   #[done] Different modes for view.php [overall rank, bracket, etc]
   Auto-detect tourney done
-  Finish no-rematches-alg for swiss
   add/update team and set/update score should return to anchor links
   #[done] Fix Session-Timeout [before we've been kicked but after timeout we can still do >= 1 thing]
 

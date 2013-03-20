@@ -367,7 +367,7 @@ class stats {
         // Iterate
         $this->addByeTeam(0);
         $count = 0; $error = 1;
-        while (($count < 10000) && ($error > 0.005)) {
+        while (($count < 1000) && ($error > 0.0001)) {
             $count++;
             $error = $this->iterateSRS();
         }
@@ -383,6 +383,39 @@ class stats {
         unset($this->teams[0]);
     }
 
+    function iterateBuchholz() {
+        foreach ($this->teams as $id => $team) {
+            $n = count($team['results']);
+            $buch[$id] = $team['score'] - 0.5 * $n;
+            // add average opponent value from prior iteration
+            foreach ($team['results'] as $r) {
+                $buch[$id] += $this->teams[$r['opp_id']]['iterBuchholz'] / ($n+0.01);
+            }
+        }
+        foreach ($buch as $id => $val) {
+            $error += abs($val - $this->teams[$id]['iterBuchholz']);
+            $this->teams[$id]['iterBuchholz'] = $val;
+        }
+        return $error;
+    }
+
+    function calcIterBuchholz() {
+        $this->addByeTeam(0);
+        // Iterate
+        $count = 0; $error = 1;
+        while (($count < 1000) && ($error > 0.0001)) {
+            $count++;
+            $error = $this->iterateBuchholz();
+        }
+        // Normalize
+        foreach ($this->teams as $team)
+            $sum += $team['iterBuchholz'];
+        foreach ($this->teams as $id => $team)
+            $this->teams[$id]['iterBuchholz'] -= $sum / count($this->teams);
+        unset($this->teams[0]);
+        echo "<div class='alert'>Iterated Buchholz Calc, total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+    }
+
     function iterMaxLikelihood() {
         $error = 0; $probs = array(); 
         foreach ($this->teams as $id => $team) {
@@ -391,7 +424,6 @@ class stats {
                 $denom += $count  / ($this->teams[$id]['maxprob'] + $this->teams[$opp_id]['maxprob']);
             $probs[$id] = $team['adjscore']/ $denom;
         }
-
         foreach ($probs as $id => $val) {
             $error += abs($val - $this->teams[$id]['maxprob']);
             $this->teams[$id]['maxprob'] = $val;
@@ -400,11 +432,9 @@ class stats {
     }
 
     function calcMaxLikelihood() {
-        //gue Iterate
-        $count=0; $error=1;
+        // Initialize teams
         foreach($this->teams as $id => $team) {
             $this->teams[$id]['maxprob'] = 1;  // initialize maxprob
-            //$team['faced'] = array(); $team['performed'] = array();
             foreach ($team['results'] as $r) {
                 $this->teams[$id]['faced'][$r['opp_id']]++;
                 $this->teams[$id]['performed'][$r['opp_id']] += ($r['res'] - 0.5) * 0.95 + 0.5;
@@ -413,18 +443,12 @@ class stats {
                 //$this->teams[$id]['adjscore'] += ($r['res'] - 0.5) * 0.95 + 0.5;
             }
         }
-
-        while (($count < 10000) && ($error > 0.001)) {
+        // Iterate
+        $count=0; $error=1;
+        while (($count < 1000) && ($error > 0.0001)) {
             $count++;
             $error = $this->iterMaxLikelihood();
-            /*
-            echo "<div class='item'>ROUND $count";
-            foreach ($this->teams as $id => $t)
-                echo "<div>$id={$t['maxprob']}</div> ";
-            echo "</div>";
-            */
         }
-        echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
         // Normalize
         $sum = 0;
         foreach($this->teams as $id => $team)
@@ -432,12 +456,8 @@ class stats {
         foreach($this->teams as $id => $team)
             $this->teams[$id]['maxprob'] = 100 * $this->teams[$id]['maxprob'] / $sum;
 
-
-
+        echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
     }
-
-
-
 }
 
 // groups elements of $ary with element[$idx] as key
@@ -477,6 +497,7 @@ function get_standings($tid, $all_tiebreaks = false, $nrounds = -1) {
         $stats->tiebreaks();
         $stats->calcSRS();
         $stats->calcMaxLikelihood();
+        $stats->calcIterBuchholz();
     }
 
     return $stats->team_array();

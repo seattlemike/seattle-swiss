@@ -53,6 +53,7 @@ span.disabled { color: #224365; }
 .topHeader { border-bottom: 1px solid #aaf; }
 .mainBox, .subBox { border: 1px solid #aaf; }
 .game { border: 1px solid black; }
+hr { height: 1px; color: #aaf; border: none; }
 
 
 ol { 
@@ -80,7 +81,8 @@ ol.spaced li {
 }
 .footer { padding-bottom: 1em; }
 
-.rHead { float: right; }
+.rBox, .rHead { float: right; }
+.lBox { float: left; }
 .raiseHead {
     position: relative;
     top: -2em;
@@ -94,6 +96,30 @@ ol.spaced li {
 /* Text Layout */
 p, .line { margin: 0.5em 0 0.5em 0; }
 .item { margin: 1em; }
+
+
+.game-box:first-child { border: none; }
+.game-box { padding: 1em 0.5em; border-top: 1px solid #aaf; }
+.game-team { 
+    display: inline-block;
+    font-size: 1.2em;
+    margin: 0 0.5em;
+}
+
+.victor, .on-court { 
+    display: inline-block;
+    padding: 0.2em 0.5em;
+    border-radius: 2px;
+}
+
+.victor {
+    background: #eef;
+    border: 1px solid #aaf;
+}
+.on-court {
+    background: #fee;
+    border: 1px solid #c99;
+}
 
 /* Page Layout */
 .con {
