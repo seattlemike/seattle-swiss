@@ -19,8 +19,12 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+    if (isset($_GET['all']))
+        $title_text = "All Tournaments";
+    else
+        $title_text = "Recent Tournaments";
+
     $page_name = "Standings";
-    $title_text = "Tournaments";
     include("header.php");
 ?>
 
@@ -38,7 +42,18 @@
             }
             else {  // List of public tournaments
                 $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
-                disp_tournaments($tlist, 'view.php');
+                // only list tournaments from the past year?
+                if (! isset($_GET['all'])) {
+                    foreach( $tlist as $k => $t ) {
+                        if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7) ||
+                            (strtotime($t['tournament_date']) < time() -3600*24*365))
+                            unset($tlist[$k]);
+                    }
+                    disp_tournaments(array_slice($tlist,0,10), 'view.php');
+                    echo '<div class="line"> <a href="view.php?all">Older Tournaments</a> </div>';
+                } else {
+                    disp_tournaments($tlist, 'view.php');
+                }
             }
         ?>
     </div>
