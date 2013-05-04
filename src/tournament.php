@@ -20,6 +20,8 @@
 */
 
     $page_name="Edit";
+    $header_extra = array( '<script src="ui.js" type="text/javascript"></script>' );
+
 	include("header.php");  // sets $tid if valid tournament
 
     if (! $tid) header("location:main_menu.php");
@@ -31,10 +33,8 @@
         $_POST['tournament_id'] = $tid;  //this is not a bad thing
 
         if ($_POST['action'] == 'delete_tournament') {
-            if ($_POST['confirmed'] == 'true') {
-                $redir = tournament_delete($_POST, $_SESSION['admin_id']);
-                $redir || die("Failed tournament delete!");
-            } else { $confirm='true'; }
+            $redir = tournament_delete($_POST, $_SESSION['admin_id']);
+            $redir || die("Failed tournament delete!");
         }
         elseif ($_POST['action'] == 'update_tournament') {
             tournament_update($_POST, $_SESSION['admin_id']);
@@ -58,14 +58,10 @@
         elseif ($_POST['action'] == 'update_team')  { team_update($_POST);  }
         if ($redir) header("location:main_menu.php");  // stick this back in delete_tournament?
     }
-  ?>
+?>
 
 <?php 
     $tourney = get_tournament($tid, $_SESSION['admin_id']);
-    
-    if ($confirm == 'true') {  //want a better way to do this.  Javascript, I suppose.
-        echo "<div class='header warning'><h2>Are you sure you want to delete this tournament?</h2></div>"; 
-    }
 ?>
 <div class="con">
     <div class="centerBox">
@@ -141,15 +137,12 @@
            </form>
         </div>
         <div class="nav rHead">
-            <form name='delete' method='post' action=''>
-                <input type='hidden' name='action' value='' />
-                <input type='hidden' name='confirmed' value='<? echo $confirm ?>' />
+            <form id="delForm" name='delete' method='post' action=''>
+                <input type='hidden' name='action' value='delete_tournament' />
                 <?php 
                     if (tournament_isowner($tourney['tournament_id'], $_SESSION['admin_id']))
-                    if ($confirm)
-                        disp_tournament_button('Yes, Delete Tournament', 'delete_tournament');
-                    else 
-                        disp_tournament_button('Delete Tournament', 'delete_tournament');
+                        echo '<a href="#" onClick="delTournament()">Delete Tournament</a>';
+                        //disp_tournament_button('Delete Tournament', 'delete_tournament');
                 ?>
             </form>
             <div class='header'></div>

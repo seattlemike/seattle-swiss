@@ -1,5 +1,12 @@
 *Readme* - major stuff
 
+#### May 2013
+    finish tournament->module->round->game hierarchy
+    redesign new-tournament creation
+    better way to do page header 
+        not just include(header.php) but more like display_head(extra_bits)
+    #fix delete-tournament
+
 ##### Feb 2013:
   Urgent: 
     #[done] Make sure double elim works for 2^k+n teams
@@ -13,7 +20,7 @@
     Tournament modules
     Consolidate forms (score, etc) and use javascript for async form update
     Better game sched page
-    Modal dialogs
+    #Modal dialogs
 
 ##### Aug 2012:
   #  [ partially implemented, then discarded? ]

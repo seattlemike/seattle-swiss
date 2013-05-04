@@ -305,3 +305,38 @@ td.center, td.numeric { text-align: center; }
 	width:100%;
 	border-top:1px solid #000;
 }
+
+/* Modal Dialog */
+    .window-overlay { 
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        background-color: #000;
+        /*transition: opacity 0.2s ease-in-out;*/
+        opacity: 0.5;
+        width: 100%;
+        height: 100%;
+        z-index: 1001;
+    }
+
+    .dialog { 
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        background-color: #fff;
+        overflow: auto;
+        width: 20em;
+        margin-left: -10em;
+        margin-top: -3em;
+        border-radius: 0.5em;
+        border: 1px solid #aaf;
+        z-index: 1002;
+        min-height: 5em;
+        padding: 1em;
+    }
+
+    .dialog-text { min-height: 3em; margin: 1em 0; text-align: center;}
+    .dialog-buttons { margin-top: 1em; }
+    .rt-button { float: right; }
+
+

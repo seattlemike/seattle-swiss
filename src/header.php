@@ -93,6 +93,10 @@ if (isset($title_text) && (! isset($header_text)))  { $header_text = $title_text
         <?php 
             $title = "20Swiss";
             if (isset($title_text)) { $title .= " : $title_text"; }
+            if (isset($header_extra)) {
+                foreach ($header_extra as $line)
+                    echo "$line\n";
+            }
         ?>
         <title><?echo $title;?></title>  
     </head>

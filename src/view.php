@@ -45,12 +45,12 @@
                 // only list tournaments from the past year?
                 if (! isset($_GET['all'])) {
                     foreach( $tlist as $k => $t ) {
-                        if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7) ||
-                            (strtotime($t['tournament_date']) < time() -3600*24*365))
+                        if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7))
+                            //(strtotime($t['tournament_date']) < time() -3600*24*365))
                             unset($tlist[$k]);
                     }
                     disp_tournaments(array_slice($tlist,0,10), 'view.php');
-                    echo '<div class="line"> <a href="view.php?all">Older Tournaments</a> </div>';
+                    echo '<div class="nav line"> <a href="view.php?all">Older Tournaments</a> </div>';
                 } else {
                     disp_tournaments($tlist, 'view.php');
                 }
