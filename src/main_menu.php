@@ -19,7 +19,7 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-  $title_text = "Tournaments";
+  $title_text = "Your Tournaments";
 
   include("header.php");
   require_login();
@@ -35,6 +35,9 @@
 
 <div class="con">
     <div class="centerBox">
+        <div class="nav line">
+            <a class="button" href="create_tournament.php">New Tournament</a>
+        </div>
             <?php
             if (isset($_GET['super'])) {
                 require_privs(false);  // dies unless $_SESSION['admin_type']=='super'
@@ -46,9 +49,6 @@
             if ($tlist) 
                 disp_tournaments($tlist);
             ?>
-        <div class="nav line">
-            <a class="button" href="create_tournament.php">New Tournament</a>
-        </div>
     </div>
 </div>
 <?php include("footer.php"); ?>

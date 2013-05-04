@@ -5,8 +5,9 @@
     #[done] Make sure double elim works for 2^k+n teams
     #[done sort of] SRS / Max Likelihood
     #[done] Better view page (games)
-    Get rid of rematches on swiss matchups
-    use ??? (iterated buchholz?) for multi-tournament import
+    swiss matchups -> random pairings within record group(?) + brute-force no rematch
+        or maybe split into k-groups (4? 8?) for most useful seeding info
+    use Min Likelihood for team Rankings
   Soon:
     Better team add (javascript async, cut/paste, import from various files)
     Tournament modules

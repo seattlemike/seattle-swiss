@@ -372,12 +372,15 @@ class stats {
             $error = $this->iterateSRS();
         }
 
-        // normalize SRS values?
-        echo "<div class='alert'>SRS Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+        // normalize
         foreach ($this->teams as $team)
             $sum += $team['srs'];
         foreach ($this->teams as $id => $team)
             $this->teams[$id]['srs'] -= $sum / count($this->teams);
+
+        foreach ($this->teams as $team)
+            $var += $team['srs'] * $team['srs'] / count($this->teams);
+        echo "<div class='alert'>SRS Calc: total error: ".sprintf("%.5f", $error).", iterations: $count, mean: 0, StdDev: ".sprintf("%.2f",sqrt($var))."</div>\n";
 
         // remove the bye team
         unset($this->teams[0]);
@@ -413,7 +416,10 @@ class stats {
         foreach ($this->teams as $id => $team)
             $this->teams[$id]['iterBuchholz'] -= $sum / count($this->teams);
         unset($this->teams[0]);
-        echo "<div class='alert'>Iterated Buchholz Calc, total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+
+        foreach($this->teams as $team)
+            $var += $team['iterBuchholz'] * $team['iterBuchholz'] / count($this->teams);
+        echo "<div class='alert'>Iterated Buchholz Calc, total error: ".sprintf("%.5f", $error).", iterations: $count, mean: 0, StdDev: ".sprintf("%.2f", sqrt($var))."</div>\n";
     }
 
     function iterMaxLikelihood() {
@@ -456,7 +462,10 @@ class stats {
         foreach($this->teams as $id => $team)
             $this->teams[$id]['maxprob'] = 100 * $this->teams[$id]['maxprob'] / $sum;
 
-        echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count</div>\n";
+        $mean = 100 / count($this->teams);
+        foreach($this->teams as $team)
+            $var += ($team['maxprob']-$mean) * ($team['maxprob']-$mean) / count($this->teams);
+        echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count, mean: ".sprintf("%.2f",$mean).", StdDev:".sprintf("%.2f",sqrt($var))."</div>\n";
     }
 }
 
