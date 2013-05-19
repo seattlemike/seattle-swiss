@@ -26,6 +26,9 @@
 
     $page_name = "Standings";
     include("header.php");
+    disp_header($title_text);
+    disp_topbar($tourney, $module, 3);
+    disp_titlebar($title_text);
 ?>
 
 <div class='con'>
@@ -41,6 +44,7 @@
                     header("location:view.php");
             }
             else {  // List of public tournaments
+                echo "<div class='mainBox'>\n";
                 $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
                 // only list tournaments from the past year?
                 if (! isset($_GET['all'])) {
@@ -54,6 +58,7 @@
                 } else {
                     disp_tournaments($tlist, 'view.php');
                 }
+                echo "</div>";
             }
         ?>
     </div>

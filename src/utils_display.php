@@ -39,35 +39,6 @@ function disp_tournament_button($value, $action, $extra='', $class='') {
 }
 
 //
-//  **HEADER**
-//
-
-function disp_header_admin() {
-    if (check_login()) {
-        echo "<div class='lHead'>\n";
-        echo "<a href='main_menu.php'>{$_SESSION['admin_name']}</a>";
-        echo "<a href='user.php'>settings</a>";
-        if ($_SESSION['admin_type'] == 'super') 
-            echo "<a href='main_menu.php?super=true'>super</a>";
-        echo "<a href='logout.php'>log out</a>\n";
-        echo "</div>\n";
-    }
-}
-
-function disp_header_tnav($tid, $tname, $pagename='') {
-    $navs = array( "Edit" => "tournament.php", "Run" => "play_tournament.php", "Standings" => "view.php");
-    if (check_login() && isset($tid)) {
-        echo "<div class='rHead'>$tname\n";
-        foreach ($navs as $name => $dest) {
-            if ($pagename == $name) { $class = "class='selected'"; }
-            else                    { $class = ""; }
-            echo "<a $class href='$dest?id=$tid'>$name</a>";
-        }
-        echo "</div>\n";
-    }
-}
-
-//
 // ** EDIT TOURNAMENT **
 //
 
@@ -89,29 +60,57 @@ function disp_status($tourney = null) {
     }
     ?>
     <div class='mainbox <? if ($going) echo "playing"; ?>'>
-        <div class='header'>Status</div>
-        <p><? echo $status; ?></p>
+        <div class='header'>Status: <? echo $status; ?></div>
     </div>
     <?
 }
 
-function disp_tournament_details($tourney = null) {
+function build_select($name, $options, $selected = null) {
+    $select = "<select name='$name'>";
+    foreach ($options as $val => $txt) {
+        if ($val == $selected)
+            $seltxt = "selected";
+        else
+            $seltxt = "";
+        $select .= "<option value='$val' $seltxt>$txt</option>";
+    }
+    return $select."</select>";
+}
 
+function disp_module_details($module = null) {
+    if (isset($module))   $date = date("m/d/Y", strtotime($module['module_date']));
+    else                   $date = date("m/d/Y");
+
+    //"<input $def name='module_mode' value=\"{$modes[$module['module_mode']]}\" DISABLED />" );
+    $modes = array("Swiss Rounds", "Single Elimination", "Double Elimination");
+    $mode_select = build_select("module_mode", $modes, $module['module_mode']);
+    $def = "class='wide' type='text' maxlength='40'";
+    $inputs = array( "Name" => "<input $def name='module_title' value=\"{$module['module_title']}\" />",
+                     "Notes" => "<input $def name='module_notes' value=\"{$module['module_notes']}\" />",
+                     "Date" => "<input $def name='module_date' value='$date' />",
+                     "Mode" => $mode_select );
+    // if we've got games in the module, don't allow changes to module_mode
+    if (is_array(sql_select_one("SELECT * from tblRound WHERE module_id = ?", array($module['module_id']))))
+        $inputs["Mode"] = "<input $def name='mode' value='{$modes[$module['module_mode']]}' DISABLED />";
+    // TODO: if module has no associated games yet, don't disable module_mode
+    
+    foreach ($inputs as $text => $input) {
+        echo "<label>$text $input</label>\n";
+    }
+}
+
+function disp_tournament_details($tourney = null) {
     if (isset($tourney))   $date = date("m/d/Y", strtotime($tourney['tournament_date']));
     else                   $date = date("m/d/Y");
 
-    if ($tourney['is_public']) $ispublic="checked='checked'";
-    if ($tourney['is_over']) $isover="checked='checked'";
-
-    $modes = array("Swiss Rounds", "Single Elimination", "Double Elimination");
+    $privacy_select = build_select("t_privacy", array("Only Me", "Anyone With A Link", "Everyone"), $tourney['tournament_privacy']);
     $def = "class='wide' type='text' maxlength='40'";
-    $inputs = array("Name" => "<input $def name='tournament_name' value=\"{$tourney['tournament_name']}\" />",
-                    "City" => "<input $def name='tournament_city' value=\"{$tourney['tournament_city']}\" />",
-                    "Date" => "<input $def name='tournament_date' value='$date' />", 
-                    "Mode" => "<input $def name='tournament_mode' value=\"{$modes[$tourney['tournament_mode']]}\" DISABLED />",
-                    "Public" => "<input type='checkbox' name='is_public' value='public' $ispublic />",
-                    "Finished" => "<input type='checkbox' name='is_over' value='finished' $isover />");
-                    
+    $inputs = array("Name" => "<input $def name='t_name' value=\"{$tourney['tournament_name']}\" />",
+                    "Date" => "<input $def name='t_date' value='$date' />", 
+                    "Notes" => "<input $def name='t_notes' value=\"{$tourney['tournament_notes']}\" />",
+                    "Who Can See Tournament Results" => $privacy_select);
+    // TODO: tournament_notes should be a [text] in the db, and should be a textbox here
+
     foreach ($inputs as $text => $input) {
         echo "<label>$text $input</label>\n";
     }
@@ -136,9 +135,27 @@ function disp_admin_tournament($t, $aid, $idx) {
     echo "</tr>";
 }
 
-function disp_tournaments($tlist, $dest='tournament.php') {
-    echo "<div class='mainBox'>\n";
+function disp_modules($tlist) {
     $mode = array("Swiss", "Single Elim", "Double Elim");
+    if ((! $tlist) || (count($tlist) == 0))
+        echo "<div class='line'>[no brackets scheduled yet]</div>\n";
+    else {
+        echo "<table>\n";
+        foreach ($tlist as $m) {
+            echo "<tr>\n";
+            echo "<td class='btnCtr'>\n";
+            echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
+            echo "</td>\n";
+            echo "<td><a href='module.php?module={$m['module_id']}'>{$m['module_title']}</a></td>";
+            $date = date("m/d/Y", strtotime($m['module_date']));
+            echo "<td>{$mode[$m['module_mode']]}</td><td>$date</td>\n";
+            echo "</tr>\n";
+        }
+        echo "</table>\n";
+    }
+}
+
+function disp_tournaments($tlist, $dest='tournament.php') {
     if ((! $tlist) || (count($tlist) == 0))
         echo "<div class='header'>[no tournaments yet]</div>\n";
     else {
@@ -146,20 +163,14 @@ function disp_tournaments($tlist, $dest='tournament.php') {
         foreach ($tlist as $tourney) {
             echo "<tr>\n";
             $date = date("M d, Y", strtotime($tourney['tournament_date']));
-            echo "<td>$date</td><td>{$mode[$tourney['tournament_mode']]}</td>\n";
+            echo "<td>$date</td>\n";
             // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
             // else                                       { $class = ''; }
-            //echo "<div class='line'>\n";
-            echo "<td class='btnCtr'>\n";
-            echo "<a href='/rss/{$tourney['tournament_id']}/' title='Subscribe to Tournament RSS Feed'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
-            echo "</td>\n";
             echo "<td><a href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a></td>";
             echo "</tr>\n";
-            //echo "</div>\n";
         }
         echo "</table>\n";
     }
-    echo "</div>\n";
 }
 
 function disp_admins($t, $aid) {
@@ -177,6 +188,16 @@ function disp_admins($t, $aid) {
         }
         echo "{$admin['admin_name']} ({$admin['admin_email']})</p>\n";
     }
+}
+
+function disp_module_team($team) {
+    echo "<tr data-seed='{$team['team_seed']}' data-id='{$team['team_id']}' class='module-team'>";
+    echo "<td>{$team['team_name']}</td>";
+    if ($team['disabled'])
+        echo "<td><a class='button'>Not Competing</a></td>";
+    else
+        echo "<td><a class='hot button'>Competing</a></td>";
+    echo "<td><input name='seed-{$team['team_id']}' class='numeric' type='text' maxlength='6' value='{$team['team_seed']}' {$team['disabled']}/></td></tr>";
 }
 
 function disp_team_edit($team) {
@@ -345,7 +366,7 @@ function disp_standings($tid, $view=null) {
         case "lbracket":
             if (($nrounds > 0) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
             break;
-        case "full":
+        case "debug":
             disp_swiss($tid, $nrounds, true);
             break;
         case "results":

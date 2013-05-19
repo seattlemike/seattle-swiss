@@ -2,10 +2,16 @@
 
 #### May 2013
     finish tournament->module->round->game hierarchy
-    redesign new-tournament creation
+    #redesign new-tournament creation
     better way to do page header 
         not just include(header.php) but more like display_head(extra_bits)
+        fix header.php to just include header get/set/disp functions, not output/unexpected side-effects
     #fix delete-tournament
+    #jesus christ, I've never had to deal with making changes in-place on working software
+    # - I want desperately to restructure the whole thing, but can't while it's in use
+    Choice between Min Likelihood / wins-buchholz for seeding
+    Status string (Round 2: x games finished or Losers Bracket Finals or sweet sixteen/elite eight/final four)
+    any POSTS to self should be rewritten as xmlhttprequest
 
 ##### Feb 2013:
   Urgent: 
@@ -14,7 +20,7 @@
     #[done] Better view page (games)
     swiss matchups -> random pairings within record group(?) + brute-force no rematch
         or maybe split into k-groups (4? 8?) for most useful seeding info
-    use Min Likelihood for team Rankings
+    #use Min Likelihood for team Rankings
   Soon:
     Better team add (javascript async, cut/paste, import from various files)
     Tournament modules

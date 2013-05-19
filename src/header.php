@@ -51,11 +51,110 @@ if (isset($_COOKIE[ini_get('session.name')])) {
     }
 }
 
-// check for tournament_id and round_id
-if ( isset($_POST['tournament_id']) || isset($_GET['id']) ) {
-    ($tid = $_POST['tournament_id']) || ($tid = $_GET['id']);
+if (isset($_GET['super'])) {
+    require_privs(false);
+    $title_text = "[super] $title_text";
+    $super=true;
+}
 
-    $tname = get_tournament_name($tid);
+//if header text is unset, use title_text
+if (isset($title_text) && (! isset($header_text)))  { $header_text = $title_text; }
+
+function disp_header($title = null, $js_extra=array(), $header_extra = array()) {
+    echo <<<END
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+<link href='http://fonts.googleapis.com/css?family=Rosario:400,400italic' rel='stylesheet' type='text/css' />
+<link href='http://fonts.googleapis.com/css?family=Rokkitt:700' rel='stylesheet' type='text/css' />
+<link rel='stylesheet' type='text/css' href='/style.css' />
+<script src='swiss.js' type='text/javascript'></script>
+END;
+    foreach ($js_extra as $jsfile)
+        echo "<script src='$jsfile' type='text/javascript'></script>\n";
+    foreach ($header_extra as $line)
+        echo "$line\n";
+    if (! $title)
+        $title = "20Swiss";
+    else 
+        $title = "20Swiss : $title";
+    echo "<title>$title</title>\n</head>\n<body>";
+}
+
+function disp_admin_topbar() {
+    if (check_login()) {
+        echo "<div class='lHead'>\n";
+        echo "<a href='main_menu.php'>{$_SESSION['admin_name']}</a>";
+        echo "<a href='user.php'>settings</a>";
+        if ($_SESSION['admin_type'] == 'super') 
+            echo "<a href='main_menu.php?super=true'>super</a>";
+        echo "<a href='logout.php'>log out</a>\n";
+        echo "</div>\n";
+    }
+}
+
+function disp_modnav_topbar($tourney, $module, $page) {
+    if (! isset($module))
+        $navs = array( array( $tourney['tournament_name'], "tournament.php?id={$tourney['tournament_id']}" ) );
+    else 
+        $navs = array( array( $tourney['tournament_name'], "tournament.php?id={$tourney['tournament_id']}" ),
+                       array( $module['module_title'], "module.php?module={$module['module_id']}" ),
+                       array( "Run", "play_tournament.php?module={$module['module_id']}" ), 
+                       array( "Standings", "view.php?module={$module['module_id']}" ));
+
+    echo "<div class='rHead'>";
+    foreach ($navs as $idx => $link) {
+        list($text, $dest) = $link;
+        if ($page == $idx)
+            echo "<a class='selected' href='$dest'>$text</a>";
+        else 
+            echo "<a href='$dest'>$text</a>";
+    }
+    echo "</div>\n";
+}
+
+// assert: already checked tid/mid/has_privs/etc
+function disp_topbar($tourney=null, $module=null, $page=null) {
+    echo "<div class='backHead nav'>";
+    if (isset($tourney))
+        disp_modnav_topbar($tourney, $module, $page);
+    disp_admin_topbar();
+    echo "</div>";
+}
+
+//    $tname = get_tournament_name($tid);
+function disp_titlebar($title = null) {
+    if (! isset($title))
+        $title = "20Swiss";
+    echo "<div class='topHeader'>$title</div>";
+}
+
+// checks for $tid in POST and GET
+function get_tid() {
+    if ( isset($_POST['tournament_id']) )
+        return $_POST['tournament_id'];
+    elseif (isset($_GET['id']))
+        return $_GET['id'];
+    return null;
+}
+
+function get_mid() {
+    if (isset($_POST['module_id']))
+        return $_POST['module_id'];
+    elseif (isset($_GET['module']))
+        return $_GET['module'];
+    return null;
+}
+
+function header_redirect( $dest ) {
+    header("location:$dest");
+    die();
+}
+
+
+/*
     if (isset($tname)) {  //TODO: should use tournament_exists($tid) instead of isset(tname)
         $title_text = $tname;  // clobbers when we have a tid [desired? used in view.php]
         if ( isset($_POST['round_id']) || isset($_GET['round_id']) )
@@ -69,43 +168,5 @@ if ( isset($_POST['tournament_id']) || isset($_GET['id']) ) {
     }
     else { unset($tid); }
 }
-
-if (isset($_GET['super'])) {
-    require_privs(false);
-    $title_text = "[super] $title_text";
-    $super=true;
-}
-
-//if header text is unset, use title_text
-if (isset($title_text) && (! isset($header_text)))  { $header_text = $title_text; }
-
+*/
 ?>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns='http://www.w3.org/1999/xhtml'>
-    <head>
-        <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
-        <link href='http://fonts.googleapis.com/css?family=Rosario:400,400italic' rel='stylesheet' type='text/css' />
-        <link href='http://fonts.googleapis.com/css?family=Rokkitt:700' rel='stylesheet' type='text/css' />
-        <link rel='stylesheet' type='text/css' href='/style.css' />
-        <script src="swiss.js" type="text/javascript"></script>
-        <?php 
-            $title = "20Swiss";
-            if (isset($title_text)) { $title .= " : $title_text"; }
-            if (isset($header_extra)) {
-                foreach ($header_extra as $line)
-                    echo "$line\n";
-            }
-        ?>
-        <title><?echo $title;?></title>  
-    </head>
-    <body>
-        <div class='backHead nav'>
-            <?php 
-                disp_header_tnav($tid, $tname, $page_name);
-                disp_header_admin();
-            ?>
-        </div>
-        <div class='topHeader'> <? echo $header_text; ?> </div>
-

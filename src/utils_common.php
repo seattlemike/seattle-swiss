@@ -107,22 +107,38 @@ function logout() {
 
 // checks to see if the admin logged in has privileges for the tournament
 function tournament_isadmin($tid, $aid) {
-    if ($_SESSION['admin_type'] == 'super')
-        return true;
-    $fetch = sql_select_one("SELECT * FROM tblTournamentAdmins
-      WHERE tournament_id = ? AND admin_id = ?", array($tid, $aid));
-    return ($fetch != false);
+    return (($_SESSION['admin_type'] == 'super') ||
+            is_array( sql_select_one("SELECT * FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", 
+                      array($tid, $aid))));
 }
 
 function tournament_isowner($tid, $aid) {
-    if ($_SESSION['admin_type'] == 'super')
-        return true;
-    $t = get_tournament($tid, $aid);
-    return ($t && $t['tournament_owner'] == $aid);
+    return (($_SESSION['admin_type'] == 'super') ||
+            is_array(sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = ? AND tournament_owner = ?', 
+                     array($tid, $aid))));
 }
 
 function tournament_ispublic($tid) {
-    return is_array(sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid AND is_public = 1', array(':tid' => $tid)));
+    return is_array(sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid AND is_public = 1', 
+                    array($tid)));
+}
+
+function tournament_isparent($tid, $mid) {
+    return is_array(sql_select_one("SELECT * FROM tblModule WHERE module_id = ? AND parent_id = ?", 
+                    array($tid, $mid)));
+}
+
+function module_getteam($mid, $team_id) {
+    return sql_select_one("SELECT * FROM tblModuleTeams WHERE module_id = ? AND team_id = ?", array($mid, $team_id));
+}
+
+function module_hasteam($mid, $team_id) {
+    return is_array(module_getteam($mid, $team_id));
+}
+
+function tournament_hasteam($tid, $team_id) {
+    return is_array(sql_select_one("SELECT * FROM tblTeam WHERE tournament_id = ? AND team_id = ?",
+                    array($tid, $team_id)));
 }
 
 //
@@ -149,6 +165,65 @@ function is_poweruser() {
 }
 
 //
+// Module Functions:
+//
+
+function get_module_parent($mid) {
+    $m = sql_select_one('SELECT * FROM tblModule WHERE module_id = ?', array($mid));
+    if (is_array($m))
+        return $m['parent_id'];
+    else 
+        return false;
+}
+
+function get_module($mid) {
+    if ($mid)
+        return sql_select_one('SELECT * FROM tblModule WHERE module_id = ?', array($mid));
+    else
+        return false;
+}
+
+function get_module_teams($mid) {
+    return sql_select_all("SELECT a.*,b.team_name FROM tblModuleTeams a JOIN tblTeam b USING (team_id) WHERE a.module_id = ? ORDER BY team_seed, team_id", array($mid));
+}
+
+
+function get_tournament_modules($tid) {
+    return sql_select_all("SELECT * FROM tblModule WHERE parent_id = ?", array($tid));
+}
+
+function module_update_seeds($data) {
+    $success = true;
+    $mid = $data['module_id'];
+    foreach($data as $key => $val) {
+        $exp = explode("seed-",$key);
+        $team_id = $exp[1];
+        if (($team_id) && module_hasteam($mid, $team_id)) {
+            $success &= sql_try("UPDATE tblModuleTeams SET team_seed = ? WHERE module_id = ? AND team_id = ?", 
+                                array($val, $mid, $team_id));
+        }
+    }
+    return $success;
+}
+
+// ASSERT (mid is valid and admin_id can edit them)
+function module_update($data) {
+    $module = get_module($data['module_id']);
+    $bind_vars = array(':title' => htmlspecialchars($data['module_title']),
+                       ':date' => date("Y-m-d", strtotime($data['module_date'])),
+                       ':notes' => htmlspecialchars($data['module_notes']),
+                       ':mode' => $module['module_mode'], // unchanged
+                       ':mid' => $data['module_id']);
+
+    // only set 'module_mode' when no rounds have yet been scheduled/played
+    if (! is_array(sql_select_one("SELECT * from tblRound WHERE module_id = ?", array($mid))))
+        $bind_vars[':mode'] = $data['module_mode'];
+
+    $success = sql_try("UPDATE tblModule SET module_title = :title, module_date = :date, 
+                        module_notes = :notes, module_mode = :mode WHERE module_id = :mid", $bind_vars);
+}
+
+//
 // Tournament Functions:
 //
 
@@ -163,11 +238,8 @@ function get_tournament_mode($tid) {
     return $t['tournament_mode'];
 }
 
-function get_tournament($tid, $aid) {
-    if (tournament_isadmin($tid, $aid))
-        return sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid', array(':tid' => $tid));
-    else
-        return false;
+function get_tournament($tid) {
+    return sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = ?', array($tid));
 }
 
 function get_my_tournaments($aid) {
@@ -242,6 +314,25 @@ function tournament_remove_admin($data, $aid) {
     return sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($data['tournament_id'], $data['admin_id']));
 }
 
+function tournament_new_module($data, $aid) {
+    require_privs(tournament_isadmin($data['tournament_id'], $aid));
+    $tourney = get_tournament($data['tournament_id']);
+    return sql_try("INSERT INTO tblModule (module_title, module_date, parent_id) VALUES (?, ?, ?)",
+                   array("New Bracket", $tourney['tournament_date'], $data['tournament_id']));
+}
+
+function new_tournament($aid) {
+    $newid = sql_insert("INSERT INTO tblTournament 
+                (tournament_name, tournament_date, tournament_owner) VALUES (?, ?, ?)", 
+                array("New Tournament", date("Y-m-d"), $aid));
+    if ($newid) {
+        $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $aid));
+        if (! $success) // TODO: created orphan tournament!  should remove! (shouldn't ever happen though)
+            return false;
+    }
+    return $newid;
+}
+
 function tournament_create($data, $aid) {
     $bind_vars = array(':tname' => htmlspecialchars($data['tournament_name']),
         ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
@@ -262,14 +353,13 @@ function tournament_create($data, $aid) {
 
 function tournament_update($data, $aid) {
     require_privs(tournament_isadmin($data['tournament_id'], $aid));  //already done?
-    $bind_vars = array(':tname' => htmlspecialchars($data['tournament_name']),
-        ':tcity' => htmlspecialchars($data['tournament_city']),
-        ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
-        ':tpub' => isset($data['is_public']),
-        ':tover' => isset($data['is_over']),
+    $bind_vars = array(':tname' => htmlspecialchars($data['t_name']),
+        ':tdate' => date("Y-m-d", strtotime($data['t_date'])),
+        ':tnotes' => htmlspecialchars($data['t_notes']),
+        ':tpriv' => $data['t_privacy'],
         ':tid' => $data['tournament_id'] );
-    $success = sql_try("UPDATE tblTournament SET tournament_name = :tname, tournament_city = :tcity,
-    tournament_date = :tdate, is_public = :tpub, is_over = :tover WHERE tournament_id = :tid", $bind_vars);
+    $success = sql_try("UPDATE tblTournament SET tournament_name = :tname, tournament_date = :tdate,
+    tournament_notes = :tnotes, tournament_privacy = :tpriv WHERE tournament_id = :tid", $bind_vars);
     return $success;
 }
 
@@ -356,7 +446,7 @@ function tournament_add_game($rid, $list, $db=null) {
     }
     if (count($list) == 0) return;
 
-    $gid = sql_insert("INSERT INTO tblGame (round_id) VALUES (:rid)", array(":rid" => $rid), $db);
+    $gid = sql_insert("INSERT INTO tblGame (round_id, game_time) VALUES (:rid, NOW())", array(":rid" => $rid), $db);
     $gid || die("failed game insert while populating round");
     if (count($list) == 1)  $score = 0;
     else                    $score = -1;

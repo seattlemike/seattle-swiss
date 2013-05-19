@@ -21,6 +21,10 @@
 
 $header_text = "Two Oh Swiss";
 include("header.php"); 
+disp_header();
+disp_topbar();
+disp_titlebar();
+
 ?>
 
 <div class='con'>
@@ -28,7 +32,7 @@ include("header.php");
         <div class='mainBox'>
             <div class='line'><a class="button" href="about.php">About</a></div>
             <div class='line'><a class="button" href="view.php">Tournaments</a></div>
-            <div class='line'><a class="button" href="admin.php">Admin</a></div>
+            <div class='line'><a class="button" href="admin.php">Login</a></div>
         </div>
     </div>
 </div>

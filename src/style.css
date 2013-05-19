@@ -239,6 +239,11 @@ td.center, td.numeric { text-align: center; }
     input.numeric {
         width: 6em;
     }
+    small {
+        display: block;
+        font-size: 0.8em;
+        margin: 0;
+    }
     label {
         display: block;
         font-size: 0.8em;
@@ -248,9 +253,11 @@ td.center, td.numeric { text-align: center; }
     label input, label select {
         display: block;
     }
-    
 
     /* Links and Buttons */
+        .toggle, .button {
+            cursor: pointer;
+        }
         .btnCtr {
             min-width: 30px;
             text-align: center;
@@ -271,6 +278,7 @@ td.center, td.numeric { text-align: center; }
 
         .button.disabled {
             color: #68819b;
+            cursor: default;
         }
 
         .nav a, .button {
@@ -282,6 +290,7 @@ td.center, td.numeric { text-align: center; }
         }
 
         a.selected, input.selected { background: #aaa; }
+        a.hot, input.hot { background: #ebb; }
 
         input.wide { width: 200px; }
         input.short { width: 50px; }

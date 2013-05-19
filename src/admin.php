@@ -21,6 +21,9 @@
 
     $title_text = "Login";
 	include("header.php"); 
+    disp_header("Login");
+    disp_topbar();
+    disp_titlebar();
 		
   if ($_POST['action'] == 'login') {
 		if (login($_POST['email'], $_POST['password']))
@@ -39,7 +42,6 @@
 
 ?>
 <div class="con">
-    <? // TODO: BIG NOTICE if we're currently running the tournament ?>
     <div class="centerBox">
         <div class="mainBox">
             <div class='header'>Admin Login</div>

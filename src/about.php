@@ -20,6 +20,8 @@
     $header_text="Two Oh Swiss";
     $title_text="About";
     include("header.php");
+    disp_header("About");
+    disp_titlebar("About 20Swiss");
 ?>
 
 <div class='con'>

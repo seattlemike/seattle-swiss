@@ -19,14 +19,18 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-    $page_name="Edit";
-    $header_extra = array( '<script src="ui.js" type="text/javascript"></script>' );
-
 	include("header.php");  // sets $tid if valid tournament
-
+    $tid = get_tid();
     if (! $tid) header("location:main_menu.php");
+
 	require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+    $tourney = get_tournament($tid);
+
+    $js_extra = array("ui.js");
+    disp_header($tourney['tournament_name'], $js_extra);
+    disp_topbar($tourney, null, 0);
+    disp_titlebar($tourney['tournament_name']);
 
     //TODO: validate tournament details
     if (isset($_POST['action'])) {
@@ -36,10 +40,13 @@
             $redir = tournament_delete($_POST, $_SESSION['admin_id']);
             $redir || die("Failed tournament delete!");
         }
+        elseif ($_POST['action'] == 'new_module') {
+            if (! tournament_new_module($_POST, $_SESSION['admin_id']))
+                echo "<div class='header warning'>Failed to add new round</div>";
+            }
         elseif ($_POST['action'] == 'update_tournament') {
             tournament_update($_POST, $_SESSION['admin_id']);
-            if (htmlspecialchars($_POST['tournament_name']) != $tname)
-                $redir='main_menu.php';
+            header("location:tournament.php?id=$tid");
         }
         elseif ($_POST['action'] == 'add_admin') {
             if (! tournament_add_admin($_POST, $_SESSION['admin_id']))
@@ -59,17 +66,25 @@
         if ($redir) header("location:main_menu.php");  // stick this back in delete_tournament?
     }
 ?>
-
-<?php 
-    $tourney = get_tournament($tid, $_SESSION['admin_id']);
-?>
 <div class="con">
     <div class="centerBox">
-        <? disp_status($tourney) ?>
+        <?  //disp_status($tourney) ?>
+        <div class="mainBox">
+            <div class="header">Rounds</div>
+            <?
+                $t_rounds = get_tournament_modules($tid);
+                disp_modules($t_rounds);
+            ?>
+            <form name="modules" method="post" action="">
+                <input type='hidden' name='action' value='new_module' />
+                <div class='line'><?php disp_tournament_button("Add Round", 'new_module'); ?></div>
+            </form>
+        </div>
+
         <div class="mainBox">
             <div class="header">Details</div>
             <form name="details" method="post" action="">
-                <input type='hidden' name='action' value='' />
+                <input type='hidden' name='action' value='update_tournament' />
                 <?php disp_tournament_details($tourney); ?>
                 <div class='line'><?php disp_tournament_button("Save Details", 'update_tournament'); ?></div>
             </form>
@@ -78,7 +93,7 @@
         <div class="mainBox">
             <div class="header">Admins</div>
                 <form name='admin' method='post' action=''>
-                    <input type='hidden' name='action' value='' />
+                    <input type='hidden' name='action' value='add_admin' />
                     <?php disp_admins($tourney, $_SESSION['admin_id']); ?>
                     <?php
                     if ($tourney['tournament_owner'] == $_SESSION['admin_id']) {

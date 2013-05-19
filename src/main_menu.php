@@ -18,26 +18,31 @@
     You should have received a copy of the GNU Affero General Public License
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
+    include("header.php");
+    require_login();
 
-  $title_text = "Your Tournaments";
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] == 'new_tournament') {
+            if ($new_id = new_tournament($_SESSION['admin_id']))
+                header("location:tournament.php?id=$new_id");
+        }
+    }
 
-  include("header.php");
-  require_login();
-
-  if (isset($_POST['action'])) {
-    if ($_POST['action'] == 'edit_tournament')
-      header('location:tournament.php');
-    elseif ($_POST['action'] == 'play_tournament')
-      header('location:play_tournament.php');
-  }
+    disp_header("Tournaments");
+    disp_topbar();
+    disp_titlebar("Your Tournaments");
 
 ?>
 
 <div class="con">
     <div class="centerBox">
         <div class="nav line">
-            <a class="button" href="create_tournament.php">New Tournament</a>
+            <form name="new_tourney" method="post" action="">
+                <input type='hidden' name='action' value='new_tournament' />
+                <input class='button' type='submit' name='submit' value='New Tournament' />
+            </form>
         </div>
+        <div class='mainBox'>
             <?php
             if (isset($_GET['super'])) {
                 require_privs(false);  // dies unless $_SESSION['admin_type']=='super'
@@ -45,10 +50,9 @@
             }
             else
                 $tlist = get_my_tournaments($_SESSION['admin_id']);
-
-            if ($tlist) 
-                disp_tournaments($tlist);
+            disp_tournaments($tlist);
             ?>
+        </div>
     </div>
 </div>
 <?php include("footer.php"); ?>

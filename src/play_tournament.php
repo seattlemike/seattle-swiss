@@ -23,9 +23,18 @@
     include("header.php");
 
 	// require tournament & admin
-	$tid     || header("location:main_menu.php");
+    $mid = get_mid();
+    $tid = get_module_parent($mid) ;
+    $tid || header_redirect("main_menu.php");
+
     require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+    $module = get_module($mid);
+    $tourney = get_tournament($tid);
+
+    disp_header($module['module_title']." : Run");
+    disp_topbar($tourney, $module, 2);
+    disp_titlebar($title_text);
 
     if ($rid == -1) unset($rid);  // set in header if round not found with rid
     
@@ -102,7 +111,7 @@
             
             <? if ($rid) { ?>
             <div class="mainBox">
-                <div class="header" id="edit_round" onclick="toggleHide('edit-round-controls')">Edit Round Controls</div> 
+                <div class="header toggle" id="edit_round" onclick="toggleHide('edit-round-controls')">Edit Round</div> 
                     <div id="edit-round-controls" style="display: none;">
                         <form name='populate_tournament' action='<? echo "$url#edit_round"?>' method='post'>
                             <input type='hidden' name='action' value='#edit_round'>
