@@ -103,7 +103,7 @@
         </div>
         <div class='mainBox'> 
             <div class="header">About Us</div>
-            <p>Several <a href="http://seattlebikepolo.com">Seattle Bike Polo</a> folks have been
+            <p>Several <a href="http://aarongrant00.wix.com/seattlebikepolo">Seattle Bike Polo</a> folks have been
             working on this project.  Send praise to mike, criticisms to paul:<br/>
             mike/paul&nbsp;at&nbsp;seattleswiss&nbsp;dot&nbsp;com.</p>
         </div>

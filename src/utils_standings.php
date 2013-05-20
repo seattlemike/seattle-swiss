@@ -477,22 +477,19 @@ function group_by($ary, $idx) {
   return $ret;
 }
 
-// from tournament_id, foreach round, foreach game, add game result to stats
-function build_stats($tid, $nrounds) {
+// get cumulative stats for rounds prior to $round
+function build_stats($round) {
     ($db = connect_to_db()) || debug_error("Couldn't connect to database for tournament standings");
-    //TODO:  handle disabled v non-disabled for elim tournaments?
-    $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid", array(":tid" => $tid), $db);
+    $teams = sql_select_all("SELECT * FROM tblModuleTeams WHERE module_id = ?", array($round['module_id']), $db);
     $stats = new stats($tid, $teams);
     
-    $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number ASC", array(":tid" => $tid), $db);
+    $rounds = sql_select_all("SELECT * FROM tblRound WHERE module_id = ? AND round_number < ? ORDER BY round_number ASC", array($round['module_id'], $round['round_number']), $db);
     foreach ($rounds as $r) {
-        if (($nrounds == -1) || ($nrounds >= $r['round_number'])) {  // nrounds > -1 means partial stats computation
-            // TODO: should SELECT WHERE tblGame.finished = true
-            $games = sql_select_all("SELECT g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = :rid", array(":rid" => $r['round_id']), $db);
-            foreach (group_by($games, 'game_id') as $match) {
-                if (min(array_map( function ($s) { return $s['score']; }, $match )) > -1)
-                    $stats->add_result($match, $r['round_number']);
-            }
+        // TODO: should SELECT WHERE tblGame.status = finished
+        $games = sql_select_all("SELECT g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = ?", array($r['round_id']), $db);
+        foreach (group_by($games, 'game_id') as $match) {
+            if (min(array_map( function ($s) { return $s['score']; }, $match )) > -1)
+                $stats->add_result($match, $r['round_number']);
         }
     }
     $db = null;
@@ -500,8 +497,8 @@ function build_stats($tid, $nrounds) {
 }
 
 // teams ordered best to worst
-function get_standings($tid, $all_tiebreaks = false, $nrounds = -1) {
-    $stats = build_stats($tid, $nrounds);
+function get_standings($round, $all_tiebreaks = false) {
+    $stats = build_stats($round);
     if ($all_tiebreaks) {
         $stats->tiebreaks();
         $stats->calcSRS();

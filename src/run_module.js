@@ -1,6 +1,5 @@
-
 /*  
-    Copyright 2011, 2012 Mike Bell and Paul Danos
+    Copyright 2011, 2012, 2013 Mike Bell and Paul Danos
 
     This file is part of 20Swiss.
     

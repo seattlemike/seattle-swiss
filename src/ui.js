@@ -1,3 +1,24 @@
+/*  
+    Copyright 2011, 2012, 2013 Mike Bell and Paul Danos
+
+    This file is part of 20Swiss.
+    
+    20Swiss is free software: you can redistribute it and/or modify it under the
+    terms of the GNU Affero General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    20Swiss is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+    more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+// Common UI
+
 function buildNode(elType, elClass, elText) {
     var el = document.createElement(elType)
     el.className = elClass
@@ -15,6 +36,15 @@ function makeTop(el) {
 
     el.style.zIndex = idx;
 }
+
+function toggleHide(id) {
+    var el = document.getElementById(id)
+    if (el.style.display == "none")
+        el.style.display = ""
+    else el.style.display = "none"
+}
+
+// Modal Dialog
 
 function Dialog( titleText="", okfn = function() {} ) {
     var self = this
@@ -52,8 +82,10 @@ function Dialog( titleText="", okfn = function() {} ) {
     this.display = function(css) { self.dialog.style.position = css; }
 }
 
+// Tournament
+
 function delTournament() {
-    d = new Dialog("Delete this tournamnent?",
+    d = new Dialog("Delete this tournament?",
                     function () { var form = document.getElementById("delForm"); if (form) form.submit() })
     d.show()
 }

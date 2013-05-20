@@ -90,14 +90,19 @@ function consec_matching($g) {
 
 
 // ASSERT:  SWISS_MODE=0 SINGLE_ELIM_MODE=1 DOUBLE_ELIM_MODE=2 ROUND_ROBIN_MODE=3
-function tournament_get_pairings($tid) {
-    switch(get_tournament_mode($tid)) {
+function round_get_pairings($round) {
+    $module = get_module($round['module_id']);
+    if (!$module) 
+        return false;
+    switch ($module['module_mode']) {
         case 0:
-            return get_swiss_pairings($tid);
+            return get_swiss_pairings($round);
         case 1:
-            return get_sglelim_pairings($tid);
+            return get_sglelim_pairings($round);
         case 2:
-            return get_dblelim_pairings($tid);
+            return get_dblelim_pairings($round);
+        case 3:
+            die("Oops:  Round Robin mode is not yet functional");
         default:  // oh no!  what other modes do we have?
             return array();
     }
@@ -239,24 +244,22 @@ function get_sglelim_pairings($tid) {
     return bracket_match($teams, 'bracket_idx', $bye_filter);
 }
 
-// MIKE TODO IMMEDIATE:  implement?  ugh.
+// MIKE TODO:  implement?  ugh.
 // NEW IDEA:  goal is to avoid eventual rematches in the bottom chunk of the tourney
 //  create a weighted edge-graph - teams as vertices, edges for teams who have not yet met
 //    higher weights for less desirable pairings
 //  find a minimal-weight perfect matching
 //
 
-function get_swiss_pairings($tid) {
-    // $teams:  not disabled, ordered BEST TO WORST
-    $teams = array_filter(get_standings($tid), function ($t) { return ($t['status'] > 0); } );
+function get_swiss_pairings($round) {
+    $teams = get_standings($round);
     array_multisort(array_map(function($t) {return $t['rank'];}, $teams), SORT_NUMERIC, $teams);
 
     $pairs = array();
-
-    // TODO: instead of BYE... something?
-    // I hate odd numbers: BYE for lowest ranked team that has not yet had a bye
+    // TODO: deal with odd number of teams better
+    // for now: BYE for lowest ranked team that has not yet had a bye
     if ((count($teams) % 2) == 1) {
-        // loop through $teams WORST TO BEST
+        // loop through $teams WORST TO BEST, pick the first one who hasn't yet had a bye
         foreach (array_reverse($teams) as $idx => $t) {
             if (! in_array(-1, $t['opponents'])) {
                 $pairs[] = array($t);
@@ -271,7 +274,7 @@ function get_swiss_pairings($tid) {
   $groups = semi_group($teams);
 
   // find matchup if possible, else merge with next semi-group, else grumpy!
-  // TODO this could leave rematches in the bottom few
+  // TODO IMMEDIATE FIX: this could leave rematches in the bottom few
   $rem = array();
   foreach ($groups as $g) {
     $g = array_merge($rem, $g);

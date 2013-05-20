@@ -133,7 +133,7 @@ function module_getteam($mid, $team_id) {
 }
 
 function module_hasteam($mid, $team_id) {
-    return is_array(module_getteam($mid, $team_id));
+    return (team_id == -1) || is_array(module_getteam($mid, $team_id));
 }
 
 function tournament_hasteam($tid, $team_id) {
@@ -162,6 +162,61 @@ function admin_create($data) {
 
 function is_poweruser() {
     return $_SESSION['admin_controls'];
+}
+
+//
+// Round functions
+//
+
+function get_round($rid) {
+    if ($rid)
+        return sql_select_one('SELECT * FROM tblRound WHERE round_id = ?', array($rid));
+    else
+        return false;
+}
+
+function get_module_rounds($mid) {
+    if ($mid)
+        return sql_select_all("SELECT * FROM tblRound WHERE module_id = ? ORDER BY round_number", array($mid));
+    else
+        return false;
+}
+
+function round_delete($round) {
+    return round_empty($round['round_id']) && 
+           sql_try("DELETE FROM tblRound WHERE round_id = ?", array($round['round_id']));
+}
+
+function round_empty($rid) {
+    $db = connect_to_db();
+    $games = get_round_games($rid, $db);
+    $success = true;
+    if (count($games)) {
+        foreach ($games as $g) {
+            $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($g['game_id']), $db);
+        }
+        return ($success && sql_try("DELETE FROM tblGame WHERE round_id = ?", array($rid), $db));
+    }
+    return true;
+}
+
+//
+// Game Functions
+//
+
+function game_in_round( $gid, $rid ) {
+    return is_array(sql_select_one("SELECT * FROM tblGame WHERE round_id=? AND game_id=?", array($rid, $gid)));
+}
+
+function game_delete( $gid, $db=null) {
+    ($db) || ($db = connect_to_db());
+    return sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($gid)) && 
+           sql_try("DELETE FROM tblGame WHERE game_id = ?", array($gid));
+}
+
+function get_round_games($rid, $db=null) {
+    ($db) || ($db = connect_to_db());
+    return sql_select_all("SELECT * FROM tblGame WHERE round_id = ?", array($rid), $db);
 }
 
 //
@@ -226,6 +281,65 @@ function module_update($data) {
 
     $success = sql_try("UPDATE tblModule SET module_title = :title, module_date = :date, 
                         module_notes = :notes, module_mode = :mode WHERE module_id = :mid", $bind_vars);
+}
+
+function module_new_round($mid) {
+    if ($mid) {
+        // if (Module Has Pending Games) { return false; } else {
+        $rid = module_add_round($mid);
+        round_populate($rid);
+        return $rid;
+    }
+    else
+        return false;
+}
+
+// adds a round to module $mid
+function module_add_round($mid) {
+    $select = sql_select_one("SELECT MAX(round_number) AS round_max FROM tblRound WHERE module_id = ?", array($mid));
+    if ($select)
+        $rnum = $select["round_max"] + 1;
+    else
+        $rnum = 1;
+    return sql_insert("INSERT INTO tblRound (round_number, module_id) VALUES (?, ?)", array($rnum, $mid));
+}
+
+// fill round $rid with games for available teams
+function round_populate($rid, $db=null) {
+    ($db) || ($db = connect_to_db());  // make sure we've got a db connection
+    $round = get_round($rid);
+    if ($round) {
+        $pairs = round_get_pairings($round);
+        foreach ($pairs as $p)
+            round_add_game($rid, $p, $db);
+        return true;
+    }
+    else
+        return false;
+}
+
+// Add game to the database
+function round_add_game($rid, $list, $db=null) {
+    ($db) || ($db = connect_to_db());  // make sure we've got a db connection
+    // gets rid of BYE/unset teams
+    foreach ($list as $idx => $team) {
+        if ((! isset($team['id'])) || ($team['id'] == -1))
+            unset($list[$idx]);
+    }
+    if (count($list) == 0) return;
+
+    $game_id = sql_insert("INSERT INTO tblGame (round_id, game_time) VALUES (?, NOW())", array($rid), $db);
+    if ($game_id) {
+        if (count($list) == 1)  $score = 0;
+        else                    $score = -1;
+        foreach ($list as $team)
+            if (! sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, ?)", 
+                    array($game_id, $team['id'], $score), $db)) 
+                return false;
+    } else {
+        return false;
+    }
+    return true;
 }
 
 //
@@ -426,84 +540,6 @@ function tournament_is_over($tid) {
     return ($select && $select['is_over']);
 }
 
-// adds a round to a tournament
-function tournament_add_round($tid) {
-    $select = sql_select_one("SELECT MAX(round_number) AS round_max FROM tblRound WHERE tournament_id = :tid", array(":tid" => $tid));
-    if (!$select) $rnum = 1;
-    else          $rnum = $select["round_max"] + 1;
-    return sql_insert("INSERT INTO tblRound (round_number, tournament_id) VALUES (:rnum, :tid)", array(":rnum" => $rnum, ":tid" => $tid));
-}
-
-
-function tournament_insert_score($gid, $tid, $score=-1, $db=null) {
-    return sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, ?)", 
-                        array($gid, $tid, $score), $db);
-}
-
-// Add a tournament game to the database
-function tournament_add_game($rid, $list, $db=null) {
-    ($db) || ($db = connect_to_db());  // make sure we've got a connection
-
-    // deletes bye v bye, and makes team v bye into just array(team)
-    // TODO: don't like.  should've already done this. it's just here for manual game add
-    foreach ($list as $idx => $team) {
-        if ((! isset($team['id'])) || ($team['id'] == -1))
-            unset($list[$idx]);
-    }
-    if (count($list) == 0) return;
-
-    $gid = sql_insert("INSERT INTO tblGame (round_id, game_time) VALUES (:rid, NOW())", array(":rid" => $rid), $db);
-    $gid || die("failed game insert while populating round");
-    if (count($list) == 1)  $score = 0;
-    else                    $score = -1;
-    foreach ($list as $team)
-        tournament_insert_score($gid, $team['id'], $score, $db) || die("failed to insert score during add game");
-}
-
-function tournament_delete_round($rid, $aid) {
-    if (!$db) $db = connect_to_db();
-    // die() if don't have privs
-    $success = tournament_empty_round($rid, $aid, $db);
-    $success &= sql_try("DELETE FROM tblRound WHERE round_id = :rid", array(":rid" => $rid), $db);
-    return $success;
-}
-
-function tournament_empty_round($rid, $aid, $db = null) {
-    if (!$db) $db = connect_to_db();
-    $round = sql_select_one("SELECT * FROM tblRound WHERE round_id = :rid", array(":rid"=>$rid), $db);
-    if (! $round) return false;
-    require_privs(tournament_isadmin($round['tournament_id'], $aid));
-
-    $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
-    if (count($games)) {
-        $success = sql_try("DELETE FROM tblGame WHERE round_id = :rid", array(":rid" => $rid), $db);
-        foreach ($games as $g) {
-            $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $g['game_id']), $db);
-        }
-        return $success;
-    } 
-    else return true;
-}
-
-// populates a round
-function tournament_populate_round($tid, $rid, $aid) {
-    $db = connect_to_db();
-
-    // if we're not passed an $rid, make a new round and populate
-    if (!$rid)
-        ($rid = tournament_add_round($tid)) || die("<h1>Failed to add tournament round to populate</h1>");
-
-    // Redundant check(rid && tid) to prevent rid phishing from remote tid
-    $round = get_tournament_round($tid, $rid, $db);
-    if ($round) {
-        require_privs(tournament_isadmin($tid, $aid));
-        $pairs = tournament_get_pairings($tid);
-        foreach ($pairs as $p)
-            tournament_add_game($rid, $p, $db);
-    }
-    return $rid;
-}
-
 function team_can_delete($team_id) {
     return !is_array(sql_select_one("SELECT * FROM tblGameTeams WHERE team_id = ?", array($team_id)));
 }
@@ -656,12 +692,6 @@ function tournament_update_score( $gid, $data) {
         sql_try("UPDATE tblGameTeams SET score = :score WHERE game_id = :gid AND team_id = :tid", 
                 array(":score" => $score, ":gid" => $gid, ":tid" => $tid));
     }
-}
-
-//ASSERT require_privs($tid,$aid)
-function tournament_delete_game( $gid ) {
-  $ret = sql_try("DELETE FROM tblGame WHERE game_id = :gid", array(":gid" => $gid));
-  return $ret && sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $gid));
 }
 
 //ASSERT require_privs($tid,$aid)

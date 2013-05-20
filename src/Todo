@@ -1,11 +1,15 @@
 *Readme* - major stuff
 
 #### May 2013
+  Urgent:
     finish tournament->module->round->game hierarchy
+      delete tournament should recurse properly over modules/moduleteams/games/etc 
+      delete module should recurse properly
+  Older:      
     #redesign new-tournament creation
-    better way to do page header 
-        not just include(header.php) but more like display_head(extra_bits)
-        fix header.php to just include header get/set/disp functions, not output/unexpected side-effects
+    #better way to do page header 
+    #    not just include(header.php) but more like display_head(extra_bits)
+    #    fix header.php to just include header get/set/disp functions, not output/unexpected side-effects
     #fix delete-tournament
     #jesus christ, I've never had to deal with making changes in-place on working software
     # - I want desperately to restructure the whole thing, but can't while it's in use

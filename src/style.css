@@ -18,7 +18,7 @@
 
 /* setup */
 body {
-	margin:0;
+	margin: 1em 0;
 	padding:0;
 	border:0;
 	width:100%;
@@ -35,7 +35,7 @@ body {
 .dialog, .topHeader, .mainBox { background: #eee; }
 
 /* Fonts */
-.textBox, .nav, .button, .header, .footer { font-family: 'Rosario', sans-serif; }
+.dialog-text, .textBox, .nav, .button, .header, .footer { font-family: 'Rosario', sans-serif; }
 
 /* Text Effects */
 .warning { color: #b22; }
@@ -54,7 +54,7 @@ span.disabled { color: #224365; }
 /* Borders */
 .topHeader { border-bottom: 1px solid #aaf; }
 .mainBox, .subBox { border: 1px solid #aaf; border-radius: 0.5em;}
-.game { border: 1px solid black; }
+.game { text-align: left; margin-left: 1em; }
 hr { height: 1px; color: #aaf; border: none; }
 
 ol { 
@@ -66,9 +66,14 @@ ol {
 ol.spaced li {
     margin-bottom: 0.5em;
 }
-.centerBox .nav {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+
+.topNav {
+    position: relative;
+    top: -0.5em;
+}
+
+.nav {
+    margin: 0.5em 0;
 }
 
 /* All Header */
@@ -128,6 +133,8 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     margin-right: 2em;
 }
 .textBox { 
+    margin-left: auto;
+    margin-right: auto;
     width: 60%; 
 }
 .mainBox { 
@@ -335,8 +342,14 @@ td.center, td.numeric { text-align: center; }
         padding: 1em;
     }
 
-    .dialog-text { min-height: 3em; margin: 1em 0; text-align: center;}
-    .dialog-buttons { margin-top: 1em; }
+    .dialog-text { 
+        margin: 1em 0; 
+        min-height: 3em; 
+        font-size: 1.2em; 
+        font-style: italic;
+        text-align: center; 
+    }
+    .dialog-buttons { margin-top: 1em; text-align: left; }
     .rt-button { float: right; }
 
 

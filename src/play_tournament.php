@@ -20,8 +20,15 @@
 */
     include("header.php");
 
+    // check for round
+    ($rid = $_POST['round_id']) || ($rid = $_GET['round']);
+    $round = get_round($rid);
+    if ($round)
+        $mid = $round['module_id'];
+    else
+        ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
+
     // Ensure mid/tid are valid and that we have privs to edit
-    ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
     $module = get_module($mid) ;
     if (! $module) 
         header_redirect("main_menu.php");
@@ -30,18 +37,25 @@
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
     $tourney = get_tournament($tid);
 
-    disp_header($module['module_title']." : Run");
+    $js_extra = array("ui.js", "async.js", "run_module.js");
+    disp_header($module['module_title']." : Run", $js_extra);
     disp_topbar($tourney, $module, 2);
     disp_titlebar($module['module_title']);
 
-    if ($rid == -1) unset($rid);  // set in header if round not found with rid
-    
-    // TODO this doesn't look nice.  how can we make this look nicer?
-    // check POST actions
-    if (isset($_POST['action'])) {
-        $_POST['tournament_id'] = $tid;  // sanitizing $_POST['tournament_id']
+    if (isset($_POST['case'])) {
+        // make sure post data matches what we've validated
+        $_POST['tournament_id'] = $tid;
+        $_POST['module_id'] = $mid;
 
-        switch ($_POST['action']) {
+        switch ($_POST['case']) {
+            case 'start_module':
+                $rounds = get_module_rounds($mid);
+                if ($rounds)
+                    $round_id = $rounds[count($rounds)-1]['round_id'];
+                else 
+                    $round_id = module_new_round($mid);
+                header_redirect("play_tournament.php?round=$round_id");
+                break;
             case 'add_round':
                 if ($rid=tournament_add_round($tid))
                     header("location:play_tournament.php?id=$tid&round_id=$rid");
@@ -50,89 +64,91 @@
                 // MIKE TODO IMMEDIATE validate:  $game_id is a member of tournament $tid
                 tournament_update_score($_POST['game_id'], $_POST);
                 break;
-            case 'remove_round':
-                // MIKE TODO IMMEDIATE validate: make sure $rid in $tid
-                if (tournament_delete_round($rid, $_SESSION['admin_id']))
-                    header("location:play_tournament.php?id=$tid");
-                break;
+            case 'delete_round':
+                if ($round && round_delete($round))
+                    header_redirect("play_tournament.php?module=$mid");
+                die("Failed to delete round");
             case 'empty_round':
-                // MIKE TODO IMMEDIATE validate: make sure $rid in $tid
-                tournament_empty_round($rid, $_SESSION['admin_id']);
+                round_empty($rid);
                 break;
             case 'populate_round':
-                //MIKE TODO IMMEDIATE: only "next round" if doesn't already exist
-                $pop_rid = tournament_populate_round($tid, $_POST['populate_id'], $_SESSION['admin_id']);
-                if ($pop_rid != $rid)
-                    header("location:play_tournament.php?id=$tid&round_id=$pop_rid");
+                round_populate($rid);
                 break;
             case 'add_game':
-                // TODO validate: make sure team_id is a member of tournament
-                tournament_add_game($rid, array( array("id" => $_POST['team_b']), array( "id" => $_POST['team_a']) ));
+                if (module_hasteam($mid, $_POST['team_a']) && module_hasteam($mid, $_POST['team_b']))
+                    round_add_game($rid, array( array("id" => $_POST['team_b']), array( "id" => $_POST['team_a']) ));
                 break;
             case 'toggle_oncourt':
-                // TODO validate: make sure game_id is a member of tournament
-                tournament_toggle_court($_POST['game_id']);
+                if ($round && game_in_round($rid, $_POST['game_id']))
+                    tournament_toggle_court($_POST['game_id']);
                 break;
             case 'delete_game':
-                // TODO validate: make sure game_id is a member of tournament
-                tournament_delete_game($_POST['game_id']);
+                if ($round && game_in_round($rid, $_POST['game_id']))
+                    game_delete($_POST['game_id']);
                 break;
         }
     }
 
     // adds a round id to the url if rounds exist
-    $url = "play_tournament.php?id=$tid";
-    if (isset($rid)) $url .= "&round_id=$rid";
-
+    $url = "play_tournament.php?" . $round ? "round=$rid" : "module=$mid";
 ?>
 <div class="con">
     <div class="centerBox"> 
+        <?php
+        if (! count(get_tournament_teams($tid))) {
+            echo "<div class='mainBox'><div class='header'>Tournament has no teams yet</div>";
+            echo "<a class='button' href='tournament.php?id=$tid'>Back</a></div>\n";
+        } elseif (! count(get_module_teams($mid))) {
+            echo "<div class='mainBox'><div class='header'>Round has no active teams yet</div>";
+            echo "<a class='button' href='module.php?module=$mid'>Back</a></div>\n";
+        } else {
+        ?>
         <div class='mainBox'>
-            <div class="header">Rounds</div>
-            <div class="nav">
-                <form name='play_tournament' action='<?echo $url;?>' method='post'>
-                    <input type='hidden' name='action' value=''>
-                    <input type='hidden' name='populate_id' value=''>
-                    <div class="lHead">
-                        <?
-                            disp_round_nav($tid, $rid, true); 
-                        ?>
-                    </div>
-                </form>
-            </div>
-            <? if (isset($rid)) { 
+            <form name='rounds' action='' method='post'>
+                <input type='hidden' name='case' value='start_module' />
+                <input type='hidden' name='module_id' value='<?echo $mid?>' />
+                <input type='hidden' name='round_id' value='<?echo $rid?>' />
+                <? disp_round_nav($mid, $round, true);  ?>
+            </form>
+
+            <? if ($round) {
                 echo "<div id='games'>";
-                disp_round_games($_POST['toggles'], $tid, $rid, $_SESSION['admin_id']); 
+                disp_round_games($round);
+                //disp_round_games($_POST['toggles'], $tid, $rid, $_SESSION['admin_id']); 
                 echo "</div>";
             } ?>
         </div>
             
-            <? if ($rid) { ?>
+            <? if ($round) { ?>
             <div class="mainBox">
                 <div class="header toggle" id="edit_round" onclick="toggleHide('edit-round-controls')">Edit Round</div> 
                     <div id="edit-round-controls" style="display: none;">
-                        <form name='populate_tournament' action='<? echo "$url#edit_round"?>' method='post'>
-                            <input type='hidden' name='action' value='#edit_round'>
-                            <input type='hidden' name='populate_id' value=''>
+                        <form name='populate_tournament' action='' method='post'>
+                            <input type='hidden' name='case' value='edit_round' />
+                            <input type='hidden' name='round_id' value='<? echo $rid ?>' />
                             <div class="line">
                                 <?php
-                                disp_tournament_button("Fill", "populate_round", " this.form.elements[\"populate_id\"].value=\"$rid\";");
+                                disp_tournament_button("Fill", "populate_round");
                                 disp_tournament_button("Empty", "empty_round");
-                                disp_tournament_button("Delete", "remove_round");
+                                disp_tournament_button("Delete", "delete_round");
                                 ?>
                             </div>
                             <div class="line">
                                 <?php
                                 disp_tournament_button('Add Game', 'add_game');
-                                disp_team_select($tid, 'team_a');
-                                disp_team_select($tid, 'team_b');
+                                disp_team_select($mid, 'team_a');
+                                disp_team_select($mid, 'team_b');
                                 ?>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            <? } ?>
+<?php
+            }
+        }
+?>
+
     </div>
 </div>
 <?php include("footer.php"); ?>

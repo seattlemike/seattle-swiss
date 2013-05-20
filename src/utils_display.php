@@ -33,9 +33,9 @@ function disp_disabled_button($value, $name="submit_btn") {
     echo "<input class='button' name='$name' value='$value' DISABLED />";
 }
 
-function disp_tournament_button($value, $action, $extra='', $class='') {
-    $onclick = "this.form.elements[\"action\"].value=\"$action\"; $extra";
-    echo "<input onclick='$onclick' class='button $class' type='submit' name='submit_btn' value='$value' />";
+function disp_tournament_button($value, $name, $extra='', $class='') {
+    $onclick = "this.form.elements[\"case\"].value=\"$name\"; $extra";
+    echo "<input onclick='$onclick' class='button $class' type='submit' name='$name' value='$value' />";
 }
 
 //
@@ -254,19 +254,21 @@ function disp_team_edit($team) {
 }
 
 // displays the navigation for a round
-function disp_round_nav($tid, $rid, $admin=false) {
-    $url="{$_SERVER['PHP_SELF']}?id=$tid&round_id=";
-
-    $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number", array(":tid" => $tid));
-    if ($rounds) {
+function disp_round_nav($mid, $round, $admin=false) {
+    $rounds = get_module_rounds($mid);
+    if (! $rounds) {
+        if ($admin)
+            echo "<input class='button' type='submit' name='start_module' value='Start' />";
+        else
+            echo "<div class='header'>Not yet started</div>";
+    } else {
+        $url = $_SERVER['PHP_SELF'];
         foreach ($rounds as $r) {
-            if ($r['round_id'] == $rid) $class = "selected";
-            else                        $class = "";
-            echo "<a class='button $class' href='$url{$r['round_id']}'>Round {$r['round_number']}</a>";
+            if ($r['round_id'] == $round['round_id']) $isSelected = "selected";
+            else                        $isSelected = "";
+            echo "<a class='button $isSelected' href='$url?round={$r['round_id']}'>Round {$r['round_number']}</a>";
         }
-    }
-    if ($admin) {
-        if ($rounds) {
+        if ($admin) {
             if (isset($rid)) {
                 $next_round = tournament_next_round($rid);
                 if (tournament_round_is_done($rid) && ! $next_round) {
@@ -276,11 +278,6 @@ function disp_round_nav($tid, $rid, $admin=false) {
                 else
                     echo "<a class='button disabled'>Next</a>";
             }
-        }
-        else {
-            echo "<div class='line'>"; // just want to center it...
-            disp_tournament_button("Start","populate_round");
-            echo "</div>\n";
         }
     }
 }
@@ -792,7 +789,7 @@ function disp_toggle_button($gid, $tog) {
     echo "<input class='button' type='button' name='tog_btn' onclick='togOnCourt($gid)' value='$val' \>";
 }
 
-function disp_game($game, $t, $st) {
+function old_disp_game($game, $t, $st) {
     $gid = $game['game_id'];
     $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid ORDER BY tblGameTeams.score_id DESC", array(":gid" => $gid), $t['db']);
     
@@ -917,12 +914,23 @@ function disp_games($tid) {
     }
 }
 
-function disp_round_games($togs, $tid, $rid, $aid=null) {
-    ($db = connect_to_db()) || die("Couldn't connect to database for disp_round");
-    $round = get_tournament_round($tid, $rid);
-    if (! $round)
-        return false;
-    
+function disp_round_games($round) {
+    $db = connect_to_db();
+    $games = get_round_games($round['round_id']);
+    if ($games)
+        foreach ($games as $g)
+            disp_game($g, $db);
+}
+
+function disp_game($game) {
+    $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
+    if (count($teams) == 1)
+        echo "<div class='game'>{$teams[0]['team_name']} has a BYE</div>";
+    else
+        echo "<div class='game'>{$teams[0]['team_name']} vs {$teams[1]['team_name']}</div>";
+}
+
+function old_disp_round_games($tid, $aid, $db) {
     $t = array();
     $t['mode']    = get_tournament_mode($tid);
     $t['isadmin'] = $aid && tournament_isadmin($tid, $aid);
@@ -948,10 +956,9 @@ function disp_round_games($togs, $tid, $rid, $aid=null) {
     return true;
 }
 
-function disp_team_select($tid, $name) {
+function disp_team_select($mid, $name) {
     echo "<select name='$name'>";
-    $teams = array_filter(get_tournament_teams($tid), function ($t) {return (!$t['is_disabled']);});
-    foreach ($teams as $t)
+    foreach (get_module_teams($mid) as $t)
         echo "<option value='{$t['team_id']}'>{$t['team_name']}</option>";
     echo "<option value='-1'>BYE</option>";
     echo "</select>";

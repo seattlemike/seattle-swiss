@@ -70,7 +70,6 @@ function disp_header($title = null, $js_extra=array(), $header_extra = array()) 
 <link href='http://fonts.googleapis.com/css?family=Rosario:400,400italic' rel='stylesheet' type='text/css' />
 <link href='http://fonts.googleapis.com/css?family=Rokkitt:700' rel='stylesheet' type='text/css' />
 <link rel='stylesheet' type='text/css' href='/style.css' />
-<script src='swiss.js' type='text/javascript'></script>
 END;
     foreach ($js_extra as $jsfile)
         echo "<script src='$jsfile' type='text/javascript'></script>\n";
@@ -117,7 +116,7 @@ function disp_modnav_topbar($tourney, $module, $page) {
 
 // assert: already checked tid/mid/has_privs/etc
 function disp_topbar($tourney=null, $module=null, $page=null) {
-    echo "<div class='nav'>";
+    echo "<div class='topNav nav'>";
     if (isset($tourney))
         disp_modnav_topbar($tourney, $module, $page);
     disp_admin_topbar();
