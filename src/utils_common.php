@@ -168,6 +168,11 @@ function is_poweruser() {
 // Module Functions:
 //
 
+function module_delete($mid) {
+    return sql_try('DELETE FROM tblModuleTeams WHERE module_id = ?', array($mid)) &&
+           sql_try('DELETE FROM tblModule WHERE module_id = ?', array($mid));
+}
+
 function get_module_parent($mid) {
     $m = sql_select_one('SELECT * FROM tblModule WHERE module_id = ?', array($mid));
     if (is_array($m))
@@ -318,7 +323,7 @@ function tournament_new_module($data, $aid) {
     require_privs(tournament_isadmin($data['tournament_id'], $aid));
     $tourney = get_tournament($data['tournament_id']);
     return sql_try("INSERT INTO tblModule (module_title, module_date, parent_id) VALUES (?, ?, ?)",
-                   array("New Bracket", $tourney['tournament_date'], $data['tournament_id']));
+                   array("New Round", $tourney['tournament_date'], $data['tournament_id']));
 }
 
 function new_tournament($aid) {
@@ -364,6 +369,7 @@ function tournament_update($data, $aid) {
 }
 
 function tournament_delete($data, $aid) {
+  // TODO IMMEDIATE -- delete modules
   $db = connect_to_db();
   $tid = $data['tournament_id'];
   require_privs(tournament_isowner($tid,$aid));
@@ -498,16 +504,16 @@ function tournament_populate_round($tid, $rid, $aid) {
     return $rid;
 }
 
-function team_can_delete($tid) {
-    $game = sql_select_one("SELECT * FROM tblGameTeams WHERE team_id = :tid", array(":tid" => $tid));
-    return (!($game && count($game)));
+function team_can_delete($team_id) {
+    return !is_array(sql_select_one("SELECT * FROM tblGameTeams WHERE team_id = ?", array($team_id)));
 }
 
-function team_delete($data) {
-    //TODO Should check:
-    //  team_id  exists and is for a team in tournament_id
-    if (team_can_delete($data['team_id']))
-        return sql_try("DELETE FROM tblTeam WHERE team_id = :tid", array(":tid" => $data['team_id']));
+function team_delete($team_id) {
+    //TODO Should check ELSEWHERE:  team_id  exists and is for a team in tournament_id
+    if (team_can_delete($team_id))
+        return sql_try("DELETE FROM tblModuleTeams WHERE team_id = ?", array($team_id)) && 
+               sql_try("DELETE FROM tblTeam WHERE team_id = ?", array($team_id));
+               
 }
 
 function teams_import($data, $aid) {

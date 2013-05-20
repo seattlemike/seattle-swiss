@@ -38,14 +38,13 @@
     disp_titlebar("{$module['module_title']}");
 
     //ASSERT: mid/tid are valid and we have privs to edit
-    if (isset($_POST['action'])) {
+    if (isset($_POST['case'])) {
         $_POST['tournament_id'] = $tid;
         $_POST['module_id'] = $mid;
-        switch($_POST['action']) {
+        switch($_POST['case']) {
             case 'delete_module':
-                die("Delete module");
-                //$redir = module_delete($_POST, $_SESSION['admin_id']);
-                //$redir || die("Failed module delete!");
+                module_delete($mid);
+                header_redirect("tournament.php?id=$tid");
                 break;
             case 'update_module':
                 module_update($_POST);
@@ -65,7 +64,7 @@
         <div class="mainBox">
             <div class="header">Details</div>
             <form name="details" method="post" action="">
-                <input type='hidden' name='action' value='update_tournament' />
+                <input type='hidden' name='case' value='update_module' />
                 <input type='hidden' name='module_id' value='<? echo $mid?>' />
                 <?php
                     disp_module_details($module);
@@ -73,36 +72,21 @@
                     disp_tournament_button("Save Details", 'update_module'); 
                     echo "</div>";
                     if (tournament_isowner($tid, $_SESSION['admin_id']))
-                        echo '<a class="button" onClick="delBracket()">Delete Bracket</a>';
+                        echo "<a id='del-btn' class='button'>Delete Round</a>";
                 ?>
             </form>
         </div>
 
         <div class="mainBox">
-            <div id='teams' class="header">Competing this round</div>
-            <form name='teams' method='post' action="">
-                <input type='hidden' name='action' value='update_seeds' />
-                <input type='hidden' name='module_id' value='<? echo $mid?>' />
-                <table>
-                <tr><th>Team Name</th><th>Status</th><th>Seed</th></tr>
-                <?php
-                $module_teams = get_module_teams($mid); // sorted by seed
-                $module_team_ids = array();
-                foreach ($module_teams as $idx => $team) {
-                    $team['team_seed'] = $idx+1; // regular 1..n seeds
-                    disp_module_team($team);
-                    $module_team_ids[] = $team['module_id'];
-                }
-                foreach (get_tournament_teams($tid, "team_id") as $team) {
-                    if (! module_hasteam($mid, $team['team_id'])) {
-                        $team['disabled'] = "DISABLED";
-                        disp_module_team($team);
-                    }
+            <?php
+                $tournament_teams = get_tournament_teams($tid, "team_id");
+                if (count($tournament_teams)) {
+                    disp_module_teams($mid, $tournament_teams);
+                } else {
+                    echo "<div class='header'>Tournament has no teams yet</div>\n";
+                    echo "<a href='tournament.php?id=$tid' class='button'>Back</a>";
                 }
                 ?>
-                </table>
-            </form>
-            <div class='line'><a class='button disabled' id="save-seeds">Save Seeds</a></div>
         </div>
         <div class="nav rHead">
             <div class='header'></div>

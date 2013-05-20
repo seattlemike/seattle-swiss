@@ -30,19 +30,20 @@
 
     disp_header("Tournaments");
     disp_topbar();
-    disp_titlebar("Your Tournaments");
+    disp_titlebar();
 
 ?>
 
 <div class="con">
     <div class="centerBox">
-        <div class="nav line">
+        <div class='mainBox'>
             <form name="new_tourney" method="post" action="">
                 <input type='hidden' name='action' value='new_tournament' />
                 <input class='button' type='submit' name='submit' value='New Tournament' />
             </form>
         </div>
         <div class='mainBox'>
+            <div class="header">Your Tournaments</div>
             <?php
             if (isset($_GET['super'])) {
                 require_privs(false);  // dies unless $_SESSION['admin_type']=='super'

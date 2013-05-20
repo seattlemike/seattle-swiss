@@ -117,7 +117,7 @@ function disp_modnav_topbar($tourney, $module, $page) {
 
 // assert: already checked tid/mid/has_privs/etc
 function disp_topbar($tourney=null, $module=null, $page=null) {
-    echo "<div class='backHead nav'>";
+    echo "<div class='nav'>";
     if (isset($tourney))
         disp_modnav_topbar($tourney, $module, $page);
     disp_admin_topbar();
@@ -128,7 +128,7 @@ function disp_topbar($tourney=null, $module=null, $page=null) {
 function disp_titlebar($title = null) {
     if (! isset($title))
         $title = "20Swiss";
-    echo "<div class='topHeader'>$title</div>";
+    echo "<h1>$title</h1>";
 }
 
 // checks for $tid in POST and GET

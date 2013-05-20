@@ -11,7 +11,7 @@ function asyncTogTeam(teamId, teamSeed, doCase, cbk) {
 
 function delModule() {
     d = new Dialog("Delete this round?",
-                    function () { var form = document.forms.details; if (form) { form['action'] = 'delete_module'; form.submit() } })
+                    function () { var form = document.forms.details; form["case"].value="delete_module"; form.submit() } )
     d.show()
 }
 
@@ -121,4 +121,5 @@ function moduleOnLoad() {
         var input = teams[i].getElementsByTagName('input')[0]
         input.onkeyup = checkSaveSeeds
     }
+    document.getElementById("del-btn").onclick = delModule;
 }

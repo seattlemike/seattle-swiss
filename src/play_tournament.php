@@ -18,23 +18,21 @@
     You should have received a copy of the GNU Affero General Public License
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
-
-    $page_name = "Run";
     include("header.php");
 
-	// require tournament & admin
-    $mid = get_mid();
-    $tid = get_module_parent($mid) ;
-    $tid || header_redirect("main_menu.php");
-
-    require_login();
+    // Ensure mid/tid are valid and that we have privs to edit
+    ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
+    $module = get_module($mid) ;
+    if (! $module) 
+        header_redirect("main_menu.php");
+    $tid = $module['parent_id'];
+	require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
-    $module = get_module($mid);
     $tourney = get_tournament($tid);
 
     disp_header($module['module_title']." : Run");
     disp_topbar($tourney, $module, 2);
-    disp_titlebar($title_text);
+    disp_titlebar($module['module_title']);
 
     if ($rid == -1) unset($rid);  // set in header if round not found with rid
     

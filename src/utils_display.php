@@ -29,13 +29,13 @@
 //
 
 // button with onclick that modifies form.action
-function disp_disabled_button($value, $name="submit") {
+function disp_disabled_button($value, $name="submit_btn") {
     echo "<input class='button' name='$name' value='$value' DISABLED />";
 }
 
 function disp_tournament_button($value, $action, $extra='', $class='') {
     $onclick = "this.form.elements[\"action\"].value=\"$action\"; $extra";
-    echo "<input onclick='$onclick' class='button $class' type='submit' name='submit' value='$value' />";
+    echo "<input onclick='$onclick' class='button $class' type='submit' name='submit_btn' value='$value' />";
 }
 
 //
@@ -75,6 +75,31 @@ function build_select($name, $options, $selected = null) {
         $select .= "<option value='$val' $seltxt>$txt</option>";
     }
     return $select."</select>";
+}
+
+function disp_module_teams($mid, $tournament_teams) {
+echo <<<END
+    <div id='teams' class="header">Competing this round</div>
+    <form name='teams' method='post' action="">
+        <input type='hidden' name='action' value='update_seeds' />
+        <input type='hidden' name='module_id' value='$mid' />
+        <table>
+        <tr><th>Team Name</th><th>Status</th><th>Seed</th></tr>
+END;
+    $module_teams = get_module_teams($mid); // sorted by seed
+    $module_team_ids = array();
+    foreach ($module_teams as $idx => $team) {
+        $team['team_seed'] = $idx+1; // regular 1..n seeds
+        disp_module_team($team);
+        $module_team_ids[] = $team['module_id'];
+    }
+    foreach ($tournament_teams as $team) {
+        if (! module_hasteam($mid, $team['team_id'])) {
+            $team['disabled'] = "DISABLED";
+            disp_module_team($team);
+        }
+    }
+    echo "</table> </form> <div class='line'><a class='button disabled' id='save-seeds'>Save Seeds</a></div>\n";
 }
 
 function disp_module_details($module = null) {
