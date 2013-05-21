@@ -33,19 +33,16 @@
 // stats class used to calculate standings based on game results
 class stats {
     public $teams;
-    function __construct($tid, $teams = NULL) {
+    function __construct($mid, $teams = array()) {
         $this->teams = array();
-        if ($tid) {
-            $this->mode = get_tournament_mode($tid);
-            $this->tid = $tid;
-        }
-        if ($teams) {
-            foreach ($teams as $t)
-                $this->add_team($t);
-        }
+        $this->module = get_module($mid);
+
+        // can initialize with a list of teams
+        foreach ($teams as $t)
+            $this->add_team($t);
         $this->build_seeds();
 
-        switch ($this->mode) {
+        switch ($this->module['module_mode']) {
             case 0:  // swiss
                 $this->cmp_methods = array('get_score', 'get_buchholz', 'get_berger', 'get_cumulative', 'get_seed');
                 break;
@@ -135,7 +132,7 @@ class stats {
                                                  'status'   => $this->teams[$id]['status'],
                                                  );
 
-        switch ($this->mode) {
+        switch ($this->module['module_mode']) {
             case 1:  // single-elim, 2=bracket 0=eliminated
                 if (($res < 1) && ($this->teams[$id]['status'] > 0))
                     $this->teams[$id]['status'] = 0;
@@ -214,7 +211,7 @@ class stats {
         foreach($standings as $idx => $t)
             $this->teams[$t['id']]['rank'] = $idx+1;
 
-        switch ($this->mode) {
+        switch ($this->module['module_mode']) {
             case 0:  //swiss
                 // anything?
                 break;
@@ -477,18 +474,18 @@ function group_by($ary, $idx) {
   return $ret;
 }
 
-// get cumulative stats for rounds prior to $round
+// get cumulative stats for rounds up through $round
 function build_stats($round) {
     ($db = connect_to_db()) || debug_error("Couldn't connect to database for tournament standings");
-    $teams = sql_select_all("SELECT * FROM tblModuleTeams WHERE module_id = ?", array($round['module_id']), $db);
-    $stats = new stats($tid, $teams);
+    $teams = sql_select_all("SELECT a.*, b.* FROM tblTeam a JOIN tblModuleTeams b USING (team_id) WHERE module_id = ?", array($round['module_id']), $db);
+    $stats = new stats($round['module_id'], $teams);
     
-    $rounds = sql_select_all("SELECT * FROM tblRound WHERE module_id = ? AND round_number < ? ORDER BY round_number ASC", array($round['module_id'], $round['round_number']), $db);
+    $rounds = sql_select_all("SELECT * FROM tblRound WHERE module_id = ? AND round_number <= ? ORDER BY round_number ASC", array($round['module_id'], $round['round_number']), $db);
     foreach ($rounds as $r) {
         // TODO: should SELECT WHERE tblGame.status = finished
-        $games = sql_select_all("SELECT g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = ?", array($r['round_id']), $db);
+        $games = sql_select_all("SELECT g.status, g.round_id, t.game_id, t.team_id, t.score FROM tblGame g JOIN tblGameTeams t WHERE t.game_id = g.game_id AND g.round_id = ?", array($r['round_id']), $db);
         foreach (group_by($games, 'game_id') as $match) {
-            if (min(array_map( function ($s) { return $s['score']; }, $match )) > -1)
+            if ($match[0]['status'] == 1)
                 $stats->add_result($match, $r['round_number']);
         }
     }
@@ -508,6 +505,5 @@ function get_standings($round, $all_tiebreaks = false) {
 
     return $stats->team_array();
 }
-
 
 ?>

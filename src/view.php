@@ -18,49 +18,55 @@
     You should have received a copy of the GNU Affero General Public License
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
-
-    if (isset($_GET['all']))
-        $title_text = "All Tournaments";
-    else
-        $title_text = "Recent Tournaments";
-
-    $page_name = "Standings";
     include("header.php");
-    disp_header($title_text);
+
+    // TODO: move this to whatever our public view tournaments file becomes
+    //if (isset($_GET['all'])) $title_text = "All Tournaments";
+    //else $title_text = "Recent Tournaments";
+
+    // Ensure mid/tid are valid and that we have privs to edit
+    ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
+    $module = get_module($mid) ;
+    if ($module)
+        $tid = $module['parent_id'];
+    else 
+        ($tid = $_POST['tournament_id']) || ($tid = $_GET['id']);
+    $tourney = get_tournament($tid);
+
+	require_login();
+    require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+
+    if ($module)
+        $title = $module['module_title'];
+    else
+        $title = $tourney['tournament_name'];
+    disp_header($title);
     disp_topbar($tourney, $module, 3);
-    disp_titlebar($title_text);
+    disp_titlebar($title);
+
+    echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
+    if ($module) {
+        echo "<div class='header'>Standings</div>\n";
+        disp_standings($module, $_GET['view']);
+    } elseif ($tourney) {
+        //if ($tourney['tournament_privacy'] > 0)
+        disp_modules($tid);
+    }
+    else {  // List of public tournaments
+        $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
+        // only list tournaments from the past year?
+        if (! isset($_GET['all'])) {
+            foreach( $tlist as $k => $t ) {
+                if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7))
+                    //(strtotime($t['tournament_date']) < time() -3600*24*365))
+                    unset($tlist[$k]);
+            }
+            disp_tournaments(array_slice($tlist,0,10), 'view.php');
+            echo '<div class="nav line"> <a href="view.php?all">Older Tournaments</a> </div>';
+        } else {
+            disp_tournaments($tlist, 'view.php');
+        }
+    }
+    echo "</div></div></div>\n";
+    include("footer.php"); 
 ?>
-
-<div class='con'>
-    <div class='centerBox'>
-        <?php 
-            ($tid  = $_GET['id'])   || ($tid = $_POST['tournament_id']);
-
-            if ($tid) {
-                if ((tournament_ispublic($tid)) || 
-                    (check_login() && tournament_isadmin($tid, $_SESSION['admin_id'])))
-                    disp_standings($tid, $_GET['view']);
-                else
-                    header("location:view.php");
-            }
-            else {  // List of public tournaments
-                echo "<div class='mainBox'>\n";
-                $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
-                // only list tournaments from the past year?
-                if (! isset($_GET['all'])) {
-                    foreach( $tlist as $k => $t ) {
-                        if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7))
-                            //(strtotime($t['tournament_date']) < time() -3600*24*365))
-                            unset($tlist[$k]);
-                    }
-                    disp_tournaments(array_slice($tlist,0,10), 'view.php');
-                    echo '<div class="nav line"> <a href="view.php?all">Older Tournaments</a> </div>';
-                } else {
-                    disp_tournaments($tlist, 'view.php');
-                }
-                echo "</div>";
-            }
-        ?>
-    </div>
-</div>
-<? include("footer.php"); ?>

@@ -282,7 +282,7 @@ function disp_round_nav($mid, $round, $admin=false) {
     }
 }
 
-function disp_teams_list($tid) {
+function disp_teams_list($mid) {
     //TODO: grey out teams that have been disabled
     //TODO: if team_init is nonzero, display this somewhere
     echo "<div class='mainbox'>\n";
@@ -333,13 +333,12 @@ function disp_view_nav($tid, $is_started, $url, $view=null) {
 }
 
 // ASSERT: check is_public/has_privs has already happened
-function disp_standings($tid, $view=null) {
-    $nrounds = get_tournament_nrounds($tid);
-    $mode = get_tournament_mode($tid);
+function disp_standings($module, $view=null) {
+    $rounds = get_module_rounds($module['module_id']);
 
     // default view if nothing explicitly chosen
-    if (! $view)
-        if ($nrounds == 0)
+    if (! $view) {
+        if (! $rounds)
             $view = "teams";
         else {
             if (isset($_GET['round_id']))
@@ -357,19 +356,20 @@ function disp_standings($tid, $view=null) {
                         break;
                 }
         }
-
+    }
 
     // view_nav_buttons [mostly greyed out when nrounds=0]
-    // TODO URGENT: $nrounds should be passed as is for disp_view_nav to grey out lbracket when ==1
-    disp_view_nav($tid, ($nrounds > 0), "view.php?id=$tid&view=", $view);
-
-    if ($nrounds == 0)
-        debug_alert("Tournament not yet started");
+    // TODO URGENT: grey out lbracket when nrounds==1
+    //        pass nrounds to disp_view_nav to do this
+    
+    //disp_view_nav($mid, ($nrounds > 0), "view.php?id=$tid&view=", $view);
 
     switch ($view) {
         case "teams":
-            echo "<div class='mainBox'>\n";
-            disp_teams_list($tid);
+            echo "<div class='mainBox'>";
+            if (! $rounds)
+                echo "<div class='header'>Not yet started</div>";
+            disp_teams_list($mid);
             echo "</div>";
             break;
         case "games":
@@ -389,17 +389,18 @@ function disp_standings($tid, $view=null) {
             if (($nrounds > 0) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
             break;
         case "debug":
-            disp_swiss($tid, $nrounds, true);
+            disp_swiss($mid, count($rounds), true);
             break;
         case "results":
-            if (($nrounds > 0) && ($mode == 0)) 
-                if (isset($_GET['round_id'])) {
-                    $r = get_tournament_round($tid, $_GET['round_id']);
-                    if ($r)
-                        disp_swiss($tid, $r['round_number'], true);
-                }
-                else
-                    disp_swiss($tid, $nrounds);
+            if (count($rounds > 0) && ($mode == 0)) {
+                //if (isset($_GET['round_id'])) {
+                //    $r = get_tournament_round($tid, $_GET['round_id']);
+                //    if ($r)
+                //        disp_swiss($tid, $r['round_number'], true);
+                //}
+                //else
+                    disp_swiss($mid, $rounds);
+            }
             break;
         case "standings":
             if ($nrounds > 0) disp_places($tid);
@@ -717,20 +718,18 @@ function score_str($result) {  // TODO need team id, then put self first
         return implode(" - ", $s)." vs {$result['opp_name']}";
 }
 
-function disp_swiss($tid, $nrounds, $all_breaks = false) {
-    $standings = get_standings($tid, $all_breaks, $nrounds);
-    
-    if (count($standings) == 0) { return; }
+function disp_swiss($mid, $rounds, $all_breaks = false) {
+    $standings = get_standings($rounds[count($rounds)-1], $all_breaks);
+    if (count($standings) == 0) { return; } // ay!  when does this happen?
     array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
 
-    echo "<div class='mainBox'>\n";
     echo "<table class='swiss standings'>\n";
     echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th>";
     if ($all_breaks)
         echo "<th>SRS</th><th>Max Likelihood</th><th>Iterated Buchholz</th>";
     echo "</tr>\n";
     echo "<tr><th colspan=2></th>\n";
-    for ($i = 1; $i <= $nrounds; $i++)
+    for ($i = 1; $i <= count($rounds); $i++)
         echo "<th>R$i</th>";
     echo  "\n<th></th>\n";
     echo  "<th title='Difficulty of all opponents faced'>Buchholz</th><th title='Difficulty of oppoents defeated and drawn'>Berger</th><th title='Integral over time of win/loss score'>Cumulative</th></tr>\n";
@@ -739,7 +738,7 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
         echo "<tr>";
         echo "<td class='numeric'>".($rank+1)."</td>";
         echo "<td class='bold'><span title=\"{$team['text']}\">{$team['name']}</span></td>\n";
-        for ($i = 0; $i < $nrounds; $i++) {
+        for ($i = 0; $i < count($rounds); $i++) {
             echo "<td class='numeric'>";
             // results from round $i
             $results = array_filter($team['results'], function ($r) use ($i) { return $r['rnum'] == $i+1; });
@@ -762,7 +761,7 @@ function disp_swiss($tid, $nrounds, $all_breaks = false) {
         }
         echo "</tr>\n";
     }
-    echo "</table>\n</div>\n";
+    echo "</table>\n";
 }
 
 function disp_scores($team, $disabled="DISABLED") {
@@ -924,10 +923,19 @@ function disp_round_games($round) {
 
 function disp_game($game) {
     $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
+    echo "<div class='game' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>{$teams[0]['team_name']}";
+
     if (count($teams) == 1)
-        echo "<div class='game'>{$teams[0]['team_name']} has a BYE</div>";
-    else
-        echo "<div class='game'>{$teams[0]['team_name']} vs {$teams[1]['team_name']}</div>";
+        echo " has a BYE";
+    else {
+        echo " vs {$teams[1]['team_name']}";
+        if ($game['status']) {
+            echo ", {$teams[0]['score']}-{$teams[1]['score']}";
+            if ($game['status'] == 1)  // FINISHED
+                echo " Finished";
+        }
+    }
+    echo "</div>";
 }
 
 function old_disp_round_games($tid, $aid, $db) {

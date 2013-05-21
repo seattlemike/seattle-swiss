@@ -36,9 +36,14 @@
 	require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
     $tourney = get_tournament($tid);
+    if (! $round) {
+        ($round = get_current_round($mid)) 
+        && ($rid = $round['round_id']);
+    }
 
     $js_extra = array("ui.js", "async.js", "run_module.js");
-    disp_header($module['module_title']." : Run", $js_extra);
+    $header_extra = array( '<script type="text/javascript">window.onload = runModuleOnLoad</script>' );
+    disp_header($module['module_title']." : Run", $js_extra, $header_extra);
     disp_topbar($tourney, $module, 2);
     disp_titlebar($module['module_title']);
 
@@ -77,10 +82,6 @@
             case 'add_game':
                 if (module_hasteam($mid, $_POST['team_a']) && module_hasteam($mid, $_POST['team_b']))
                     round_add_game($rid, array( array("id" => $_POST['team_b']), array( "id" => $_POST['team_a']) ));
-                break;
-            case 'toggle_oncourt':
-                if ($round && game_in_round($rid, $_POST['game_id']))
-                    tournament_toggle_court($_POST['game_id']);
                 break;
             case 'delete_game':
                 if ($round && game_in_round($rid, $_POST['game_id']))
@@ -128,13 +129,16 @@
                             <input type='hidden' name='round_id' value='<? echo $rid ?>' />
                             <div class="line">
                                 <?php
-                                disp_tournament_button("Fill", "populate_round");
-                                disp_tournament_button("Empty", "empty_round");
-                                disp_tournament_button("Delete", "delete_round");
+                            //    <a id="fill-btn" class="button">Fill Round</a>
+                            //    <a id="empty-btn" class="button">Empty Round</a>
+                            //    <a id="delete-btn" class="button">Delete Round</a>
+                                disp_tournament_button('Fill Round', 'populate_round');
+                                disp_tournament_button('Empty Round', 'empty_round');
+                                disp_tournament_button('Delete Round', 'delete_round');
                                 ?>
                             </div>
                             <div class="line">
-                                <?php
+                                <?
                                 disp_tournament_button('Add Game', 'add_game');
                                 disp_team_select($mid, 'team_a');
                                 disp_team_select($mid, 'team_b');

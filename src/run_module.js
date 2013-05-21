@@ -58,3 +58,38 @@ function toggleHide(id) {
     else el.style.display = "none"
 }
 
+function runModuleOnLoad() {
+    //document.getElementById("fill-round").onclick = fillRound;
+    //document.getElementById("empty-round").onclick = fillRound;
+    //document.getElementById("delete-round").onclick = fillRound;
+
+    var games = document.querySelectorAll(".game")
+    for (var i=0; i<games.length; i++) {
+        var scores = JSON.parse(games[i].getAttribute("data-score"))
+        var game = JSON.parse(games[i].getAttribute("data-game"))
+        if (game.status == 1)
+            games[i].className += " played"
+        var dialog = new GameDialog(game, scores)
+        games[i].onclick = dialog.show
+    }
+}
+
+function GameDialog(game, scores) {
+    var self=this
+    this.game = game
+    this.scores = scores
+
+    this.toggleStatus = function () {
+        self.game.status = (self.game.status + 1) % 3
+        self.statusNode.lastChild.innerHTML = self.statusTexts[game.status]
+    }
+    this.dialog = new Dialog(scores[0]['team_name']+" vs "+scores[1]['team_name'], function () { })
+    this.statusTexts = ["Scheduled", "Finished", "Now Playing"]
+    this.statusNode = buildNode("div", "line")
+    this.statusNode.appendChild(buildNode("div", "label", "Status"))
+    this.statusNode.appendChild(buildNode("div", "status", this.statusTexts[game.status]))
+    this.statusNode.onclick = this.toggleStatus
+    this.dialog.insert(this.statusNode)
+
+    this.show = function () { self.dialog.show() }
+}

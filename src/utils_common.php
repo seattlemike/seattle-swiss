@@ -216,7 +216,7 @@ function game_delete( $gid, $db=null) {
 
 function get_round_games($rid, $db=null) {
     ($db) || ($db = connect_to_db());
-    return sql_select_all("SELECT * FROM tblGame WHERE round_id = ?", array($rid), $db);
+    return sql_select_all("SELECT * FROM tblGame WHERE round_id = ? ORDER BY status ASC", array($rid), $db);
 }
 
 //
@@ -319,22 +319,27 @@ function round_populate($rid, $db=null) {
 }
 
 // Add game to the database
-function round_add_game($rid, $list, $db=null) {
+function round_add_game($rid, $teams, $db=null) {
     ($db) || ($db = connect_to_db());  // make sure we've got a db connection
-    // gets rid of BYE/unset teams
-    foreach ($list as $idx => $team) {
-        if ((! isset($team['id'])) || ($team['id'] == -1))
-            unset($list[$idx]);
-    }
-    if (count($list) == 0) return;
 
-    $game_id = sql_insert("INSERT INTO tblGame (round_id, game_time) VALUES (?, NOW())", array($rid), $db);
+    // strip BYE/unset teams
+    foreach ($teams as $idx => $team) {
+        if ((! isset($team['id'])) || ($team['id'] == -1))
+            unset($teams[$idx]);
+    }
+
+    if (count($teams) == 0) // empty game?
+        return;
+    else if (count($teams) == 1) // BYE => status = finished
+        $status = 1;
+    else // unplayed
+        $status = 0;
+
+    $game_id = sql_insert("INSERT INTO tblGame (round_id, status, game_time) VALUES (?, ?, NOW())", array($rid, $status), $db);
     if ($game_id) {
-        if (count($list) == 1)  $score = 0;
-        else                    $score = -1;
-        foreach ($list as $team)
-            if (! sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, ?)", 
-                    array($game_id, $team['id'], $score), $db)) 
+        foreach ($teams as $team)
+            if (! sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, 0)", 
+                    array($game_id, $team['id']), $db)) 
                 return false;
     } else {
         return false;
@@ -405,9 +410,8 @@ function get_tournament_round($tid, $rid, $db=null) {
 }
 
 // return the round_id of the round with the highest round_number [for tournament_id $tid]
-function get_current_round($tid, $db=null) {
-    return sql_select_one("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_number DESC", 
-                          array(":tid" => $tid), $db);
+function get_current_round($mid, $db=null) {
+    return sql_select_one("SELECT * FROM tblRound WHERE module_id = ? ORDER BY round_number DESC", array($mid), $db);
 }
 
 function tournament_add_admin($data, $aid) {
