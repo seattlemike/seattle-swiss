@@ -106,16 +106,16 @@ function logout() {
 }
 
 // checks to see if the admin logged in has privileges for the tournament
-function tournament_isadmin($tid, $aid) {
+function tournament_isadmin($tid, $aid=null) {
     return (($_SESSION['admin_type'] == 'super') ||
             is_array( sql_select_one("SELECT * FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", 
-                      array($tid, $aid))));
+                      array($tid, $_SESSION['admin_id']))));
 }
 
-function tournament_isowner($tid, $aid) {
+function tournament_isowner($tid) {
     return (($_SESSION['admin_type'] == 'super') ||
             is_array(sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = ? AND tournament_owner = ?', 
-                     array($tid, $aid))));
+                     array($tid, $_SESSION['admin_id']))));
 }
 
 function tournament_ispublic($tid) {
@@ -168,6 +168,21 @@ function is_poweruser() {
 // Round functions
 //
 
+function round_isdone($rid) {
+    $games = get_round_games($rid, $db);
+    if (! $games)
+        return false;
+    $unfinished = array_filter($games, function ($g) { return ($g['status'] != 1); } );
+    return (count($unfinished) == 0);
+}
+
+function get_game($game_id) {
+    if ($game_id)
+        return sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
+    else
+        return false;
+}
+
 function get_round($rid) {
     if ($rid)
         return sql_select_one('SELECT * FROM tblRound WHERE round_id = ?', array($rid));
@@ -216,7 +231,7 @@ function game_delete( $gid, $db=null) {
 
 function get_round_games($rid, $db=null) {
     ($db) || ($db = connect_to_db());
-    return sql_select_all("SELECT * FROM tblGame WHERE round_id = ? ORDER BY status ASC", array($rid), $db);
+    return sql_select_all("SELECT * FROM tblGame WHERE round_id = ? ORDER BY game_id ASC", array($rid), $db);
 }
 
 //
@@ -415,7 +430,7 @@ function get_current_round($mid, $db=null) {
 }
 
 function tournament_add_admin($data, $aid) {
-    require_privs(tournament_isowner($data['tournament_id'], $aid));
+    require_privs(tournament_isowner($data['tournament_id']));
     $admin = sql_select_one("SELECT * FROM tblAdmin WHERE admin_email = ?", array($data['admin_email']));
     if (!$admin)
         return false;
@@ -428,7 +443,7 @@ function tournament_add_admin($data, $aid) {
 }
 
 function tournament_remove_admin($data, $aid) {
-    require_privs(tournament_isowner($data['tournament_id'], $aid));
+    require_privs(tournament_isowner($data['tournament_id']));
     if ($data['admin'] == $aid)
         return false;
     $admin = sql_select_one("SELECT * FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($data['tournament_id'], $data['admin_id']));
@@ -490,7 +505,7 @@ function tournament_delete($data, $aid) {
   // TODO IMMEDIATE -- delete modules
   $db = connect_to_db();
   $tid = $data['tournament_id'];
-  require_privs(tournament_isowner($tid,$aid));
+  require_privs(tournament_isowner($tid));
   $success = sql_try("DELETE FROM tblTournament WHERE tournament_id = ?", array($tid), $db);
   $success &= sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ?", array($tid), $db);
 

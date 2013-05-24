@@ -17,40 +17,6 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-function postToggles(form) {
-    var toggles = [];
-    var gamebox = document.getElementById("games");
-    var games = gamebox.getElementsByTagName("form");
-    for (var j = 0; j < games.length; j++) {
-        if ((games[j] != form) && games[j].elements.hasOwnProperty("toggle") && games[j].elements.toggle.value) {
-            toggles.push(games[j].elements.game_id.value);
-        }
-    }
-
-    var toggleField = document.createElement("input");
-    toggleField.setAttribute("type", "hidden");
-    toggleField.setAttribute("name", "toggles");
-    toggleField.setAttribute("value", toggles.join(" "));
-    form.appendChild(toggleField);
-}
-
-function togOnCourt(gid) {
-    var box = document.getElementById("box_"+gid);
-    var form = document.getElementById("form_"+gid);
-    if (form.elements.toggle.value) {
-        form.elements.tog_btn.value = "On Court";
-        form.elements.toggle.value = "";
-        box.className = box.className.replace(/\bplaying\b/,"");
-    }
-    else {
-        form.elements.tog_btn.value = "Off Court";
-        form.elements.toggle.value = "1";
-        if (! box.className.match(/\bplaying\b/) )
-            box.className += " playing";
-    }
-    return true;
-}
-
 function toggleHide(id) {
     var el = document.getElementById(id)
     if (el.style.display == "none")
@@ -63,33 +29,81 @@ function runModuleOnLoad() {
     //document.getElementById("empty-round").onclick = fillRound;
     //document.getElementById("delete-round").onclick = fillRound;
 
+    var statusClass = ["game-scheduled", "game-finished", "game-inprogress"]
     var games = document.querySelectorAll(".game")
+
     for (var i=0; i<games.length; i++) {
         var scores = JSON.parse(games[i].getAttribute("data-score"))
         var game = JSON.parse(games[i].getAttribute("data-game"))
-        if (game.status == 1)
-            games[i].className += " played"
+        game.node = games[i]
         var dialog = new GameDialog(game, scores)
         games[i].onclick = dialog.show
+        games[i].className += " "+statusClass[game.status]
     }
 }
 
 function GameDialog(game, scores) {
     var self=this
-    this.game = game
-    this.scores = scores
 
-    this.toggleStatus = function () {
-        self.game.status = (self.game.status + 1) % 3
-        self.statusNode.lastChild.innerHTML = self.statusTexts[game.status]
+    var statusText = ["Scheduled", "Finished", "Now Playing"]
+    var statusClass = ["game-scheduled", "game-finished", "game-inprogress"]
+    var titleNode = buildNode("div", "header")
+    var tmpStatus
+
+    this.update = function (s) {
+        tmpStatus = s
+        self.statusNode.innerHTML = statusText[s]
+        self.statusNode.className = "dialog-status "+statusClass[s]
+        titleNode.innerHTML = scores[0].team_name + " vs " + scores[1].team_name
     }
-    this.dialog = new Dialog(scores[0]['team_name']+" vs "+scores[1]['team_name'], function () { })
-    this.statusTexts = ["Scheduled", "Finished", "Now Playing"]
-    this.statusNode = buildNode("div", "line")
-    this.statusNode.appendChild(buildNode("div", "label", "Status"))
-    this.statusNode.appendChild(buildNode("div", "status", this.statusTexts[game.status]))
-    this.statusNode.onclick = this.toggleStatus
-    this.dialog.insert(this.statusNode)
+    this.toggleStatus = function () { self.update((tmpStatus + 2) % 3) }
 
-    this.show = function () { self.dialog.show() }
+    this.saveScore = function() {
+        game.status = tmpStatus
+        for(var i=0; i<scores.length; i++) {
+            var score = parseInt(scores[i].input.value)
+            if (! isNaN(score))
+                scores[i]['score'] = score;
+            else
+                scores[i]['score'] = 0;
+        }
+        
+        game.node.className = "game "+statusClass[game.status]
+        game.node.innerHTML = scores[0].team_name + " vs " + scores[1].team_name
+        if (game.status > 0) { game.node.innerHTML += ", " + scores[0].score + "-" + scores[1].score }
+
+        game.onclick = ""
+        var async = new asyncPost()
+        async.onSuccess = function () { game.node.onclick = self.show; game.node.className = "game "+statusClass[game.status] }
+        var fd = new FormData()
+        fd.append("case", "GameUpdate")
+        fd.append("game_data", JSON.stringify( { "status" : game.status, "game_id": game.game_id } ))
+        fd.append("score_data", JSON.stringify(scores))
+        async.post(fd)
+
+    }
+
+    this.show = function () { 
+        for(var i=0; i<scores.length; i++)
+            scores[i].input.value = scores[i]['score']
+        self.update(game.status);
+        self.dialog.show() 
+    }
+
+    // Build the node structure
+    this.dialog = new Dialog("", self.saveScore)
+    this.dialog.insert(titleNode)
+    this.box = buildNode("div", "")
+    for(var i=0; i<scores.length; i++) {
+        var line = buildNode("div", "line toggle")
+        line.appendChild(buildNode("div", "team", scores[i]['team_name']))
+        scores[i].input = buildNode("input", "score")
+        scores[i].input.value = scores[i]['score']
+        line.appendChild(scores[i].input)
+        this.box.appendChild(line);
+    }
+    this.statusNode = buildNode("div", "dialog-status")
+    this.statusNode.onclick = this.toggleStatus
+    this.dialog.insert(this.box)
+    this.dialog.insert(this.statusNode)
 }

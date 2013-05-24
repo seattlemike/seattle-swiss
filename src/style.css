@@ -100,6 +100,19 @@ ol.spaced li {
 p, .line { margin: 0.5em 0 0.5em 0; }
 .item { margin: 1em; }
 
+/* Run Module */
+
+#games { 
+    margin: 1em -0.5em;
+}
+.game { 
+    text-align: left; 
+    cursor: pointer;
+    padding: 1em 2em;
+}
+.game:hover {
+    background: #ddd;
+}
 
 .game-box:first-child { border: none; }
 .game-box { padding: 1em 0.5em; border-top: 1px solid #aaf; }
@@ -109,20 +122,26 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     margin: 0 0.5em;
 }
 
-.victor, .on-court { 
-    display: inline-block;
-    padding: 0.2em 0.5em;
-    border-radius: 2px;
-}
+.status { cursor: pointer; }
+.game-scheduled{ background: #eee}
+.game-finished { background: #aaa; }
+.game-inprogress { background: #caa; }
+
 
 .victor {
-    background: #eef;
-    border: 1px solid #aaf;
+    /*background: #fc5; a83 a38*/
+    border: 2px dashed #77e;
 }
 .on-court {
     background: #fee;
     border: 1px solid #c99;
 }
+.victor, .on-court { 
+    display: inline-block;
+    padding: 0.2em;
+    margin: 0 0.2em;
+}
+
 
 /* Page Layout */
 
@@ -153,19 +172,6 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     margin-left: 0.5em;
 }
 
-.game { 
-    text-align: left; 
-    cursor: pointer;
-    padding: 1em 2em;
-    margin: 0 -0.5em;
-}
-.game:hover {
-    background: #ddd;
-}
-.status {
-    cursor: pointer;
-}
-
 /* tabulated display */
 table {
     margin-left: auto;
@@ -192,6 +198,10 @@ td.numeric { min-width: 40px; }
 .twocolor td {
     height: 40px;
     min-width: 100px;
+}
+
+input .score {
+
 }
 
 .standings .score { 
@@ -350,6 +360,7 @@ td.center, td.numeric { text-align: center; }
         z-index: 1002;
         min-height: 5em;
         padding: 1em;
+        overflow: hidden;
     }
 
     .dialog-text { 
@@ -359,6 +370,12 @@ td.center, td.numeric { text-align: center; }
         font-style: italic;
         text-align: center; 
     }
+    .dialog-status {
+        margin: 1em -1em;
+        font-size: 1.2em;
+        padding: 1em;
+    }
+
     .dialog-buttons { margin-top: 1em; text-align: left; }
     .rt-button { float: right; }
 

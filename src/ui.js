@@ -79,7 +79,8 @@ function Dialog( titleText="", okfn = function() {} ) {
     this.hide = function() { document.body.removeChild(self.dialog);  document.body.removeChild(self.overlay) }
     this.insert = function(node) { self.dialog.insertBefore(node, self.buttonBox); return node }
     this.setWidth = function(w) { self.dialog.style.width =  w+"px"; self.dialog.style.marginLeft = (Math.round(-1 * w/2)) + "px" }
-    this.display = function(css) { self.dialog.style.position = css; }
+    this.display = function(css) { self.dialog.style.position = css }
+    this.setTitle = function(text) { self.titleBox.innerHTML=text }
 }
 
 // Tournament

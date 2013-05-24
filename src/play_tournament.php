@@ -61,6 +61,17 @@
                     $round_id = module_new_round($mid);
                 header_redirect("play_tournament.php?round=$round_id");
                 break;
+            case 'next_round':
+                $rounds = get_module_rounds($mid);
+                if ($rounds[count($rounds)-1]['round_id'] != $_POST['round_id']) 
+                    $round_id = $rounds[count($rounds)-1]['round_id'];
+                else
+                    $round_id = module_new_round($mid);
+                header_redirect("play_tournament.php?round=$round_id");
+                break;
+
+
+            //OLD
             case 'add_round':
                 if ($rid=tournament_add_round($tid))
                     header("location:play_tournament.php?id=$tid&round_id=$rid");
@@ -105,12 +116,7 @@
         } else {
         ?>
         <div class='mainBox'>
-            <form name='rounds' action='' method='post'>
-                <input type='hidden' name='case' value='start_module' />
-                <input type='hidden' name='module_id' value='<?echo $mid?>' />
-                <input type='hidden' name='round_id' value='<?echo $rid?>' />
-                <? disp_round_nav($mid, $round, true);  ?>
-            </form>
+            <? disp_round_nav($mid, $round, true);  ?>
 
             <? if ($round) {
                 echo "<div id='games'>";

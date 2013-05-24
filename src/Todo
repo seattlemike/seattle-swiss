@@ -6,6 +6,7 @@
       delete tournament should recurse properly over modules/moduleteams/games/etc 
       delete module should recurse properly
   Older:      
+    tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
     #redesign new-tournament creation
     #better way to do page header 
     #    not just include(header.php) but more like display_head(extra_bits)

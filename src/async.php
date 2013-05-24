@@ -10,6 +10,9 @@
             case 'ModuleTeamDel':  // add team_id to the teams competing in module_id
                 $status = asyncModuleTeamDel($_POST['module_id'], $_POST['team_id']);
                 break;
+            case 'GameUpdate':  // update score/status for game
+                $status = asyncGameUpdate(json_decode($_POST['game_data'], true), json_decode($_POST['score_data'], true));
+                break;
             default:
                 $status = array("errno" => 1, "msg" => "Unexpected ASYNC case \"{$_POST['case']}\"");
         }

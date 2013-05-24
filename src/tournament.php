@@ -155,7 +155,7 @@
             <form id="delForm" name='delete' method='post' action=''>
                 <input type='hidden' name='action' value='delete_tournament' />
                 <?php 
-                    if (tournament_isowner($tourney['tournament_id'], $_SESSION['admin_id']))
+                    if (tournament_isowner($tourney['tournament_id']))
                         echo '<a href="#" onClick="delTournament()">Delete Tournament</a>';
                         //disp_tournament_button('Delete Tournament', 'delete_tournament');
                 ?>

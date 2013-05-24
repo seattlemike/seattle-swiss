@@ -256,29 +256,34 @@ function disp_team_edit($team) {
 // displays the navigation for a round
 function disp_round_nav($mid, $round, $admin=false) {
     $rounds = get_module_rounds($mid);
-    if (! $rounds) {
-        if ($admin)
-            echo "<input class='button' type='submit' name='start_module' value='Start' />";
-        else
-            echo "<div class='header'>Not yet started</div>";
-    } else {
+    if (! $rounds)
+        echo "<div class='header'>Not yet started</div>";
+    else {
         $url = $_SERVER['PHP_SELF'];
         foreach ($rounds as $r) {
             if ($r['round_id'] == $round['round_id']) $isSelected = "selected";
             else                        $isSelected = "";
             echo "<a class='button $isSelected' href='$url?round={$r['round_id']}'>Round {$r['round_number']}</a>";
         }
-        if ($admin) {
-            if (isset($rid)) {
-                $next_round = tournament_next_round($rid);
-                if (tournament_round_is_done($rid) && ! $next_round) {
-                    $onclick = " this.form.elements[\"populate_id\"].value=\"{$next_round['round_id']}\";";
-                    disp_tournament_button("Next", "populate_round", $onclick);
-                }
-                else
-                    echo "<a class='button disabled'>Next</a>";
+    }
+
+    if ($admin) {
+        echo "<form name='round' action='' method='post'>
+            <input type='hidden' name='module_id' value='$mid' />
+            <input type='hidden' name='round_id' value='{$round['round_id']}' />";
+        if (! $rounds)  {
+            echo "<input type='hidden' name='case' value='start_module' />
+            <input class='button' type='submit' name='start_module' value='Start' />";
+        } else {
+            // if we're looking at most recent round and round_isdone
+            if (($rounds[count($rounds)-1]['round_id'] == $round['round_id']) && round_isdone($round['round_id'])) {
+                echo "<input type='hidden' name='case' value='next_round' />
+                <input class='button' type='submit' name='next_round' value='Next' />";
+            } else {
+                echo "<a class='button disabled'>Next</a>";
             }
         }
+        echo "</form>";
     }
 }
 
@@ -923,16 +928,20 @@ function disp_round_games($round) {
 
 function disp_game($game) {
     $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
-    echo "<div class='game' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>{$teams[0]['team_name']}";
+    echo "<div class='game' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>";
 
     if (count($teams) == 1)
-        echo " has a BYE";
+        echo "{$teams[0]['team_name']} has a BYE";
     else {
-        echo " vs {$teams[1]['team_name']}";
-        if ($game['status']) {
+        if ($game['status'] == 1) {
+            if ($teams[0]['score'] > $teams[1]['score'])
+                $teams[0]['team_name'] = "<div class='victor'>{$teams[0]['team_name']}</div>";
+            elseif ($teams[0]['score'] < $teams[1]['score'])
+                $teams[1]['team_name'] = "<div class='victor'>{$teams[1]['team_name']}</div>";
+        }
+        echo "{$teams[0]['team_name']} vs {$teams[1]['team_name']}";
+        if ($game['status'] > 0) {
             echo ", {$teams[0]['score']}-{$teams[1]['score']}";
-            if ($game['status'] == 1)  // FINISHED
-                echo " Finished";
         }
     }
     echo "</div>";

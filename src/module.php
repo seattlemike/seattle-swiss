@@ -71,7 +71,7 @@
                     echo "<div class='line'>";
                     disp_tournament_button("Save Details", 'update_module'); 
                     echo "</div>";
-                    if (tournament_isowner($tid, $_SESSION['admin_id']))
+                    if (tournament_isowner($tid))
                         echo "<a id='del-btn' class='button'>Delete Round</a>";
                 ?>
             </form>
