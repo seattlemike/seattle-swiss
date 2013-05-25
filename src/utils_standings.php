@@ -65,6 +65,7 @@ class stats {
                 // -1 if disabled, 0 if eliminated, 2 if in winners bracket, 1 if in losers bracket
                 'status' => $team['is_disabled'] ? -1 : 2,
                 'opponents' => array(), // list of opponents faced in order
+                'faced' => array(),     // list of opponents sorted by team_id
                 'result' => array(), // outcomes of games in order
                 'results' => array(), // array of round data
                 'score' => 0, // sum of results
@@ -422,10 +423,14 @@ class stats {
     function iterMaxLikelihood() {
         $error = 0; $probs = array(); 
         foreach ($this->teams as $id => $team) {
-            $denom = 0;
-            foreach ($team['faced'] as $opp_id => $count)
-                $denom += $count  / ($this->teams[$id]['maxprob'] + $this->teams[$opp_id]['maxprob']);
-            $probs[$id] = $team['adjscore']/ $denom;
+            if (count($team['faced'])) {
+                $denom = 0;
+                foreach ($team['faced'] as $opp_id => $count)
+                    $denom += $count  / ($this->teams[$id]['maxprob'] + $this->teams[$opp_id]['maxprob']);
+                $probs[$id] = $team['adjscore']/ $denom;
+            }
+            else
+                $probs[$id] = 1 / count($this->teams);
         }
         foreach ($probs as $id => $val) {
             $error += abs($val - $this->teams[$id]['maxprob']);
@@ -462,7 +467,7 @@ class stats {
         $mean = 100 / count($this->teams);
         foreach($this->teams as $team)
             $var += ($team['maxprob']-$mean) * ($team['maxprob']-$mean) / count($this->teams);
-        echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count, mean: ".sprintf("%.2f",$mean).", StdDev:".sprintf("%.2f",sqrt($var))."</div>\n";
+        //echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count, mean: ".sprintf("%.2f",$mean).", StdDev:".sprintf("%.2f",sqrt($var))."</div>\n";
     }
 }
 
@@ -477,7 +482,11 @@ function group_by($ary, $idx) {
 // get cumulative stats for rounds up through $round
 function build_stats($round) {
     ($db = connect_to_db()) || debug_error("Couldn't connect to database for tournament standings");
-    $teams = sql_select_all("SELECT a.*, b.* FROM tblTeam a JOIN tblModuleTeams b USING (team_id) WHERE module_id = ?", array($round['module_id']), $db);
+    $teams = sql_select_all("SELECT tblTeam.*, tblModuleTeams.* FROM tblTeam JOIN tblModuleTeams USING (team_id) WHERE module_id = ? ORDER BY team_seed, tblTeam.team_id", array($round['module_id']), $db);
+    $seed=1;
+    foreach ($teams as $idx => $t) {
+        $teams[$idx]['team_init'] = $seed++;
+    }
     $stats = new stats($round['module_id'], $teams);
     
     $rounds = sql_select_all("SELECT * FROM tblRound WHERE module_id = ? AND round_number <= ? ORDER BY round_number ASC", array($round['module_id'], $round['round_number']), $db);
@@ -496,13 +505,12 @@ function build_stats($round) {
 // teams ordered best to worst
 function get_standings($round, $all_tiebreaks = false) {
     $stats = build_stats($round);
+    $stats->calcMaxLikelihood();
     if ($all_tiebreaks) {
         $stats->tiebreaks();
         $stats->calcSRS();
-        $stats->calcMaxLikelihood();
         $stats->calcIterBuchholz();
     }
-
     return $stats->team_array();
 }
 

@@ -111,7 +111,6 @@ function round_get_pairings($round) {
 //TODO MIKE IMMEDIATE
 function get_dblelim_pairings($tid) {
     $standings = array_filter(get_standings($tid), function ($t) { return ($t['status'] >= 0); });
-
     $lbracket = array_filter($standings, function ($t) { return ($t['status'] == 1); });
     $wbracket = array_filter($standings, function ($t) { return ($t['status'] == 2); });
 

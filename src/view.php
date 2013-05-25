@@ -46,11 +46,15 @@
 
     echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
     if ($module) {
-        echo "<div class='header'>Standings</div>\n";
-        disp_standings($module, $_GET['view']);
+        if (get_module_rounds($mid)) {
+            disp_standings($module, $_GET['view']);
+        } else {
+            echo "<div class='header'>Not yet started</div>";
+            disp_teams_list($mid);
+        }
     } elseif ($tourney) {
-        //if ($tourney['tournament_privacy'] > 0)
-        disp_modules($tid);
+        if ($tourney['tournament_privacy'] > 0)
+            disp_modules(get_tournament_modules($tid), "view.php");
     }
     else {  // List of public tournaments
         $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());

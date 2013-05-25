@@ -3,8 +3,12 @@
 #### May 2013
   Urgent:
     finish tournament->module->round->game hierarchy
-      delete tournament should recurse properly over modules/moduleteams/games/etc 
-      delete module should recurse properly
+        delete tournament should recurse properly over modules/moduleteams/games/etc 
+        delete module should recurse properly
+    move next-round button into javascript
+    sort rank based on MaxLikelihood
+    figure out how we're going to pick matchups
+        (still buchholz but now with max likelihood as secondary tiebreak?)
   Older:      
     tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
     #redesign new-tournament creation

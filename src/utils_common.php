@@ -259,12 +259,12 @@ function get_module($mid) {
 }
 
 function get_module_teams($mid) {
-    return sql_select_all("SELECT a.*,b.team_name FROM tblModuleTeams a JOIN tblTeam b USING (team_id) WHERE a.module_id = ? ORDER BY team_seed, team_id", array($mid));
+    return sql_select_all("SELECT a.*,b.team_name,b.team_text FROM tblModuleTeams a JOIN tblTeam b USING (team_id) WHERE a.module_id = ? ORDER BY team_seed, team_id", array($mid));
 }
 
 
 function get_tournament_modules($tid) {
-    return sql_select_all("SELECT * FROM tblModule WHERE parent_id = ?", array($tid));
+    return sql_select_all("SELECT * FROM tblModule WHERE parent_id = ? ORDER BY module_id", array($tid));
 }
 
 function module_update_seeds($data) {

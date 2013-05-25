@@ -160,7 +160,7 @@ function disp_admin_tournament($t, $aid, $idx) {
     echo "</tr>";
 }
 
-function disp_modules($tlist) {
+function disp_modules($tlist, $linkto = "module.php") {
     $mode = array("Swiss", "Single Elim", "Double Elim");
     if ((! $tlist) || (count($tlist) == 0))
         echo "<div class='line'>[no brackets scheduled yet]</div>\n";
@@ -171,7 +171,7 @@ function disp_modules($tlist) {
             echo "<td class='btnCtr'>\n";
             echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
             echo "</td>\n";
-            echo "<td><a href='module.php?module={$m['module_id']}'>{$m['module_title']}</a></td>";
+            echo "<td><a href='$linkto?module={$m['module_id']}'>{$m['module_title']}</a></td>";
             $date = date("m/d/Y", strtotime($m['module_date']));
             echo "<td>{$mode[$m['module_mode']]}</td><td>$date</td>\n";
             echo "</tr>\n";
@@ -287,19 +287,15 @@ function disp_round_nav($mid, $round, $admin=false) {
     }
 }
 
+
 function disp_teams_list($mid) {
-    //TODO: grey out teams that have been disabled
-    //TODO: if team_init is nonzero, display this somewhere
-    echo "<div class='mainbox'>\n";
-    $teams = sql_select_all("SELECT * FROM tblTeam WHERE tournament_id = :tid ORDER BY team_name ASC", array(":tid" => $tid));
+    // TODO: starting seed?  sort alphabetically?
+    $teams = get_module_teams($mid);
+    //$teams = sql_select_all("SELECT * FROM tblTeam WHERE module_id = ? ORDER BY team_name ASC", array($mid));
     if ($teams) {
-        foreach ($teams as $t) {
-            if ($t['team_text']) $text = " : <i>{$t['team_text']}</i>";
-            else                 $text = "";
-            echo "<p>{$t['team_name']}$text</p>\n";
-        }
+        foreach ($teams as $t)
+            echo "<div class='team'>{$t['team_name']}".($t['team_text'] ? " : <i>{$t['team_text']}</i>":"")."</div>";
     }
-    echo "</div></div>\n";
 }
 
 //
@@ -349,7 +345,7 @@ function disp_standings($module, $view=null) {
             if (isset($_GET['round_id']))
                 $view = "games";
             else
-                switch ($mode) {
+                switch ($module['module_mode']) {
                     case 0:
                         $view = "results";
                         break;
@@ -374,7 +370,7 @@ function disp_standings($module, $view=null) {
             echo "<div class='mainBox'>";
             if (! $rounds)
                 echo "<div class='header'>Not yet started</div>";
-            disp_teams_list($mid);
+            disp_teams_list($module['module_id']);
             echo "</div>";
             break;
         case "games":
@@ -385,30 +381,36 @@ function disp_standings($module, $view=null) {
             echo "</div></div>";
             break;
         case "bracket":
-            if (($nrounds > 0) && ($mode == 1)) disp_sglelim($tid);
+            echo "<div class='header'>Bracket</div>\n";
+            if ((count($rounds) > 0) && ($module['module_mode'] == 1)) 
+                disp_sglelim($module, $rounds);
             break;
         case "wbracket":
-            if (($nrounds > 0) && ($mode == 2)) disp_dblelim_wbracket($tid, $nrounds);
+            echo "<div class='header'>Winners Bracket</div>\n";
+            if ((count($rounds) > 0) && ($module['module_mode'] == 2))
+                disp_dblelim_wbracket($module, $rounds);
             break;
         case "lbracket":
-            if (($nrounds > 0) && ($mode == 2)) disp_dblelim_lbracket($tid, $nrounds);
+            echo "<div class='header'>Losers Bracket</div>\n";
+            if ((count($rounds) > 1) && ($module['module_mode']== 2))
+                disp_dblelim_lbracket($module, $rounds);
             break;
         case "debug":
-            disp_swiss($mid, count($rounds), true);
+            disp_swiss($module['module_id'], count($rounds), true);
             break;
         case "results":
-            if (count($rounds > 0) && ($mode == 0)) {
+            if (count($rounds > 0) && ($module['module_mode'] == 0)) {
                 //if (isset($_GET['round_id'])) {
                 //    $r = get_tournament_round($tid, $_GET['round_id']);
                 //    if ($r)
                 //        disp_swiss($tid, $r['round_number'], true);
                 //}
                 //else
-                    disp_swiss($mid, $rounds);
+                    disp_swiss($module['module_id'], $rounds);
             }
             break;
         case "standings":
-            if ($nrounds > 0) disp_places($tid);
+            if ($nrounds > 0) disp_places($module['module_id']);
             break;
     }
 }
@@ -433,8 +435,8 @@ function get_td_color($rnum, $pos) {
     return $color;
 }
 
-function disp_sglelim($tid) {
-    $st = get_standings($tid);
+function disp_sglelim($module, $rounds) {
+    $st = get_standings($rounds[count($rounds)-1]);
     $nrounds = intval(ceil(log(count($st),2)));
     // rewrite standings results arrays to be indexed by round number
     foreach ($st as $i => $t) {
@@ -448,8 +450,9 @@ function disp_sglelim($tid) {
     disp_elim( $bracket, pow(2,$nrounds), range(1,$nrounds) );
 }
 
-function disp_dblelim_wbracket($tid, $rnum) {
-    $st = get_standings($tid);
+function disp_dblelim_wbracket($module, $rounds) {
+    $recent = $rounds[count($rounds)-1];
+    $st = get_standings($recent);
     // rewrite standings results arrays to be indexed by round number
     foreach ($st as $i => $t) {
         $tmp = array();
@@ -474,8 +477,9 @@ function disp_dblelim_wbracket($tid, $rnum) {
     disp_elim($bracket, pow(2,$nrounds), array_merge($rounds, $fin));
 }
 
-function disp_dblelim_lbracket($tid, $rnum) {
-    $st = get_standings($tid);
+function disp_dblelim_lbracket($module, $rounds) {
+    $recent = $rounds[count($rounds)-1];
+    $st = get_standings($recent);
 
     // rewrite standings results arrays to be indexed by round number
     foreach ($st as $i => $t) {
@@ -678,7 +682,6 @@ function disp_elim($bracket, $height, $rounds) {
 
 
     // print the table
-    echo "<div class='mainBox'>\n";
     echo "<table class='elim standings'>\n";
     echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*count($rounds)-2).">Results</th></tr>\n";
     echo "<tr><th colspan='".(1 + 3 * count($rounds))."'> &nbsp;</th></tr>";
@@ -689,7 +692,7 @@ function disp_elim($bracket, $height, $rounds) {
         }
         echo "</tr>\n";
     }
-    echo "</table>\n</div>\n";
+    echo "</table>\n";
 }
 
 function disp_team($team, $index, $rnum) {
@@ -728,16 +731,12 @@ function disp_swiss($mid, $rounds, $all_breaks = false) {
     if (count($standings) == 0) { return; } // ay!  when does this happen?
     array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
 
+    echo "<div class='header'>Standings</div>\n";
     echo "<table class='swiss standings'>\n";
-    echo "<tr><th>Rank</th><th>Team</th><th colspan=$nrounds>Results</th><th>Total</th><th colspan=3><a href='about.php'>Tie Breaks (in order)</a></th>";
+    echo "<tr><th>Rank</th><th>Team</th><th colspan=".count($rounds).">Games</th><th>Total</th><th><a title='Strength of Schedule' href='about.php'>Buchholz</a></th><th>Iterative</th>";
     if ($all_breaks)
         echo "<th>SRS</th><th>Max Likelihood</th><th>Iterated Buchholz</th>";
     echo "</tr>\n";
-    echo "<tr><th colspan=2></th>\n";
-    for ($i = 1; $i <= count($rounds); $i++)
-        echo "<th>R$i</th>";
-    echo  "\n<th></th>\n";
-    echo  "<th title='Difficulty of all opponents faced'>Buchholz</th><th title='Difficulty of oppoents defeated and drawn'>Berger</th><th title='Integral over time of win/loss score'>Cumulative</th></tr>\n";
     
     foreach ($standings as $rank => $team) {
         echo "<tr>";
@@ -756,12 +755,10 @@ function disp_swiss($mid, $rounds, $all_breaks = false) {
             echo "</td>\n";
         }
         echo "<td class='bold numeric'>{$team['score']}</td>";
+        echo "<td class='bold numeric'>".sprintf("%.4f",$team['maxprob'])."</td>";
         echo "<td class='numeric'>{$team['buchholz']}</td>";
-        echo "<td class='numeric'>{$team['berger']}</td>";
-        echo "<td class='numeric'>{$team['cumulative']}</td>";
         if ($all_breaks) {
             echo "<td class='numeric'>".sprintf("%.2f",$team['srs'])."</td>";
-            echo "<td class='numeric'>".sprintf("%.4f",$team['maxprob'])."</td>";
             echo "<td class='numeric'>".sprintf("%.4f",$team['iterBuchholz'])."</td>";
         }
         echo "</tr>\n";

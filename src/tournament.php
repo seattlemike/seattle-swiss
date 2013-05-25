@@ -22,6 +22,7 @@
 	include("header.php");  // sets $tid if valid tournament
     $tid = get_tid();
     if (! $tid) header("location:main_menu.php");
+    $_POST['tournament_id'] = $tid;
 
 	require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
@@ -32,38 +33,46 @@
     disp_topbar($tourney, null, 0);
     disp_titlebar($tourney['tournament_name']);
 
-    //TODO: validate tournament details
-    if (isset($_POST['action'])) {
-        $_POST['tournament_id'] = $tid;  //this is not a bad thing
-
-        if ($_POST['action'] == 'delete_tournament') {
-            $redir = tournament_delete($_POST, $_SESSION['admin_id']);
-            $redir || die("Failed tournament delete!");
+    //   ASSERT $_POST[tournament_id] is set to tid
+    if (isset($_POST['case'])) {
+        switch ($_POST['case']) {
+            case 'delete_tournament':
+                $redir = tournament_delete($_POST, $_SESSION['admin_id']);
+                $redir || die("Failed tournament delete!");
+                break;
+            case 'new_module':
+                if (! tournament_new_module($_POST, $_SESSION['admin_id']))
+                    echo "<div class='header warning'>Failed to add new round</div>";
+                break;
+            case 'update_tournament':
+                tournament_update($_POST, $_SESSION['admin_id']);
+                header("location:tournament.php?id=$tid");
+                break;
+            case 'add_admin':
+                if (! tournament_add_admin($_POST, $_SESSION['admin_id']))
+                    echo "<div class='header warning'>Failed to add admin</div>";
+                break;
+            case 'remove_admin':
+                if (! tournament_remove_admin($_POST, $_SESSION['admin_id']))
+                    echo "<div class='header warning'>Failed to remove admin</div>";
+                break;
+            case 'import_teams': 
+                teams_import($_POST, $_SESSION['admin_id']) || die("import failed"); 
+                break;
+            case 'team_add': 
+                team_add($_POST);
+                break;
+            case 'disable_team':
+                team_disable($_POST);
+                break;
+            case 'delete_team':  
+                team_delete($_POST);
+                break;
+            case 'update_team':
+                team_update($_POST);
+                break;
         }
-        elseif ($_POST['action'] == 'new_module') {
-            if (! tournament_new_module($_POST, $_SESSION['admin_id']))
-                echo "<div class='header warning'>Failed to add new round</div>";
-            }
-        elseif ($_POST['action'] == 'update_tournament') {
-            tournament_update($_POST, $_SESSION['admin_id']);
-            header("location:tournament.php?id=$tid");
-        }
-        elseif ($_POST['action'] == 'add_admin') {
-            if (! tournament_add_admin($_POST, $_SESSION['admin_id']))
-                echo "<div class='header warning'>Failed to add admin</div>";
-            }
-        elseif ($_POST['action'] == 'remove_admin') {
-            if (! tournament_remove_admin($_POST, $_SESSION['admin_id']))
-                echo "<div class='header warning'>Failed to remove admin</div>";
-            }
-        //   ASSERT require_privs(tid, aid)
-        //      and $_POST[tournament_id] is set to tid
-        elseif ($_POST['action'] == 'import_teams') { teams_import($_POST, $_SESSION['admin_id']) || die("import failed"); }
-        elseif ($_POST['action'] == 'add_team')     { team_add($_POST);     }
-        elseif ($_POST['action'] == 'disable_team') { team_disable($_POST); }
-        elseif ($_POST['action'] == 'delete_team')  { team_delete($_POST); }
-        elseif ($_POST['action'] == 'update_team')  { team_update($_POST);  }
-        if ($redir) header("location:main_menu.php");  // stick this back in delete_tournament?
+        if ($redir) header("location:main_menu.php");
     }
 ?>
 <div class="con">
@@ -76,30 +85,29 @@
                 disp_modules($t_rounds);
             ?>
             <form name="modules" method="post" action="">
-                <input type='hidden' name='action' value='new_module' />
-                <div class='line'><?php disp_tournament_button("Add Round", 'new_module'); ?></div>
+                <input type='hidden' name='case' value='new_module' />
+                <div class='line'><input class='button' type='submit' name='add_round' value="Add Round"></div>
             </form>
         </div>
 
         <div class="mainBox">
             <div class="header">Details</div>
             <form name="details" method="post" action="">
-                <input type='hidden' name='action' value='update_tournament' />
+                <input type='hidden' name='case' value='update_tournament' />
                 <?php disp_tournament_details($tourney); ?>
-                <div class='line'><?php disp_tournament_button("Save Details", 'update_tournament'); ?></div>
+                <div class='line'><input class='button' type='submit' name='save' value="Save Details"></div>
             </form>
         </div>
 
         <div class="mainBox">
             <div class="header">Admins</div>
                 <form name='admin' method='post' action=''>
-                    <input type='hidden' name='action' value='add_admin' />
+                    <input type='hidden' name='case' value='add_admin' />
                     <?php disp_admins($tourney, $_SESSION['admin_id']); ?>
                     <?php
                     if ($tourney['tournament_owner'] == $_SESSION['admin_id']) {
-                        echo "<p> ";
-                        disp_tournament_button("Add", "add_admin");
-                        echo "<input type='text' name='admin_email' value='admin email'/> </p>\n";
+                        echo "<div class='line'><input class='button' type='submit' name='add_admin' value='Add'>";
+                        echo "<input type='text' name='admin_email' value='admin email'/> </div>\n";
                     }
                     ?>
                 </form>
@@ -110,12 +118,12 @@
             <div id='teams' class="header">Teams</div>
             <form name='admin' method='post' action='#teams'>
                 <input type='hidden' name='team_id' value=''>
-                <input type='hidden' name='action' value='' />
+                <input type='hidden' name='case' value='team_add' />
                 <table>
                     <tr><th></th><th>Team Name</th><th>Players</th>
                         <th title="if unsure, leave blank"><i>UID</i></th>
                         <th title="for random starting rank, leave blank">Starting Rank</th></tr>
-                    <tr> <td> <? disp_tournament_button("Add", "add_team"); ?> </td>
+                    <tr><td><input class='button' type='submit' name='team_add' value="Add"></td>
                         <td><input type='text' name='name_add'></td>
                         <td><input type='text' name='text_add'></td>
                         <td><input class='numeric' type='text' name='uid_add'></td>
