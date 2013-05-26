@@ -48,7 +48,7 @@ function check_login() {
 
 function require_login() {
     if (!check_login()) {
-        header('location:admin.php');
+        header('location:/login/');
         die();
     }
 }
@@ -100,7 +100,7 @@ function logout() {
     // destroy session cookie
     setcookie(ini_get('session.name'),'',1,'/');
     session_destroy();
-    header("location:index.php");
+    header("location:/index.php");
     ob_end_flush();
     die();
 }

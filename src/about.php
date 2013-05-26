@@ -21,6 +21,7 @@
     $title_text="About";
     include("header.php");
     disp_header("About");
+    disp_topbar();
     disp_titlebar("About 20Swiss");
 ?>
 
@@ -35,7 +36,7 @@
             and provides a means of importing teams with their seeding from one tournament to the
             next.</p>
             <p>If you're interested in running a tournament, create a free account <a
-            href="http://beta.seattleswiss.com/admin.php">here</a> and give it a try! (though see
+            href="http://beta.seattleswiss.com/login/">here</a> and give it a try! (though see
             below for a thorough warning against expecting things to be perfect)</p>
         </div>
         <div class='mainBox'>

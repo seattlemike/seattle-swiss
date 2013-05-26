@@ -21,14 +21,15 @@
 
 	include("header.php");  // sets $tid if valid tournament
     $tid = get_tid();
-    if (! $tid) header("location:main_menu.php");
+    if (! $tid) 
+        header_redirect("location:/private/");
     $_POST['tournament_id'] = $tid;
 
 	require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
     $tourney = get_tournament($tid);
 
-    $js_extra = array("ui.js");
+    $js_extra = array("/ui.js");
     disp_header($tourney['tournament_name'], $js_extra);
     disp_topbar($tourney, null, 0);
     disp_titlebar($tourney['tournament_name']);
@@ -46,7 +47,7 @@
                 break;
             case 'update_tournament':
                 tournament_update($_POST, $_SESSION['admin_id']);
-                header("location:tournament.php?id=$tid");
+                header("location:/private/tournament/$tid/");
                 break;
             case 'add_admin':
                 if (! tournament_add_admin($_POST, $_SESSION['admin_id']))
@@ -72,7 +73,7 @@
                 team_update($_POST);
                 break;
         }
-        if ($redir) header("location:main_menu.php");
+        if ($redir) header("location:/private/");
     }
 ?>
 <div class="con">

@@ -105,6 +105,11 @@ p, .line { margin: 0.5em 0 0.5em 0; }
 #games { 
     margin: 1em -0.5em;
 }
+
+.games {
+    overflow: hidden;
+    border-radius: 0.5em;
+}
 .game { 
     text-align: left; 
     cursor: pointer;
@@ -350,7 +355,6 @@ td.center, td.numeric { text-align: center; }
         position: fixed;
         top: 40%;
         left: 50%;
-        overflow: auto;
         width: 20em;
         margin-left: -10em;
         margin-top: -3em;
@@ -370,11 +374,23 @@ td.center, td.numeric { text-align: center; }
         text-align: center; 
     }
     .dialog-status {
+        cursor: pointer;
         margin: 1em -1em;
         font-size: 1.2em;
         padding: 1em;
     }
-
+    .dialog-line {
+        text-align: left;
+    }
+    .dialog-team {
+        text-align: right;
+        display: inline-block;
+        min-width: 5em;
+        margin: 0 1em;
+    }
+    .dialog-score {
+        width: 3em;
+    }
     .dialog-buttons { margin-top: 1em; text-align: left; }
     .rt-button { float: right; }
 

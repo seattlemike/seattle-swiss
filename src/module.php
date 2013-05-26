@@ -31,7 +31,7 @@
     $tourney = get_tournament($tid);
 
     // logged in / have privs, so display header
-    $js_extra = array("ui.js", "async.js", "module.js");
+    $js_extra = array("/ui.js", "/async.js", "/module.js");
     $header_extra = array( '<script type="text/javascript">window.onload = moduleOnLoad</script>' );
     disp_header("{$tourney['tournament_name']} : {$module['module_title']}", $js_extra, $header_extra);
     disp_topbar($tourney, $module, 1);
@@ -44,15 +44,15 @@
         switch($_POST['case']) {
             case 'delete_module':
                 module_delete($mid);
-                header_redirect("tournament.php?id=$tid");
+                header_redirect("/private/tournament/$tid/");
                 break;
             case 'update_module':
                 module_update($_POST);
-                header_redirect("module.php?module=$mid");
+                header_redirect("/private/module/$mid/");
                 break;
             case 'update_seeds':
                 module_update_seeds($_POST);
-                header_redirect("module.php?module=$mid");
+                header_redirect("/private/module/$mid");
                 break;
         }
 
@@ -84,7 +84,7 @@
                     disp_module_teams($mid, $tournament_teams);
                 } else {
                     echo "<div class='header'>Tournament has no teams yet</div>\n";
-                    echo "<a href='tournament.php?id=$tid' class='button'>Back</a>";
+                    echo "<a href='/private/tournament/$tid/' class='button'>Back</a>";
                 }
                 ?>
         </div>

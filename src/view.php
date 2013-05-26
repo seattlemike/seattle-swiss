@@ -40,26 +40,34 @@
         $title = $module['module_title'];
     else
         $title = $tourney['tournament_name'];
+
     disp_header($title);
     disp_topbar($tourney, $module, 3);
     disp_titlebar($title);
+    //} else {
+    //    disp_header($tourney['tournament_name']);
+    //    disp_topbar($tourney);
+    //    disp_titlebar($tourney['tournament_name']);
+    //}
 
-    echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
-    if ($module) {
-        if (get_module_rounds($mid)) {
-            disp_standings($module, $_GET['view']);
-        } else {
-            echo "<div class='header'>Not yet started</div>";
-            disp_teams_list($mid);
+        // default view if nothing explicitly chosen
+        echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
+        if ($module) {
+            if (count(get_module_rounds($module['module_id']))) {
+                $default_view = array("results", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
+                disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
+            } else {
+                echo "<div class='header'>Not yet started</div>";
+                disp_teams_list($mid);
+            }
+        } elseif ($tourney) {
+            if ($tourney['tournament_privacy'] > 0)
+                disp_modules(get_tournament_modules($tid), "view.php");
         }
-    } elseif ($tourney) {
-        if ($tourney['tournament_privacy'] > 0)
-            disp_modules(get_tournament_modules($tid), "view.php");
-    }
-    else {  // List of public tournaments
-        $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
-        // only list tournaments from the past year?
-        if (! isset($_GET['all'])) {
+        else {  // List of public tournaments
+            $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
+            // only list tournaments from the past year?
+            if (! isset($_GET['all'])) {
             foreach( $tlist as $k => $t ) {
                 if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7))
                     //(strtotime($t['tournament_date']) < time() -3600*24*365))

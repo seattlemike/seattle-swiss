@@ -141,29 +141,10 @@ function disp_tournament_details($tourney = null) {
     }
 }
 
-function disp_admin_tournament($t, $aid, $idx) {
-    if ($t['tournament_owner'] == $aid)
-        $class = "owner";
-    // if tournament is running { $class="running" }
-    if (($idx % 2) == 0)
-        $class.="even";
-    else
-        $class.="odd";
-    echo "<tr class='$class'>";
-    echo "<td>";
-    echo "<a class='button' href='tournament.php?id={$t['tournament_id']}'>Edit</a>";
-    echo "<a class='button' href='play_tournament.php?id={$t['tournament_id']}'>Run</a>";
-    echo "</td>";
-    echo "<td>" . date("M d, Y", strtotime($t['tournament_date'])) . "</td>";
-    echo "<td>{$t['tournament_name']}</td>";
-
-    echo "</tr>";
-}
-
-function disp_modules($tlist, $linkto = "module.php") {
+function disp_modules($tlist) {
     $mode = array("Swiss", "Single Elim", "Double Elim");
     if ((! $tlist) || (count($tlist) == 0))
-        echo "<div class='line'>[no brackets scheduled yet]</div>\n";
+        echo "<div class='header'>No Brackets Scheduled Yet</div>";
     else {
         echo "<table>\n";
         foreach ($tlist as $m) {
@@ -171,7 +152,7 @@ function disp_modules($tlist, $linkto = "module.php") {
             echo "<td class='btnCtr'>\n";
             echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
             echo "</td>\n";
-            echo "<td><a href='$linkto?module={$m['module_id']}'>{$m['module_title']}</a></td>";
+            echo "<td><a href='../../module/{$m['module_id']}/'>{$m['module_title']}</a></td>";
             $date = date("m/d/Y", strtotime($m['module_date']));
             echo "<td>{$mode[$m['module_mode']]}</td><td>$date</td>\n";
             echo "</tr>\n";
@@ -180,7 +161,7 @@ function disp_modules($tlist, $linkto = "module.php") {
     }
 }
 
-function disp_tournaments($tlist, $dest='tournament.php') {
+function disp_tournaments($tlist) {
     if ((! $tlist) || (count($tlist) == 0))
         echo "<div class='header'>[no tournaments yet]</div>\n";
     else {
@@ -191,7 +172,7 @@ function disp_tournaments($tlist, $dest='tournament.php') {
             echo "<td>$date</td>\n";
             // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
             // else                                       { $class = ''; }
-            echo "<td><a href='$dest?id={$tourney['tournament_id']}'>{$tourney['tournament_name']}</a></td>";
+            echo "<td><a href='tournament/{$tourney['tournament_id']}/'>{$tourney['tournament_name']}</a></td>";
             echo "</tr>\n";
         }
         echo "</table>\n";
@@ -302,11 +283,10 @@ function disp_teams_list($mid) {
 // **STANDINGS**
 //
 
-function disp_view_nav($tid, $is_started, $url, $view=null) {
+function disp_view_nav($module, $rounds, $view) {
     echo "<div class='nav'>";
-    $mode = get_tournament_mode($tid);
     $views = array("teams" => "Teams","games" => "Games");
-    switch ($mode) {
+    switch ($module['module_mode']) {
         case 0:
             $views["results"] = "Results";
             break;
@@ -321,10 +301,10 @@ function disp_view_nav($tid, $is_started, $url, $view=null) {
     $views["standings"] = "Standings";
 
     foreach ($views as $v => $text) {
-        if ($is_started || $v == "teams") {
+        if (($v == "teams") || (count($rounds) > 1) || (($v != "lbracket") && count($rounds) > 0)) {
             if ($view == $v) $class = "selected";
             else             $class = "";
-            echo "<a class=\"button $class\" href=\"$url{$v}\">$text</a>";
+            echo "<a class='button $class' href='$v'>$text</a>";
         }
         else
             echo "<a class=\"button disabled\">$text</a>";
@@ -335,50 +315,20 @@ function disp_view_nav($tid, $is_started, $url, $view=null) {
 
 // ASSERT: check is_public/has_privs has already happened
 function disp_standings($module, $view=null) {
-    $rounds = get_module_rounds($module['module_id']);
-
-    // default view if nothing explicitly chosen
-    if (! $view) {
-        if (! $rounds)
-            $view = "teams";
-        else {
-            if (isset($_GET['round_id']))
-                $view = "games";
-            else
-                switch ($module['module_mode']) {
-                    case 0:
-                        $view = "results";
-                        break;
-                    case 1:
-                        $view = "bracket";
-                        break;
-                    case 2:
-                        $view = "wbracket";
-                        break;
-                }
-        }
-    }
-
-    // view_nav_buttons [mostly greyed out when nrounds=0]
     // TODO URGENT: grey out lbracket when nrounds==1
     //        pass nrounds to disp_view_nav to do this
     
-    //disp_view_nav($mid, ($nrounds > 0), "view.php?id=$tid&view=", $view);
-
+    $rounds = get_module_rounds($module['module_id']);
+    disp_view_nav($module, $rounds, $view);
     switch ($view) {
         case "teams":
-            echo "<div class='mainBox'>";
             if (! $rounds)
                 echo "<div class='header'>Not yet started</div>";
             disp_teams_list($module['module_id']);
-            echo "</div>";
             break;
         case "games":
-            echo "<div class='mainBox'>\n";
             //disp_round_nav($tid, $_GET['round_id'], false);
-            echo "<div id='games'>";
-            disp_games($tid);
-            echo "</div></div>";
+            disp_module_games($module, $rounds);
             break;
         case "bracket":
             echo "<div class='header'>Bracket</div>\n";
@@ -733,9 +683,9 @@ function disp_swiss($mid, $rounds, $all_breaks = false) {
 
     echo "<div class='header'>Standings</div>\n";
     echo "<table class='swiss standings'>\n";
-    echo "<tr><th>Rank</th><th>Team</th><th colspan=".count($rounds).">Games</th><th>Total</th><th><a title='Strength of Schedule' href='about.php'>Buchholz</a></th><th>Iterative</th>";
+    echo "<tr><th>Seed</th><th>Team</th><th colspan=".count($rounds).">Games</th><th>Total</th><th>Strength</th><th><a title='Strength of Schedule' href='about.php'>Buchholz</a></th>";
     if ($all_breaks)
-        echo "<th>SRS</th><th>Max Likelihood</th><th>Iterated Buchholz</th>";
+        echo "<th>SRS</th><th>Iterated Buchholz</th>";
     echo "</tr>\n";
     
     foreach ($standings as $rank => $team) {
@@ -893,17 +843,16 @@ function disp_oneline($game, $scores) {
     echo "</div>";
 }
 
-function disp_games($tid) {
+function disp_games($module) {
     ($db = connect_to_db()) || die("Couldn't connect to database for Display Games");
-    $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid ORDER BY round_id DESC", array(":tid" => $tid), $db);
-    $mode = get_tournament_mode($tid);
+    $rounds = get_module_rounds($module['module_id']);
     if ($rounds) {
         echo "<div class='rounds'>";
         foreach ($rounds as $r) {
             $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $r['round_id']),$db);
             if ($games) {
                 echo "<div class='game-box'>";
-                if ($mode == 0) echo "Round {$r['round_number']}";
+                if ($module['module_mode'] == 0) echo "Round {$r['round_number']}";
                 foreach ($games as $g) {
                     $scores = sql_select_all("SELECT * FROM tblGameTeams a JOIN tblTeam b WHERE a.game_id = :gid AND a.team_id = b.team_id", array(":gid" => $g['game_id']),$db);
                     disp_oneline($g, $scores);
@@ -915,17 +864,31 @@ function disp_games($tid) {
     }
 }
 
+function disp_module_games($module, $rounds) {
+    // echo "<div class='header'>{$module['module_title']} : Games</div>";
+    //
+    foreach (array_reverse($rounds) as $r) {
+        if ($module['module_mode'] == 0)
+            echo "<div class='header'>Round {$r['round_number']}</div>";
+        disp_round_games($r);
+    }
+}
+
 function disp_round_games($round) {
     $db = connect_to_db();
     $games = get_round_games($round['round_id']);
-    if ($games)
+    if ($games) {
+        echo "<div class='games'>\n";
         foreach ($games as $g)
             disp_game($g, $db);
+        echo "</div>";
+    }
 }
 
 function disp_game($game) {
+    $status_class = array("game-scheduled", "game-finished", "game-inprogress");
     $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
-    echo "<div class='game' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>";
+    echo "<div class='game {$status_class[$game['status']]}' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>";
 
     if (count($teams) == 1)
         echo "{$teams[0]['team_name']} has a BYE";

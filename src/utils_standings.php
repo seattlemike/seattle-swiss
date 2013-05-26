@@ -38,9 +38,11 @@ class stats {
         $this->module = get_module($mid);
 
         // can initialize with a list of teams
-        foreach ($teams as $t)
-            $this->add_team($t);
-        $this->build_seeds();
+        if ($teams) {
+            foreach ($teams as $t)
+                $this->add_team($t);
+            $this->build_seeds();
+        } 
 
         switch ($this->module['module_mode']) {
             case 0:  // swiss
@@ -483,6 +485,8 @@ function group_by($ary, $idx) {
 function build_stats($round) {
     ($db = connect_to_db()) || debug_error("Couldn't connect to database for tournament standings");
     $teams = sql_select_all("SELECT tblTeam.*, tblModuleTeams.* FROM tblTeam JOIN tblModuleTeams USING (team_id) WHERE module_id = ? ORDER BY team_seed, tblTeam.team_id", array($round['module_id']), $db);
+    if (!$teams) 
+        return false;
     $seed=1;
     foreach ($teams as $idx => $t) {
         $teams[$idx]['team_init'] = $seed++;
@@ -505,6 +509,8 @@ function build_stats($round) {
 // teams ordered best to worst
 function get_standings($round, $all_tiebreaks = false) {
     $stats = build_stats($round);
+    if (! $stats)
+        return false;
     $stats->calcMaxLikelihood();
     if ($all_tiebreaks) {
         $stats->tiebreaks();

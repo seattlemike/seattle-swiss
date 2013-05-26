@@ -1,0 +1,30 @@
+Options -Indexes
+ErrorDocument 403 /error.php?errno=403
+ErrorDocument 404 /error.php?errno=404
+
+RewriteEngine On
+RewriteRule ^login/$ /admin.php [QSA,L]
+RewriteRule ^about/$ /about.php [QSA,L]
+RewriteRule ^settings/$ /settings.php [QSA,L]
+RewriteRule ^logout/$ /logout.php [QSA,L]
+RewriteRule ^super/$ /main_menu.php?super=true [QSA,L]
+
+RewriteRule ^super/$ /main_menu.php?super=true [QSA,L]
+RewriteRule ^super/(.*)$ /private/$1 [QSA]
+
+RewriteRule ^private/$ /main_menu.php [QSA,L]
+RewriteRule ^private/tournament/([0-9]*)/$ /tournament.php?id=$1 [QSA,L]
+RewriteRule ^private/module/([0-9]*)/$ /module.php?module=$1 [QSA,L]
+RewriteRule ^private/module/([0-9]*)/run/$ /play_tournament.php?module=$1 [QSA,L]
+RewriteRule ^private/module/([0-9]*)/view/$ /view.php?module=$1 [QSA,L]
+RewriteRule ^private/module/([0-9]*)/view/(.*)$ /view.php?module=$1&view=$2 [QSA,L]
+
+
+RewriteRule ^public/$ /watch.php [QSA,L]
+RewriteRule ^public/all$ /watch.php?all [QSA,L]
+RewriteRule ^public/tournament/([0-9]*)/$ /watch.php?id=$1 [QSA,L]
+RewriteRule ^public/module/([0-9]*)/$ /watch.php?module=$1 [QSA,L]
+RewriteRule ^public/module/([0-9]*)/(.*)$ /watch.php?module=$1&view=$2 [QSA,L]
+
+RewriteRule ^rss/poloModule/$ poloModule.php
+RewriteRule ^rss/(\d*) rss.php?id=$1

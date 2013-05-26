@@ -24,7 +24,7 @@
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'new_tournament') {
             if ($new_id = new_tournament($_SESSION['admin_id']))
-                header("location:tournament.php?id=$new_id");
+                header("location:/private/tournament/$new_id/");
         }
     }
 

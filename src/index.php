@@ -30,9 +30,9 @@ disp_titlebar();
 <div class='con'>
     <div class='centerBox'>
         <div class='mainBox'>
-            <div class='line'><a class="button" href="about.php">About</a></div>
-            <div class='line'><a class="button" href="view.php">Tournaments</a></div>
-            <div class='line'><a class="button" href="admin.php">Login</a></div>
+            <div class='line'><a class="button" href="/about/">About</a></div>
+            <div class='line'><a class="button" href="/public/">Tournaments</a></div>
+            <div class='line'><a class="button" href="/login/">Login</a></div>
         </div>
     </div>
 </div>

@@ -95,9 +95,9 @@ function GameDialog(game, scores) {
     this.dialog.insert(titleNode)
     this.box = buildNode("div", "")
     for(var i=0; i<scores.length; i++) {
-        var line = buildNode("div", "line toggle")
-        line.appendChild(buildNode("div", "team", scores[i]['team_name']))
-        scores[i].input = buildNode("input", "score")
+        var line = buildNode("div", "dialog-line")
+        line.appendChild(buildNode("span", "dialog-team", scores[i]['team_name']))
+        scores[i].input = buildNode("input", "dialog-score")
         scores[i].input.value = scores[i]['score']
         line.appendChild(scores[i].input)
         this.box.appendChild(line);

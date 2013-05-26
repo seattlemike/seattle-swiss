@@ -9,6 +9,9 @@
     sort rank based on MaxLikelihood
     figure out how we're going to pick matchups
         (still buchholz but now with max likelihood as secondary tiebreak?)
+    make a tblLogEntry and log basic things
+        new/delete tournament
+        login/out
   Older:      
     tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
     #redesign new-tournament creation

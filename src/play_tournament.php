@@ -31,7 +31,7 @@
     // Ensure mid/tid are valid and that we have privs to edit
     $module = get_module($mid) ;
     if (! $module) 
-        header_redirect("main_menu.php");
+        header_redirect("/private/");
     $tid = $module['parent_id'];
 	require_login();
     require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
@@ -41,7 +41,7 @@
         && ($rid = $round['round_id']);
     }
 
-    $js_extra = array("ui.js", "async.js", "run_module.js");
+    $js_extra = array("/ui.js", "/async.js", "/run_module.js");
     $header_extra = array( '<script type="text/javascript">window.onload = runModuleOnLoad</script>' );
     disp_header($module['module_title']." : Run", $js_extra, $header_extra);
     disp_topbar($tourney, $module, 2);

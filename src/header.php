@@ -85,25 +85,25 @@ END;
 }
 
 function disp_admin_topbar() {
-    if (check_login()) {
-        echo "<div class='lHead'>\n";
-        echo "<a href='main_menu.php'>{$_SESSION['admin_name']}</a>";
-        echo "<a href='user.php'>settings</a>";
-        if ($_SESSION['admin_type'] == 'super') 
-            echo "<a href='main_menu.php?super=true'>super</a>";
-        echo "<a href='logout.php'>log out</a>\n";
-        echo "</div>\n";
-    }
+    echo "<div class='lHead'>\n";
+    echo "<a href='/private/'>{$_SESSION['admin_name']}</a>";
+    echo "<a href='/settings/'>settings</a>";
+    if ($_SESSION['admin_type'] == 'super') 
+        echo "<a href='/super/'>super</a>";
+    echo "<a href='/logout/'>log out</a>\n";
+    echo "</div>\n";
 }
 
 function disp_modnav_topbar($tourney, $module, $page) {
-    if (! isset($module))
-        $navs = array( array( $tourney['tournament_name'], "tournament.php?id={$tourney['tournament_id']}" ) );
+    if (! $tourney)
+        return;
+    elseif (! $module)
+        $navs = array( array( $tourney['tournament_name'], "/private/tournament/{$tourney['tournament_id']}/" ) );
     else 
-        $navs = array( array( $tourney['tournament_name'], "tournament.php?id={$tourney['tournament_id']}" ),
-                       array( $module['module_title'], "module.php?module={$module['module_id']}" ),
-                       array( "Run", "play_tournament.php?module={$module['module_id']}" ), 
-                       array( "Standings", "view.php?module={$module['module_id']}" ));
+        $navs = array( array( $tourney['tournament_name'], "/private/tournament/{$tourney['tournament_id']}/" ),
+                       array( $module['module_title'], "/private/module/{$module['module_id']}/" ),
+                       array( "Run", "/private/module/{$module['module_id']}/run/" ), 
+                       array( "Standings", "/private/module/{$module['module_id']}/view/" ));
 
     echo "<div class='rHead'>";
     foreach ($navs as $idx => $link) {
@@ -119,9 +119,12 @@ function disp_modnav_topbar($tourney, $module, $page) {
 // assert: already checked tid/mid/has_privs/etc
 function disp_topbar($tourney=null, $module=null, $page=null) {
     echo "<div class='topNav nav'>";
-    if (isset($tourney))
+    if (check_login()) {
         disp_modnav_topbar($tourney, $module, $page);
-    disp_admin_topbar();
+        disp_admin_topbar();
+    } else {
+        disp_modnav_topbar($tourney, $module, $page);
+    }
     echo "</div>";
 }
 

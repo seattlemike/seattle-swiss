@@ -21,31 +21,33 @@
 
     $title_text = "Login";
 	include("header.php"); 
+    
+    if (check_login())
+        header_redirect("/private/");
+  
     disp_header("Login");
-    disp_topbar();
     disp_titlebar();
-		
-  if ($_POST['action'] == 'login') {
-		if (login($_POST['email'], $_POST['password']))
-			header("location:main_menu.php");
-		else 
-			echo "<div class='header warning'>Wrong Email or Password</div>";
-  }
-  elseif ($_POST['action'] == 'create') {
-    // on success, note about 'click link in verification email to enable account'
-    list($status, $msg) = admin_create($_POST);
-		if ($status)
-			echo "<div class='header warning'>Admin ".$_POST['name']." successfully created.</div>";
-		else
-			echo "<div class='header warning'>$msg</div>";
-	}
 
+    if ($_POST['action'] == 'login') {
+        if (login($_POST['email'], $_POST['password']))
+            header("location:/private/");
+        else 
+            echo "<div class='header warning'>Wrong Email or Password</div>";
+    }
+    elseif ($_POST['action'] == 'create') {
+        // on success, note about 'click link in verification email to enable account'
+        list($status, $msg) = admin_create($_POST);
+            if ($status)
+                echo "<div class='header warning'>Admin ".$_POST['name']." successfully created.</div>";
+            else
+                echo "<div class='header warning'>$msg</div>";
+    }
 ?>
 <div class="con">
     <div class="centerBox">
         <div class="mainBox">
             <div class='header'>Admin Login</div>
-            <form name="login.form" method="post" action="admin.php">
+            <form name="login.form" method="post" action="/login/">
                 <input type="hidden" name="action" value="login">
                 <label>Email    <input name="email" type="text" id="email" maxlength="40" /> </label>
                 <label>Password <input name="password" type="password" id="password" maxlength="40" /> </label>
@@ -55,7 +57,7 @@
         </div>
         <div class="mainBox">
             <div class='header'>Create New Account</div>
-            <form name="newadmin.form" method="post" action="admin.php">
+            <form name="newadmin.form" method="post" action="/login/">
                 <input type="hidden" name="action" value="create">
                 <label>Name     <input name="name" type="text" id="rname" maxlength="40" /></label>
                 <label>Email    <input name="email" type="text" id="email" maxlength="40" /></label>
