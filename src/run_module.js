@@ -38,7 +38,7 @@ function runModuleOnLoad() {
         game.node = games[i]
         var dialog = new GameDialog(game, scores)
         games[i].onclick = dialog.show
-        games[i].className += " "+statusClass[game.status]
+        games[i].className= "game "+statusClass[game.status]
     }
 }
 

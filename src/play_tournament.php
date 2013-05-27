@@ -47,6 +47,8 @@
     disp_topbar($tourney, $module, 2);
     disp_titlebar($module['module_title']);
 
+    $rounds = get_module_rounds($mid);
+
     if (isset($_POST['case'])) {
         // make sure post data matches what we've validated
         $_POST['tournament_id'] = $tid;
@@ -54,7 +56,6 @@
 
         switch ($_POST['case']) {
             case 'start_module':
-                $rounds = get_module_rounds($mid);
                 if ($rounds)
                     $round_id = $rounds[count($rounds)-1]['round_id'];
                 else 
@@ -62,7 +63,6 @@
                 header_redirect("play_tournament.php?round=$round_id");
                 break;
             case 'next_round':
-                $rounds = get_module_rounds($mid);
                 if ($rounds[count($rounds)-1]['round_id'] != $_POST['round_id']) 
                     $round_id = $rounds[count($rounds)-1]['round_id'];
                 else
@@ -116,14 +116,9 @@
         } else {
         ?>
         <div class='mainBox'>
-            <? disp_round_nav($mid, $round, true);  ?>
-
-            <? if ($round) {
-                echo "<div id='games'>";
-                disp_round_games($round);
-                //disp_round_games($_POST['toggles'], $tid, $rid, $_SESSION['admin_id']); 
-                echo "</div>";
-            } ?>
+            <div id='games'>
+            <? disp_module_games($module, $rounds) ?>
+            </div>
         </div>
             
             <? if ($round) { ?>

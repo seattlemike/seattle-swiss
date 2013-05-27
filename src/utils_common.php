@@ -165,6 +165,32 @@ function is_poweruser() {
 }
 
 //
+// Game Functions
+//
+
+function get_game($game_id) {
+    if ($game_id)
+        return sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
+    else
+        return false;
+}
+
+function filter_games($rid, $stats) {
+    // double-counting games with more than one team in them
+    foreach ($stats as $t)
+        $teams[$t['id']] = $t;
+    $games = sql_select_all('SELECT a.*, b.team_id FROM tblGame a JOIN tblGameTeams b USING (game_id) WHERE round_id = ? AND (SELECT COUNT(*) FROM tblGameTeams WHERE game_id=a.game_id) > 1', array($rid));
+    //$games = sql_select_all('SELECT tblGame.*, team_id, count(*) n FROM tblGame JOIN tblGameTeams USING (game_id) WHERE round_id = ?', array($rid));
+    //echo "GAMES";
+    //foreach ($games as $g) { echo "<br>"; print_r($g); } die();
+    foreach ($games as $g) {
+        if ($teams[$g['team_id']])
+            $ret[$g['game_id']] = $g;
+    }
+    return $ret;
+}
+
+//
 // Round functions
 //
 
@@ -174,13 +200,6 @@ function round_isdone($rid) {
         return false;
     $unfinished = array_filter($games, function ($g) { return ($g['status'] != 1); } );
     return (count($unfinished) == 0);
-}
-
-function get_game($game_id) {
-    if ($game_id)
-        return sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
-    else
-        return false;
 }
 
 function get_round($rid) {
@@ -461,7 +480,7 @@ function tournament_new_module($data, $aid) {
 
 function new_tournament($aid) {
     $newid = sql_insert("INSERT INTO tblTournament 
-                (tournament_name, tournament_date, tournament_owner) VALUES (?, ?, ?)", 
+                (tournament_name, tournament_date, tournament_owner, is_fixed) VALUES (?, ?, ?, 1)", 
                 array("New Tournament", date("Y-m-d"), $aid));
     if ($newid) {
         $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $aid));

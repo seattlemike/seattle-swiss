@@ -24,6 +24,7 @@ body {
 	width:100%;
 	background:#fff;
     font-size: 100%;
+    /*font-family: Raleway?*/
     font-family: 'Rokkitt', serif;
     text-align: center;
 }
@@ -103,12 +104,12 @@ p, .line { margin: 0.5em 0 0.5em 0; }
 /* Run Module */
 
 #games { 
-    margin: 1em -0.5em;
 }
 
 .games {
     overflow: hidden;
     border-radius: 0.5em;
+    margin: 1em 1em;
 }
 .game { 
     text-align: left; 

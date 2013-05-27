@@ -28,6 +28,14 @@
 // **GENERIC**
 //
 
+function ordinal($cdnl){
+    $test_c = abs($cdnl) % 10;
+    $ext = ((abs($cdnl) %100 < 21 && abs($cdnl) %100 > 4) ? 'th'
+        : (($test_c < 4) ? ($test_c < 3) ? ($test_c < 2) ? ($test_c < 1)
+        ? 'th' : 'st' : 'nd' : 'rd' : 'th'));
+    return $cdnl.$ext;
+}  
+
 // button with onclick that modifies form.action
 function disp_disabled_button($value, $name="submit_btn") {
     echo "<input class='button' name='$name' value='$value' DISABLED />";
@@ -141,13 +149,13 @@ function disp_tournament_details($tourney = null) {
     }
 }
 
-function disp_modules($tlist) {
+function disp_modules($modules) {
     $mode = array("Swiss", "Single Elim", "Double Elim");
-    if ((! $tlist) || (count($tlist) == 0))
+    if ((! $modules) || (count($modules) == 0))
         echo "<div class='header'>No Brackets Scheduled Yet</div>";
     else {
         echo "<table>\n";
-        foreach ($tlist as $m) {
+        foreach ($modules as $m) {
             echo "<tr>\n";
             echo "<td class='btnCtr'>\n";
             echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
@@ -716,106 +724,6 @@ function disp_swiss($mid, $rounds, $all_breaks = false) {
     echo "</table>\n";
 }
 
-function disp_scores($team, $disabled="DISABLED") {
-    if ($team['score'] < 0) $score = "";
-    else                    $score = $team['score'];
-    echo "<div class='team'>";
-    echo "<span title=\"{$team['team_text']}\">{$team['team_name']}</span>";
-    if (($team['team_id'] != -1) && ($team['opp_id'] != -1))
-        echo "<br><input type='text' class='short' name='score_{$team['team_id']}' value='$score'} $disabled/>";
-    echo "</div>";
-}
-
-function disp_score_inputs($team) {
-    disp_scores($team, "");
-}
-
-function check_team_score($team) {
-  return ($team['score'] >= 0);
-}
-
-function disp_toggle_button($gid, $tog) {
-    $val = $tog ? 'Off Court' : 'On Court';
-    echo "<input type='hidden' name='toggle' value='$tog' \>";
-    echo "<input class='button' type='button' name='tog_btn' onclick='togOnCourt($gid)' value='$val' \>";
-}
-
-function old_disp_game($game, $t, $st) {
-    $gid = $game['game_id'];
-    $teams = sql_select_all("SELECT * from tblGameTeams JOIN tblTeam using (team_id) WHERE tblGameTeams.game_id = :gid ORDER BY tblGameTeams.score_id DESC", array(":gid" => $gid), $t['db']);
-    
-    // MIKE TODO IMMEDIATE DEBUG CODE
-    /*foreach ($teams as $idx => $score) {
-        $teams[$idx]['loser_idx'] = $st[$score['team_id']]['loser_idx'];
-        $teams[$idx]['bracket_idx'] = $st[$score['team_id']]['bracket_idx'];
-    }*/
-    // END DEBUG CODE
-    
-
-    if (array_product(array_map('check_team_score', $teams))) {
-        $is_finished = true;
-        $outer = "played";
-    }
-    else {
-        if ($t['mode'] == 0)  // flag rematches with blue if we're in SWISS mode
-            if (game_is_rematch($teams)) $outer = "rematch";
-        if ($game['playing'])  $outer .= "playing";
-    }
-
-    // if double-elim, add 'losers' designation for losers-bracket games
-    if ($t['mode'] == 2) {
-        // examine all score differentials from prior rounds, return min
-        $query = "SELECT MIN(a.score - b.score) as min
-                  FROM tblGameTeams a JOIN tblGameTeams b ON a.game_id = b.game_id
-                                      JOIN tblGame      c ON c.game_id = a.game_id
-                                      JOIN tblRound     d ON c.round_id = d.round_id
-                  WHERE a.team_id = :tid AND b.team_id != :tid AND d.round_number < :rnum AND a.score > -1 AND b.score > -1";
-        $is_loser = true;
-        foreach ($teams as $x) {
-            $q = sql_select_one($query, array(":tid" => $x['team_id'], ":rnum" => $t['rnum'])); 
-            $is_loser &= ($q && $q['min'] && ($q['min']<0));  //min=0 [tie] shouldn't ever happen
-        }
-
-        $comment = "<span class='disabled'>[".($is_loser ? "L" : "W")."B]</span>";
-        if ($is_loser) 
-            $outer .= " losers";
-
-    }
-
-    echo "<div id='box_$gid' class='line game $outer'>";
-    echo $comment;  // [wb/lb] only when mode=2  TODO: put this somewhere better
-    if (count($teams) == 1) {
-        $teams[0]['opp_id'] = -1;
-        $teams[] = array("team_name" => "BYE", "team_id" => -1);
-    }
-
-    if ($t['isadmin']) {
-        echo "<form class='$inner' id='form_$gid' name='game_$gid' action='{$t['url']}#box_$gid' method='post' onsubmit='postToggles(this)'>";
-        echo "<input type='hidden' name='action' value='' />";
-        echo "<input type='hidden' name='game_id' value='$gid' />";
-        
-        if (is_poweruser())
-            disp_tournament_button('Delete', 'delete_game', "this.form.action=\"#edit_round\"");
-
-        // Display the team names and score input boxes
-        $stat_ary = array_map('disp_score_inputs', $teams);
-
-        echo "<div class='team'>";
-        if ($is_finished)
-            disp_tournament_button('Update', 'update_score');
-        else {
-            disp_toggle_button($gid, $game['playing'] ? "1" : "");
-            echo "<br>";
-            disp_tournament_button('Set Score', 'update_score');
-        }
-        echo "</div></form>";
-    }
-    else 
-        $stat_ary = array_map('disp_scores', $teams);
-
-    echo "</div>\n";
-}
-
 function disp_oneline($game, $scores) {
     echo "<div class='item'>";
 
@@ -843,46 +751,80 @@ function disp_oneline($game, $scores) {
     echo "</div>";
 }
 
-function disp_games($module) {
-    ($db = connect_to_db()) || die("Couldn't connect to database for Display Games");
-    $rounds = get_module_rounds($module['module_id']);
-    if ($rounds) {
-        echo "<div class='rounds'>";
-        foreach ($rounds as $r) {
-            $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $r['round_id']),$db);
-            if ($games) {
-                echo "<div class='game-box'>";
-                if ($module['module_mode'] == 0) echo "Round {$r['round_number']}";
-                foreach ($games as $g) {
-                    $scores = sql_select_all("SELECT * FROM tblGameTeams a JOIN tblTeam b WHERE a.game_id = :gid AND a.team_id = b.team_id", array(":gid" => $g['game_id']),$db);
-                    disp_oneline($g, $scores);
-                }
-                echo "</div>\n";
+function disp_module_games($module, $rounds) {
+    switch ($module['module_mode']) {
+        case 0:
+            foreach (array_reverse($rounds) as $r) {
+                echo "<div class='header'>Round {$r['round_number']}</div>";
+                $games = get_round_games($r);
+                // TODO: check for byes
+                disp_games($games);
             }
-        }
-        echo "</div>";
+            break;
+        case 1:
+            $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            foreach(array_reverse($rounds) as $r) {
+                disp_round_games($r);
+            }
+            break;
+        case 2:
+            $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            $lbterms = array(5=> "Fifth Place Games", 3 => "Losers' Bracket Finals");
+            foreach(array_reverse($rounds, true) as $idx => $r) {
+                // split round up if both winners and losers
+                if (array_key_exists($idx-1, $rounds))
+                    $teams = get_standings($rounds[$idx-1]);
+                else
+                    $teams = get_standings(standings_init_round($module['module_id']));
+
+                $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
+                $games = filter_games($r['round_id'], $wb);
+                if ($games) {
+                    if ($wbterms[count($wb)])
+                        echo "<div class='header'>Winners' Bracket {$wbterms[count($wb)]}</div>";
+                    else
+                        echo "<div class='header'>Winners' Bracket Round of ".count($wb)."</div>";
+                    // filter games for wb
+                    disp_games($games);
+                } 
+                $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
+                $games = filter_games($r['round_id'], $lb);
+                if ($games) {
+                    if ($lbterms[count($teams)])
+                        echo "<div class='header'>{$lbterms[count($teams)]}</div>";
+                    else
+                        echo "<div class='header'>Losers' Bracket ".ordinal(count($teams)-count($games)+1)."-place Round</div>";
+                    disp_games($games);
+                }
+            }
+            break;
     }
 }
 
-function disp_module_games($module, $rounds) {
-    // echo "<div class='header'>{$module['module_title']} : Games</div>";
-    //
-    foreach (array_reverse($rounds) as $r) {
-        if ($module['module_mode'] == 0)
-            echo "<div class='header'>Round {$r['round_number']}</div>";
-        disp_round_games($r);
+function disp_games($games, $filter = null) {
+    if ($filter) {
+        foreach($filter as $idx => $t) {
+            echo "<br>Team: $idx<br>";
+            print_r($t);
+        }
+        foreach ($games as $idx => $g) {
+            echo "<br>Game: $idx<br>";
+            print_r($g);
+        }
+        die();
+
+       //$games = array_filter($games, function ($t) use ($filter) { return 
+    }
+    if ($games) {
+        echo "<div class='games'>\n";
+        foreach ($games as $g)
+            disp_game($g);
+        echo "</div>";
     }
 }
 
 function disp_round_games($round) {
-    $db = connect_to_db();
-    $games = get_round_games($round['round_id']);
-    if ($games) {
-        echo "<div class='games'>\n";
-        foreach ($games as $g)
-            disp_game($g, $db);
-        echo "</div>";
-    }
+    disp_games(get_round_games($round['round_id']));
 }
 
 function disp_game($game) {
@@ -907,32 +849,6 @@ function disp_game($game) {
     echo "</div>";
 }
 
-function old_disp_round_games($tid, $aid, $db) {
-    $t = array();
-    $t['mode']    = get_tournament_mode($tid);
-    $t['isadmin'] = $aid && tournament_isadmin($tid, $aid);
-    $t['url']     = "play_tournament.php?id=$tid&round_id=$rid";
-    $t['db']      = $db;
-    $t['rnum']    = $round['round_number'];
-
-    // MIKE DEBUG CODE 
-    /* $tmp = get_standings($tid);
-    $st = array();
-    foreach ($tmp as $st_team)
-        $st[$st_team['id']] = $st_team;
-    */
-    // END DEBUG CODE
-
-    $game_list = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $rid),$db);
-    if ($game_list) {
-        foreach ($game_list as $g) {
-            $g['playing'] = (strpos($togs, $g['game_id']) > -1);
-            disp_game($g, $t, $st);
-        }
-    }
-    return true;
-}
-
 function disp_team_select($mid, $name) {
     echo "<select name='$name'>";
     foreach (get_module_teams($mid) as $t)
@@ -941,6 +857,4 @@ function disp_team_select($mid, $name) {
     echo "</select>";
 }
 
-function disp_next_round_button($tid, $rid) {
-}
 ?>

@@ -2,16 +2,28 @@
 
 #### May 2013
   Urgent:
-    finish tournament->module->round->game hierarchy
-        delete tournament should recurse properly over modules/moduleteams/games/etc 
-        delete module should recurse properly
-    move next-round button into javascript
+    #finish tournament->module->round->game hierarchy
+    delete tournament should recurse properly over modules/moduleteams/games/etc 
+    delete module should recurse properly
     sort rank based on MaxLikelihood
     figure out how we're going to pick matchups
         (still buchholz but now with max likelihood as secondary tiebreak?)
     make a tblLogEntry and log basic things
         new/delete tournament
         login/out
+    Delete Game
+    Run Module should work:
+        move next-round button into javascript
+        update 'victor' class in javascript
+        #display-games all at once (list 'round' in swiss, 'final-four' in sglelim)
+        add games automatically as other games end
+            this is tricky because it creates dependencies, 
+            so modification to finished games screws with the (now set in stone) future
+            solution: don't actually add these games to the db.  use js.
+            maybe only add when future game is in-progress.
+            (though this means that the viewer-end will need its own javascript future-prediction)
+            good plan.
+        #split dblelim into winners/losers brackets (wb-bye / lb-bye?)
   Older:      
     tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
     #redesign new-tournament creation

@@ -127,7 +127,8 @@ class stats {
         $this->teams[$id]['result'][]    = $res;
         $this->teams[$id]['score']      += $res;
         $this->teams[$id]['games'][]     = $score;
-        $this->teams[$id]['results'][]   = array('rnum'     => $rnum, 
+        $this->teams[$id]['results'][]   = array(
+                                                 'rnum'     => $rnum, 
                                                  'res'      => $res, 
                                                  'opp_name' => $b['name'],
                                                  'opp_id'   => $b['team_id'],
@@ -491,6 +492,9 @@ function build_stats($round) {
     foreach ($teams as $idx => $t) {
         $teams[$idx]['team_init'] = $seed++;
     }
+    if ($round) {
+
+    }
     $stats = new stats($round['module_id'], $teams);
     
     $rounds = sql_select_all("SELECT * FROM tblRound WHERE module_id = ? AND round_number <= ? ORDER BY round_number ASC", array($round['module_id'], $round['round_number']), $db);
@@ -506,7 +510,11 @@ function build_stats($round) {
     return $stats;
 }
 
-// teams ordered best to worst
+function standings_init_round($mid) {
+    return array( "module_id" => $mid, 'round_number' => 0);
+}
+
+// standings through $round, ordered best to worst
 function get_standings($round, $all_tiebreaks = false) {
     $stats = build_stats($round);
     if (! $stats)
