@@ -27,7 +27,7 @@
         header_redirect("main_menu.php");
     $tid = $module['parent_id'];
 	require_login();
-    require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+    require_privs( tournament_isadmin($tid) );
     $tourney = get_tournament($tid);
 
     // logged in / have privs, so display header

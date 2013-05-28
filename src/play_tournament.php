@@ -116,6 +116,7 @@
         } else {
         ?>
         <div class='mainBox'>
+            <div class='nav'><a class='button disabled'>Next Round</a></div>
             <div id='games'>
             <? disp_module_games($module, $rounds) ?>
             </div>

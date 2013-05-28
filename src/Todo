@@ -16,13 +16,12 @@
         move next-round button into javascript
         update 'victor' class in javascript
         #display-games all at once (list 'round' in swiss, 'final-four' in sglelim)
-        add games automatically as other games end
-            this is tricky because it creates dependencies, 
-            so modification to finished games screws with the (now set in stone) future
-            solution: don't actually add these games to the db.  use js.
-            maybe only add when future game is in-progress.
+        add games automatically as other games finish
+            don't actually add these games to the db until in-progress/score/etc
+            instead, use javascript to add them to the top of the run/disp
             (though this means that the viewer-end will need its own javascript future-prediction)
-            good plan.
+            ---could grey-out whole predictive rounds / not display on viewer-end until a game in them has started
+               and in this fashion work out the swiss-continuation problem?
         #split dblelim into winners/losers brackets (wb-bye / lb-bye?)
   Older:      
     tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
@@ -33,6 +32,7 @@
     #fix delete-tournament
     #jesus christ, I've never had to deal with making changes in-place on working software
     # - I want desperately to restructure the whole thing, but can't while it's in use
+    #(n.b. totally restructuring in-place.  leaving old db stuff as a scaffold until we hot-swap)
     Choice between Min Likelihood / wins-buchholz for seeding
     Status string (Round 2: x games finished or Losers Bracket Finals or sweet sixteen/elite eight/final four)
     any POSTS to self should be rewritten as xmlhttprequest
@@ -48,8 +48,8 @@
   Soon:
     Better team add (javascript async, cut/paste, import from various files)
     Tournament modules
-    Consolidate forms (score, etc) and use javascript for async form update
-    Better game sched page
+    #Consolidate forms (score, etc) and use javascript for async form update
+    #Better game sched page
     #Modal dialogs
 
 ##### Aug 2012:

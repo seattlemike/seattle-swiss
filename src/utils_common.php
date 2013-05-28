@@ -106,7 +106,7 @@ function logout() {
 }
 
 // checks to see if the admin logged in has privileges for the tournament
-function tournament_isadmin($tid, $aid=null) {
+function tournament_isadmin($tid) {
     return (($_SESSION['admin_type'] == 'super') ||
             is_array( sql_select_one("SELECT * FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", 
                       array($tid, $_SESSION['admin_id']))));
@@ -471,45 +471,27 @@ function tournament_remove_admin($data, $aid) {
     return sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($data['tournament_id'], $data['admin_id']));
 }
 
-function tournament_new_module($data, $aid) {
-    require_privs(tournament_isadmin($data['tournament_id'], $aid));
+function tournament_new_module($data) {
+    require_privs(tournament_isadmin($data['tournament_id']));
     $tourney = get_tournament($data['tournament_id']);
     return sql_try("INSERT INTO tblModule (module_title, module_date, parent_id) VALUES (?, ?, ?)",
                    array("New Round", $tourney['tournament_date'], $data['tournament_id']));
 }
 
-function new_tournament($aid) {
+function new_tournament() {
     $newid = sql_insert("INSERT INTO tblTournament 
                 (tournament_name, tournament_date, tournament_owner, is_fixed) VALUES (?, ?, ?, 1)", 
-                array("New Tournament", date("Y-m-d"), $aid));
+                array("New Tournament", date("Y-m-d"), $_SESSION['admin_id']));
     if ($newid) {
-        $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $aid));
+        $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $_SESSION['admin_id']));
         if (! $success) // TODO: created orphan tournament!  should remove! (shouldn't ever happen though)
             return false;
     }
     return $newid;
 }
 
-function tournament_create($data, $aid) {
-    $bind_vars = array(':tname' => htmlspecialchars($data['tournament_name']),
-        ':tdate' => date("Y-m-d", strtotime($data['tournament_date'])),
-        ':aid' => $aid);
-    if (in_array($data['tournament_mode'], range(0,2)))
-        $bind_vars[':tmode'] = $data['tournament_mode'];
-
-    $newid = sql_insert("INSERT INTO tblTournament
-        (tournament_name, tournament_date, tournament_mode, tournament_owner) 
-        VALUES (:tname, :tdate, :tmode, :aid)", $bind_vars);
-    if ($newid != false) {
-        $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $aid));
-    }
-    else
-        $success = false;
-    return $success;
-}
-
-function tournament_update($data, $aid) {
-    require_privs(tournament_isadmin($data['tournament_id'], $aid));  //already done?
+function tournament_update($data) {
+    require_privs(tournament_isadmin($data['tournament_id']));  //already done?
     $bind_vars = array(':tname' => htmlspecialchars($data['t_name']),
         ':tdate' => date("Y-m-d", strtotime($data['t_date'])),
         ':tnotes' => htmlspecialchars($data['t_notes']),
@@ -520,7 +502,7 @@ function tournament_update($data, $aid) {
     return $success;
 }
 
-function tournament_delete($data, $aid) {
+function tournament_delete($data) {
   // TODO IMMEDIATE -- delete modules
   $db = connect_to_db();
   $tid = $data['tournament_id'];
@@ -590,14 +572,14 @@ function team_delete($team_id) {
                
 }
 
-function teams_import($data, $aid) {
+function teams_import($data) {
     $status = false;
 
     if (! $data['imp_tid'])
         return false;
 
     if (intval($data['imp_num'] > 0)) {
-        require_privs(tournament_isadmin($data['imp_tid'], $aid));
+        require_privs(tournament_isadmin($data['imp_tid']));
         $standings = get_standings($data['imp_tid'], true);
 
         array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
@@ -611,7 +593,6 @@ function teams_import($data, $aid) {
             //$init = intval($t['srs'] * -1000+100000);
             $status &= team_add( array('name_add' => $t['name'],
                                     'uid_add'  => $t['uid'],
-                                    'init_add' => intval($init),
                                     'text_add' => $t['text'],
                                     'tournament_id' => $data['tournament_id']) );
         }

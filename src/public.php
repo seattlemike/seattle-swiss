@@ -39,7 +39,6 @@
         $title = $tourney['tournament_name'];
 
     disp_header($title);
-    disp_topbar($tourney);
     disp_titlebar($title);
 
     // default view if nothing explicitly chosen

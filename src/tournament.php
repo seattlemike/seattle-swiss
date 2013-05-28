@@ -26,7 +26,7 @@
     $_POST['tournament_id'] = $tid;
 
 	require_login();
-    require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+    require_privs( tournament_isadmin($tid) );
     $tourney = get_tournament($tid);
 
     $js_extra = array("/ui.js");
@@ -38,15 +38,15 @@
     if (isset($_POST['case'])) {
         switch ($_POST['case']) {
             case 'delete_tournament':
-                $redir = tournament_delete($_POST, $_SESSION['admin_id']);
+                $redir = tournament_delete($_POST);
                 $redir || die("Failed tournament delete!");
                 break;
             case 'new_module':
-                if (! tournament_new_module($_POST, $_SESSION['admin_id']))
+                if (! tournament_new_module($_POST))
                     echo "<div class='header warning'>Failed to add new round</div>";
                 break;
             case 'update_tournament':
-                tournament_update($_POST, $_SESSION['admin_id']);
+                tournament_update($_POST);
                 header("location:/private/tournament/$tid/");
                 break;
             case 'add_admin':
@@ -58,7 +58,7 @@
                     echo "<div class='header warning'>Failed to remove admin</div>";
                 break;
             case 'import_teams': 
-                teams_import($_POST, $_SESSION['admin_id']) || die("import failed"); 
+                teams_import($_POST) || die("import failed"); 
                 break;
             case 'team_add': 
                 team_add($_POST);
@@ -121,14 +121,12 @@
                 <input type='hidden' name='team_id' value=''>
                 <input type='hidden' name='case' value='team_add' />
                 <table>
-                    <tr><th></th><th>Team Name</th><th>Players</th>
-                        <th title="if unsure, leave blank"><i>UID</i></th>
-                        <th title="for random starting rank, leave blank">Starting Rank</th></tr>
+                    <tr><th></th><th>Name</th><th>Note</th>
+                        <th title="<? echo "Unique ID for external stat-keeping.\nIf unsure, leave blank";?>"><i>UID</i></th></tr>
                     <tr><td><input class='button' type='submit' name='team_add' value="Add"></td>
                         <td><input type='text' name='name_add'></td>
                         <td><input type='text' name='text_add'></td>
                         <td><input class='numeric' type='text' name='uid_add'></td>
-                        <td><input class='numeric' type='text' name='init_add'></td>
                     </tr>
                     <tr style='height:20px;'><th colspan=7>&nbsp;</th></tr>
                     <?php

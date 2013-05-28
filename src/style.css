@@ -24,25 +24,26 @@ body {
 	width:100%;
 	background:#fff;
     font-size: 100%;
-    /*font-family: Raleway?*/
-    font-family: 'Rokkitt', serif;
-    text-align: center;
+    font-family: 'Rosario', sans-serif;
 }
 
 .center {
     margin-left: auto;
     margin-right: auto;
 }
-.dialog, .topHeader, .mainBox { background: #eee; }
+.dialog, .topHeader, .mainBox { background: #e6ecf8; }
 
 /* Fonts */
-.dialog-text, .textBox, .nav, .button, .header, .footer { font-family: 'Rosario', sans-serif; }
+.dialog-text, .nav, .button, .footer { font-family: 'Rosario', sans-serif; }
+h1, .nav { text-align: center; }
+
 
 /* Text Effects */
 .warning { color: #b22; }
 .header, .footer { font-size: 1.2em; font-style: italic;}
 h1 { font-size: 2em; margin: 0px; font-weight: normal; clear:both;}
-.button, .nav a {
+
+.button {
     font-weight: normal;
     font-size: 1em;
 }
@@ -50,22 +51,12 @@ h1 { font-size: 2em; margin: 0px; font-weight: normal; clear:both;}
 span.disabled { color: #224365; }
 
 .cHead, .line, .topHeader, .header, .footer { text-align: center; }
-.lHead, .subBox, .item, label, p, .textbox, li, td { text-align: left; }
+.lHead, .item, label, p, li, td { text-align: left; }
 
 /* Borders */
 .topHeader { border-bottom: 1px solid #aaf; }
-.mainBox, .subBox { border: 1px solid #aaf; border-radius: 0.5em;}
+.mainBox   { border: none; border-radius: 0.5em;}
 hr { height: 1px; color: #aaf; border: none; }
-
-ol { 
-    list-style: none;
-    margin: 0em;
-    padding: 0em;
-    padding-left: 1em;
-}
-ol.spaced li {
-    margin-bottom: 0.5em;
-}
 
 .topNav {
     position: relative;
@@ -74,6 +65,7 @@ ol.spaced li {
 
 .nav {
     margin: 0.5em 0;
+    font-size: 1.2em;
 }
 
 /* All Header */
@@ -98,8 +90,11 @@ ol.spaced li {
 }
 
 /* Text Layout */
-p, .line { margin: 0.5em 0 0.5em 0; }
+.line { margin: 0.5em 0 0.5em 0; }
+p { margin: 1em 2em; }
 .item { margin: 1em; }
+.centerCtr { border-radius: 0.5em; overflow: hidden; display: inline-block; text-align: left;} /*put inside of div class='line' */
+
 
 /* Run Module */
 
@@ -117,26 +112,18 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     padding: 1em 2em;
 }
 .game:hover {
-    background: #ddd;
-}
-
-.game-box:first-child { border: none; }
-.game-box { padding: 1em 0.5em; border-top: 1px solid #aaf; }
-.game-team { 
-    display: inline-block;
-    font-size: 1.2em;
-    margin: 0 0.5em;
+    background: #cde;
 }
 
 .status { cursor: pointer; }
-.game-scheduled{ background: #eee}
-.game-finished { background: #aaa; }
-.game-inprogress { background: #caa; }
+.game-scheduled{ background: #b4cfed; }
+.game-finished { background: #658ab3; }
+.game-inprogress { background: #c9a; }
 
 
 .victor {
     /*background: #fc5; a83 a38*/
-    border: 2px dashed #77e;
+    border: 2px dashed #fff;
 }
 .on-court {
     background: #fee;
@@ -156,26 +143,9 @@ p, .line { margin: 0.5em 0 0.5em 0; }
     margin-left: 2em;
     margin-right: 2em;
 }
-.textBox { 
-    margin-left: auto;
-    margin-right: auto;
-    width: 60%; 
-}
 .mainBox { 
     margin: 1em 0;
-    padding: 0.5em ;
-}
-.centerBox .team { min-width: 20%; }
-
-.subBox { 
-    margin-bottom: .5em;
-    padding-left: 2em;
-}
-
-.cBox { 
-    display:inline-block;
-    padding: 0.2em;
-    margin-left: 0.5em;
+    padding: 0.5em;
 }
 
 /* tabulated display */
@@ -206,12 +176,7 @@ td.numeric { min-width: 40px; }
     min-width: 100px;
 }
 
-input .score {
-
-}
-
-.standings .score { 
-}
+/* Standings */
 
 .standings .dark  { background: #ddd; }
 .standings .light { background: #aaa; }
@@ -227,10 +192,45 @@ input .score {
 .swiss tr:nth-child(2n+3) { background: #aaa; }
 .swiss tr:nth-child(2n+3) .bold { background: #68819b;}
 
+.info {
+    display: inline-block;
+    background: #658ab3;
+    padding: 0.5em 1em;
+    min-width: 15em;
+    margin-right: 1em;
+}
+.team { 
+    position: relative;
+    /*border-radius: 1em;*/
+    overflow: hidden;
+    min-width: 20em;
+    text-align: left;
+    /*background: #87a8cc;*/
+    background: #b4cfed;
+    padding-right: 1em;
+    margin: 1px 0;
+}
+.strength, .rank{
+    display: inline-block;
+    padding: 0.5em 1em;
+    text-align: center;
+}
+.rank {
+    min-width: 2em;
+    margin-right: 1em;
+    background: #658ab3;
+}
+.strength{
+    min-width: 4em;
+    position: absolute;
+    right: 0;
+    margin-left: 1em;
+}
+
 /*  TODO: get rid of these ASAP */
 table { border-collapse:collapse; }
 table.list { width: 100%; }
-th { text-align: center; padding: 0.2em; font-size: 1.2em; }
+th { text-align: center; padding: 0.2em; font-size: 1.2em; font-weight: normal;}
 td { padding: 0 5px 0 5px; }
 td.right { text-align: right; }
 td.center, td.numeric { text-align: center; }
@@ -243,23 +243,43 @@ td.center, td.numeric { text-align: center; }
     .playing { background: #ebb; }
     .game * { vertical-align: middle; }
     .middle { vertical-align: bottom; }
-    .team {
-        margin: 0.5em 1em;
-        text-align: left;
-    }
-
 
 /* Forms and Input */
     form { margin: 0; display: inline;}
     input, .nav a, .button, select {
-        /*margin: 0.1em;*/
-        /*padding: 0.1em 0.2em 0.1em 0.2em;*/
         margin: 3px;
         padding: 3px 5px 3px 5px;
-        background: #ddd;
-        border: 1px solid black;
+        background: #b4cfed;
+        border: none;
         border-radius: 0.3em;
     }
+    .nav a, .button {
+        display: inline-block;
+        text-decoration:none;
+        text-align: center;
+        min-width: 60px;
+        color: #224369;
+    }
+    a:visited, a:active, a:link {
+        text-decoration:none;
+        color: #224365;
+    }
+
+    .button.disabled {
+        color: #68819b;
+        cursor: default;
+    }
+    a.selected, input.selected { 
+        background: #658ab3; 
+    }
+    a { padding: 0.3em; }
+    a:hover { background-color: #cde; border-radius: 0.2em;}
+    a.button:hover { text-decoration: none; }
+    input:hover, .button:hover, .nav a:hover {
+        color: #224365;
+        background: #97bfed;
+    }
+
     input.numeric {
         width: 6em;
     }
@@ -293,27 +313,6 @@ td.center, td.numeric { text-align: center; }
             display: block;
         }
 
-        a:visited, a:active, a:link {
-            text-decoration:none;
-            color: #224365;
-        }
-
-        .button:hover, a:hover { color: #68819b; }
-
-        .button.disabled {
-            color: #68819b;
-            cursor: default;
-        }
-
-        .nav a, .button {
-            display: inline-block;
-            text-decoration:none;
-            text-align: center;
-            color: #224365;
-            min-width: 60px;
-        }
-
-        a.selected, input.selected { background: #aaa; }
         a.hot, input.hot { background: #ebb; }
 
         input.wide { width: 200px; }
@@ -360,7 +359,6 @@ td.center, td.numeric { text-align: center; }
         margin-left: -10em;
         margin-top: -3em;
         border-radius: 0.5em;
-        border: 1px solid #aaf;
         z-index: 1002;
         min-height: 5em;
         padding: 1em;

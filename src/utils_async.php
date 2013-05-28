@@ -15,7 +15,7 @@ function dbAttempt($query, $vars) {
 function asyncModuleTeamPrivs($mid, $team_id) {
     if (! $module = get_module($mid))
         return asyncError(20, "Couldn't find bracket");
-    elseif (! tournament_isadmin($module['parent_id'], $_SESSION['admin_id']))
+    elseif (! tournament_isadmin($module['parent_id']) )
         return asyncError(100, "Not admin for tournament {$module['parent_id']}");
     elseif (! tournament_hasteam($module['parent_id'], $team_id))
         return asyncError(22, "Coudln't find team in tournament");

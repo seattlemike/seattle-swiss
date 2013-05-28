@@ -34,7 +34,7 @@
     $tourney = get_tournament($tid);
 
 	require_login();
-    require_privs( tournament_isadmin($tid, $_SESSION['admin_id']) );
+    require_privs( tournament_isadmin($tid) );
 
     if ($module)
         $title = $module['module_title'];

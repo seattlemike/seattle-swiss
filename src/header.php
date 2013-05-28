@@ -70,7 +70,6 @@ function disp_header($title = null, $js_extra=array(), $header_extra = array()) 
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
 <link href='http://fonts.googleapis.com/css?family=Rosario:400,400italic' rel='stylesheet' type='text/css' />
-<link href='http://fonts.googleapis.com/css?family=Rokkitt:700' rel='stylesheet' type='text/css' />
 <link rel='stylesheet' type='text/css' href='/style.css' />
 END;
     foreach ($js_extra as $jsfile)
@@ -86,11 +85,11 @@ END;
 
 function disp_admin_topbar() {
     echo "<div class='lHead'>\n";
-    echo "<a href='/private/'>{$_SESSION['admin_name']}</a>";
-    echo "<a href='/settings/'>settings</a>";
+    echo "<a class='button' href='/private/'>{$_SESSION['admin_name']}</a>";
+    //echo "<a href='/settings/'>settings</a>";
     if ($_SESSION['admin_type'] == 'super') 
-        echo "<a href='/super/'>super</a>";
-    echo "<a href='/logout/'>log out</a>\n";
+        echo "<a class='button' href='/super/'>super</a>";
+    echo "<a class='button' href='/logout/'>log out</a>\n";
     echo "</div>\n";
 }
 
@@ -109,9 +108,9 @@ function disp_modnav_topbar($tourney, $module, $page) {
     foreach ($navs as $idx => $link) {
         list($text, $dest) = $link;
         if ($page == $idx)
-            echo "<a class='selected' href='$dest'>$text</a>";
+            echo "<a class='selected button' href='$dest'>$text</a>";
         else 
-            echo "<a href='$dest'>$text</a>";
+            echo "<a class='button' href='$dest'>$text</a>";
     }
     echo "</div>\n";
 }

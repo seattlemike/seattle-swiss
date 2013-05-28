@@ -54,7 +54,7 @@ function GameDialog(game, scores) {
         tmpStatus = s
         self.statusNode.innerHTML = statusText[s]
         self.statusNode.className = "dialog-status "+statusClass[s]
-        titleNode.innerHTML = scores[0].team_name + " vs " + scores[1].team_name
+        titleNode.innerHTML = scores[0].team_name+" vs "+scores[1].team_name
     }
     this.toggleStatus = function () { self.update((tmpStatus + 2) % 3) }
 

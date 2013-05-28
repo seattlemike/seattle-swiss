@@ -35,7 +35,7 @@
     if (! $id)
         header("location:/");
 
-    if (!( (check_login() && tournament_isadmin($id, $_SESSION['admin_id'])) ||
+    if (!( (check_login() && tournament_isadmin($id)) ||
            (tournament_ispublic($id)) ))
         header("location:/");
 

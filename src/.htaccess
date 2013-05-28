@@ -28,11 +28,11 @@ RewriteRule ^private/module/([0-9]*)/view/$ /view.php?module=$1 [QSA,L]
 RewriteRule ^private/module/([0-9]*)/view/(.*)$ /view.php?module=$1&view=$2 [QSA,L]
 
 
-RewriteRule ^public/$ /watch.php [QSA,L]
-RewriteRule ^public/all$ /watch.php?all [QSA,L]
-RewriteRule ^public/tournament/([0-9]*)/$ /watch.php?id=$1 [QSA,L]
-RewriteRule ^public/module/([0-9]*)/$ /watch.php?module=$1 [QSA,L]
-RewriteRule ^public/module/([0-9]*)/(.*)$ /watch.php?module=$1&view=$2 [QSA,L]
+RewriteRule ^public/$ /public.php [QSA,L]
+RewriteRule ^public/all$ /public.php?all [QSA,L]
+RewriteRule ^public/tournament/([0-9]*)/$ /public.php?id=$1 [QSA,L]
+RewriteRule ^public/module/([0-9]*)/$ /public.php?module=$1 [QSA,L]
+RewriteRule ^public/module/([0-9]*)/(.*)$ /public.php?module=$1&view=$2 [QSA,L]
 
 RewriteRule ^rss/poloModule/$ poloModule.php
 RewriteRule ^rss/(\d*) rss.php?id=$1

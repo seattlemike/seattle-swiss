@@ -39,7 +39,7 @@ function togTeamCompeting(button, row) {
                     function () { 
                         row.setAttribute("data-seed", newSeed);
                         button.innerHTML = "Competing" 
-                        button.className = "button hot"
+                        button.className = "button selected"
                         button.onclick = function () { togTeamCompeting(button, row) } 
                         input.value = newSeed;
                         input.disabled = false
