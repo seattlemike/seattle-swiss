@@ -2,6 +2,7 @@
 
 #### May 2013
   Urgent:
+    finish moving to raise new Exception(msg) paradigm that I should've done ages ago
     #finish tournament->module->round->game hierarchy
     delete tournament should recurse properly over modules/moduleteams/games/etc 
     delete module should recurse properly
@@ -23,7 +24,8 @@
             ---could grey-out whole predictive rounds / not display on viewer-end until a game in them has started
                and in this fashion work out the swiss-continuation problem?
         #split dblelim into winners/losers brackets (wb-bye / lb-bye?)
-  Older:      
+  Less Urgent:      
+    standings should style as a table, as should disp_teams_list
     tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
     #redesign new-tournament creation
     #better way to do page header 

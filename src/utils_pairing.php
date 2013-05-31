@@ -286,7 +286,7 @@ function get_swiss_pairings($round) {
     $pairs = array_merge($pairs, $p);
   }
   if (count($rem) > 0) {
-    debug_alert("rematches coming up");
+    //debug_alert("rematches coming up");
     $pairs = array_merge($pairs, outer_matching($rem));
   }
   return $pairs;

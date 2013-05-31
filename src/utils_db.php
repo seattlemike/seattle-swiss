@@ -46,7 +46,9 @@ function db_execute( $query, $values, $db=null) {
 
 function sql_try( $query, $values, $db=null) {
     list($success, , ) = db_execute($query, $values, $db);
-    return $success;
+    if (!$success)
+        throw new Exception("Database query attempt failed: $query");
+    return true;
 }
 
 // insert a record into the db

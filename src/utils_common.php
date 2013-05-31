@@ -168,11 +168,13 @@ function is_poweruser() {
 // Game Functions
 //
 
-function get_game($game_id) {
-    if ($game_id)
-        return sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
-    else
+function get_game($game_id) {  // fail quietly when no $game_id
+    if (! $game_id)
         return false;
+    $game = sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
+    if (!$game)
+        throw new Exception("Unable to find game [$game_id]"); // fail noisily if $game_id not in database
+    return $game;
 }
 
 function filter_games($rid, $stats) {
@@ -195,7 +197,7 @@ function filter_games($rid, $stats) {
 //
 
 function round_isdone($rid) {
-    $games = get_round_games($rid, $db);
+    $games = get_round_games($rid);
     if (! $games)
         return false;
     $unfinished = array_filter($games, function ($g) { return ($g['status'] != 1); } );
@@ -203,35 +205,33 @@ function round_isdone($rid) {
 }
 
 function get_round($rid) {
-    if ($rid)
-        return sql_select_one('SELECT * FROM tblRound WHERE round_id = ?', array($rid));
-    else
+    if (!$rid)
         return false;
+    $round = sql_select_one('SELECT * FROM tblRound WHERE round_id = ?', array($rid));
+    if (!$round)
+        throw new Exception("Unable to find round [$rid]");
+    return $round;
 }
 
 function get_module_rounds($mid) {
-    if ($mid)
-        return sql_select_all("SELECT * FROM tblRound WHERE module_id = ? ORDER BY round_number", array($mid));
-    else
+    if (! $mid)
         return false;
+    return sql_select_all("SELECT * FROM tblRound WHERE module_id = ? ORDER BY round_number", array($mid));
 }
 
 function round_delete($round) {
-    return round_empty($round['round_id']) && 
-           sql_try("DELETE FROM tblRound WHERE round_id = ?", array($round['round_id']));
+    round_empty($round['round_id']);
+    sql_try("DELETE FROM tblRound WHERE round_id = ?", array($round['round_id']));
 }
 
 function round_empty($rid) {
     $db = connect_to_db();
     $games = get_round_games($rid, $db);
-    $success = true;
     if (count($games)) {
-        foreach ($games as $g) {
-            $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($g['game_id']), $db);
-        }
-        return ($success && sql_try("DELETE FROM tblGame WHERE round_id = ?", array($rid), $db));
+        foreach ($games as $g)
+            sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($g['game_id']), $db);
+        sql_try("DELETE FROM tblGame WHERE round_id = ?", array($rid), $db);
     }
-    return true;
 }
 
 //
@@ -263,18 +263,17 @@ function module_delete($mid) {
 }
 
 function get_module_parent($mid) {
-    $m = sql_select_one('SELECT * FROM tblModule WHERE module_id = ?', array($mid));
-    if (is_array($m))
-        return $m['parent_id'];
-    else 
-        return false;
+    $module = get_module($mid);
+    return $module['parent_id'];
 }
 
-function get_module($mid) {
-    if ($mid)
-        return sql_select_one('SELECT * FROM tblModule WHERE module_id = ?', array($mid));
-    else
+function get_module($mid) {  // fail quietly if no $mid
+    if (! $mid)
         return false;
+    $module = sql_select_one('SELECT * FROM tblModule WHERE module_id = ?', array($mid));
+    if (!$module)
+        throw new Exception("Couldn't find module: $mid");  // fail noisily if $mid not in database
+    return $module;
 }
 
 function get_module_teams($mid) {
@@ -342,14 +341,12 @@ function module_add_round($mid) {
 function round_populate($rid, $db=null) {
     ($db) || ($db = connect_to_db());  // make sure we've got a db connection
     $round = get_round($rid);
-    if ($round) {
-        $pairs = round_get_pairings($round);
-        foreach ($pairs as $p)
-            round_add_game($rid, $p, $db);
-        return true;
-    }
-    else
-        return false;
+    if (!$round)
+        throw new Exception("Unable to get round [$rid] when trying to add new games to it");
+
+    $pairs = round_get_pairings($round);
+    foreach ($pairs as $p)
+        round_add_game($rid, $p, $db);
 }
 
 // Add game to the database
@@ -502,10 +499,9 @@ function tournament_update($data) {
     return $success;
 }
 
-function tournament_delete($data) {
+function tournament_delete($tid) {
   // TODO IMMEDIATE -- delete modules
   $db = connect_to_db();
-  $tid = $data['tournament_id'];
   require_privs(tournament_isowner($tid));
   $success = sql_try("DELETE FROM tblTournament WHERE tournament_id = ?", array($tid), $db);
   $success &= sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ?", array($tid), $db);

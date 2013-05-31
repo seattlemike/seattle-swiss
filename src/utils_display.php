@@ -85,6 +85,14 @@ function build_select($name, $options, $selected = null) {
     return $select."</select>";
 }
 
+function disp_team_select($mid, $name) {
+    echo "<select name='$name'>";
+    foreach (get_module_teams($mid) as $t)
+        echo "<option value='{$t['team_id']}'>{$t['team_name']}</option>";
+    echo "<option value='-1'>BYE</option>";
+    echo "</select>";
+}
+
 function disp_module_teams($mid, $tournament_teams) {
 echo <<<END
     <div id='teams' class="header">Competing this round</div>
@@ -277,22 +285,6 @@ function disp_round_nav($mid, $round, $admin=false) {
 }
 
 
-function disp_teams_list($mid) {
-    // TODO: starting seed?  sort alphabetically?
-    $teams = get_module_teams($mid);
-    //$teams = sql_select_all("SELECT * FROM tblTeam WHERE module_id = ? ORDER BY team_name ASC", array($mid));
-    if ($teams) {
-        echo "<div class='line'><div class='centerCtr'>";
-        foreach ($teams as $t)
-            echo "<div class='team'><span class='info'>{$t['team_name']}</span>{$t['team_text']}</div>";
-        echo "</div></div>";
-    }
-}
-
-//
-// **STANDINGS**
-//
-
 function disp_view_nav($module, $rounds, $view) {
     echo "<div class='nav'>";
     $views = array("teams" => "Teams","games" => "Games");
@@ -305,22 +297,14 @@ function disp_view_nav($module, $rounds, $view) {
             $views["standings"] = "Standings";
             break;
         case 2:
-            $views["wbracket"] = "Winners Bracket";
-            $views["lbracket"] = "Losers Bracket";
+            $views["bracket"] = "Brackets";
             $views["standings"] = "Standings";
             break;
     }
 
-    foreach ($views as $v => $text) {
-        if (($v == "teams") || (count($rounds) > 1) || (($v != "lbracket") && count($rounds) > 0)) {
-            if ($view == $v) $class = "selected";
-            else             $class = "";
-            echo "<a class='button $class' href='$v'>$text</a>";
-        }
-        else
-            echo "<a class=\"button disabled\">$text</a>";
-
-    }
+    $selected = array($view => "selected");
+    foreach ($views as $v => $text)
+        echo "<a class='button {$selected[$v]}' href='$v'>$text</a>";
     echo "</div>";
 }
 
@@ -338,44 +322,163 @@ function disp_standings($module, $view=null) {
             disp_teams_list($module['module_id']);
             break;
         case "games":
-            //disp_round_nav($tid, $_GET['round_id'], false);
             disp_module_games($module, $rounds);
             break;
-        case "bracket":
-            echo "<div class='header'>Bracket</div>\n";
-            if ((count($rounds) > 0) && ($module['module_mode'] == 1)) 
-                disp_sglelim($module, $rounds);
-            break;
-        case "wbracket":
-            echo "<div class='header'>Winners Bracket</div>\n";
-            if ((count($rounds) > 0) && ($module['module_mode'] == 2))
-                disp_dblelim_wbracket($module, $rounds);
-            break;
-        case "lbracket":
-            echo "<div class='header'>Losers Bracket</div>\n";
-            if ((count($rounds) > 1) && ($module['module_mode']== 2))
-                disp_dblelim_lbracket($module, $rounds);
-            break;
         case "debug":
-            disp_swiss($module['module_id'], count($rounds), true);
+            //disp_swiss($module['module_id'], count($rounds), true);
             break;
         case "standings":
-            if (count($rounds > 0) && ($module['module_mode'] == 0)) {
-                //if (isset($_GET['round_id'])) {
-                //    $r = get_tournament_round($tid, $_GET['round_id']);
-                //    if ($r)
-                //        disp_swiss($tid, $r['round_number'], true);
-                //}
-                //else
-                    disp_swiss($module['module_id'], $rounds);
+            if (count($rounds > 0)) {
+                $standings = get_standings($rounds[count($rounds)-1]);
+                if (count($standings) == 0) { throw new Exception("Problem: attempted to view empty standings"); }
+
+                switch($module['module_mode']) {
+                    case 0: // Swiss
+                        disp_standings_swiss($module, $standings);
+                        break;
+                    case 1: // Single Elim
+                    case 2: // Double Elim
+                        disp_standings_elim($module, $standings);
+                        break;
+                }
             }
             break;
-        case "rank":
-            if (count($rounds) > 0) 
-                disp_places($rounds[count($rounds)-1]);
+        case "bracket":
+            //disp_sglelim($module, $rounds);
+            //disp_dblelim_wbracket($module, $rounds);
+            //disp_dblelim_lbracket($module, $rounds);
             break;
     }
 }
+
+//
+// Display Teams
+//
+function disp_teams_list($mid) {
+    // TODO: starting seed?  sort alphabetically?
+    $teams = get_module_teams($mid);
+    //$teams = sql_select_all("SELECT * FROM tblTeam WHERE module_id = ? ORDER BY team_name ASC", array($mid));
+    if ($teams) {
+        echo "<div class='line'><div class='centerCtr'>";
+        foreach ($teams as $t)
+            echo "<div class='team'><div class='info'>{$t['team_name']}</div><div class='dark info'>{$t['team_text']}</div></div>";
+        echo "</div></div>";
+    }
+}
+
+//
+// Display Games
+//
+function disp_module_games($module, $rounds) {
+    switch ($module['module_mode']) {
+        case 0:
+            foreach (array_reverse($rounds) as $r) {
+                echo "<div class='header'>Round {$r['round_number']}</div>";
+                disp_games(get_round_games($r['round_id'])); // get rid of byes?
+            }
+            break;
+        case 1:
+            $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            foreach(array_reverse($rounds) as $r) {
+                disp_round_games($r);
+            }
+            break;
+        case 2:
+            $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            $lbterms = array(5=> "Fifth Place Games", 3 => "Losers' Bracket Finals");
+            foreach(array_reverse($rounds, true) as $idx => $r) {
+                // split round up if both winners and losers
+                if (array_key_exists($idx-1, $rounds))
+                    $teams = get_standings($rounds[$idx-1]);
+                else
+                    $teams = get_standings(standings_init_round($module['module_id']));
+
+                $teams = array_filter($teams, function($t) { return ($t['status'] > 0); });
+
+                if (count($teams) == 2) { // FINALS!
+                    $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
+                    if (count($lb) == 1)
+                        echo "<div class='header'>Tournament Finals</div>";
+                    else 
+                        echo "<div class='header'>Final Finals Game</div>";
+                    disp_round_games($r); // well, there's only one
+                } else { // Not Finals (i.e. regular wb/wb and lb/lb games)
+                    $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
+                    $games = filter_games($r['round_id'], $wb);
+                    if ($games) {
+                        if ($wbterms[count($wb)])
+                            echo "<div class='header'>Winners' Bracket {$wbterms[count($wb)]}</div>";
+                        else
+                            echo "<div class='header'>Winners' Bracket Round of ".count($wb)."</div>";
+                        // filter games for wb
+                        disp_games($games);
+                    } 
+                    $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
+                    $games = filter_games($r['round_id'], $lb);
+                    if ($games) {
+                        if ($lbterms[count($teams)])
+                            echo "<div class='header'>{$lbterms[count($teams)]}</div>";
+                        else
+                            echo "<div class='header'>Losers' Bracket ".ordinal(count($teams)-count($games)+1)."-place Games</div>";
+                        disp_games($games);
+                    }
+                }
+            }
+            break;
+    }
+}
+
+function disp_games($games, $filter = null) {
+    if ($filter) {
+        foreach($filter as $idx => $t) {
+            echo "<br>Team: $idx<br>";
+            print_r($t);
+        }
+        foreach ($games as $idx => $g) {
+            echo "<br>Game: $idx<br>";
+            print_r($g);
+        }
+        die();
+
+       //$games = array_filter($games, function ($t) use ($filter) { return 
+    }
+    if ($games) {
+        echo "<div class='games'>\n";
+        foreach ($games as $g)
+            disp_game($g);
+        echo "</div>";
+    }
+}
+
+function disp_round_games($round) {
+    disp_games(get_round_games($round['round_id']));
+}
+
+function disp_game($game) {
+    $status_class = array("game-scheduled", "game-finished", "game-inprogress");
+    $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
+    echo "<div class='game {$status_class[$game['status']]}' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>";
+
+    if (count($teams) == 1)
+        echo "{$teams[0]['team_name']} has a BYE";
+    else {
+        if ($game['status'] == 1) {
+            if ($teams[0]['score'] > $teams[1]['score'])
+                $teams[0]['team_name'] = "<div class='victor'>{$teams[0]['team_name']}</div>";
+            elseif ($teams[0]['score'] < $teams[1]['score'])
+                $teams[1]['team_name'] = "<div class='victor'>{$teams[1]['team_name']}</div>";
+        }
+        echo "{$teams[0]['team_name']} vs {$teams[1]['team_name']}";
+        if ($game['status'] > 0) {
+            echo ", {$teams[0]['score']}-{$teams[1]['score']}";
+        }
+    }
+    echo "</div>";
+}
+
+//
+// Standings Display
+//
 
 function disp_places($round) {
     $standings = get_standings($round);
@@ -386,6 +489,55 @@ function disp_places($round) {
         echo "<div><div class='seed'><span class='rank'>{$t['rank']}</span><span class='team'>{$t['name']}</span></div></div>";
     }
 }
+
+function disp_standings_swiss($module, $standings) {
+    // TODO IMMEDIATE: figure out how we're going to deal with partially completed rounds (split standings)
+    $standings = get_standings($rounds[count($rounds)-1], $all_breaks);
+    if (count($standings) == 0) { return; } // ay!  when does this happen?
+    array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
+
+    // should we display number of draws?  Yes, if anyone has a draw.
+    foreach ($standings as $t)
+        foreach ($t['results'] as $r)
+            if ($r['res'] == 0.5)
+                $draws = 1;
+
+    echo "<div class='header'>Standings</div>\n";
+    echo "<div class='line'><div class='centerCtr'>";
+    foreach ($standings as $seed => $team) {
+        echo "<div class='team'>";
+        echo "<span class='rank'>".($seed+1)."</span>";
+        echo "<span class='' title=\"{$team['text']}\">{$team['name']}\n";
+        $result = array('losses', 'draws', 'wins');
+        $team['wins'] = $team['losses'] = $team['draws'] = 0;
+        foreach ($team['results'] as $r) { // increment appropriate w/l/d column
+            $team[$result[$r['res']*2]] += 1;
+        }
+        echo "<span class='strength'>{$team['wins']}-{$team['losses']}";
+        if ($draws)
+            echo "-{$team['draws']}";
+        echo "</span></span></div>";
+        //echo "<span class='strength'>".sprintf("%.4f",$team['maxprob'])."</span></div>";
+    }
+    echo "</div></div>";
+    //echo "<td class='bold numeric'>{$team['score']}</td>";
+    //echo "<td class='bold numeric'>".sprintf("%.4f",$team['maxprob'])."</td>";
+    //echo "<td class='numeric'>{$team['buchholz']}</td>";
+    //echo "<td class='numeric'>".sprintf("%.2f",$team['srs'])."</td>";
+    //echo "<td class='numeric'>".sprintf("%.4f",$team['iterBuchholz'])."</td>";
+}
+
+function disp_standings_elim($module, $standings) {
+    // split teams into wb / lb / done (ranked)
+
+
+}
+
+//
+//  Here begins the too-much display logic for Single and Double Elimination Brackets
+//
+//  :(
+//
 
 function get_td_color($rnum, $pos) {
     $mod = pow(2, $rnum+2);
@@ -677,176 +829,9 @@ function disp_team($team, $index, $rnum) {
         echo "<td colspan=2></td>";  // blank entry in table
 }
 
-function score_str($result) {  // TODO need team id, then put self first
-    $s = $result['score'];
-    if ($result['opp_id'] == -1)
-        return "BYE";
-    else 
-        return implode(" - ", $s)." vs {$result['opp_name']}";
-}
-
-function disp_swiss($mid, $rounds, $all_breaks = false) {
-    $standings = get_standings($rounds[count($rounds)-1], $all_breaks);
-    if (count($standings) == 0) { return; } // ay!  when does this happen?
-    array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
-
-    echo "<div class='header'>Standings</div>\n";
-    echo "<div class='line'><div class='centerCtr'>";
-    foreach ($standings as $seed => $team) {
-        echo "<div class='team'>";
-        echo "<span class='rank'>".($seed+1)."</span>";
-        echo "<span title=\"{$team['text']}\">{$team['name']}</span>\n";
-        echo "</div>";
-        //echo "<span class='strength'>".sprintf("%.4f",$team['maxprob'])."</span></div>";
-    }
-    echo "</div></div>";
-        //echo "<td class='bold numeric'>{$team['score']}</td>";
-        //echo "<td class='bold numeric'>".sprintf("%.4f",$team['maxprob'])."</td>";
-        //echo "<td class='numeric'>{$team['buchholz']}</td>";
-            //echo "<td class='numeric'>".sprintf("%.2f",$team['srs'])."</td>";
-            //echo "<td class='numeric'>".sprintf("%.4f",$team['iterBuchholz'])."</td>";
-}
-
-function disp_oneline($game, $scores) {
-    echo "<div class='item'>";
-
-    if (count($scores) == 1)
-        echo "Bye for <div class='game-team'>{$scores[0]['team_name']}</div>";
-    elseif (count($scores) > 1) {
-        $max = $scores[0]; $min = $scores[1];
-        if ($scores[1]['score'] > $scores[0]['score']) { $max = $scores[1]; $min = $scores[0]; }
-        $victor = "<div class='game-team'><div class='victor'>{$max['team_name']}</div></div>";
-        $score = "<span class='score'>{$max['score']}-{$min['score']}</span>";
-        $loser = "<div class='game-team'>{$min['team_name']}</div>";
-        $normal = "<div class='game-team'>{$max['team_name']}</div> vs. <div class='game-team'>{$min['team_name']}</div>";
-
-        if ($min['score'] == -1) {
-            if ($game['court'] > 0) echo "<div class='on-court'><span class='score'>Now playing:<span> $normal</div>";
-            else                 echo "<span class='score'>Not yet started:</span> $normal";
-        }
-        else if ($min['score'] == $max['score'])
-            echo "$score Tie, $normal";
-        else 
-            echo "$score Win, $victor over $loser";
-    }
-    else
-        echo "PROBLEM: display game invoked with no scores";
-    echo "</div>";
-}
-
-function disp_module_games($module, $rounds) {
-    switch ($module['module_mode']) {
-        case 0:
-            foreach (array_reverse($rounds) as $r) {
-                echo "<div class='header'>Round {$r['round_number']}</div>";
-                disp_games(get_round_games($r['round_id'])); // get rid of byes?
-            }
-            break;
-        case 1:
-            $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
-            foreach(array_reverse($rounds) as $r) {
-                disp_round_games($r);
-            }
-            break;
-        case 2:
-            $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
-            $lbterms = array(5=> "Fifth Place Games", 3 => "Losers' Bracket Finals");
-            foreach(array_reverse($rounds, true) as $idx => $r) {
-                // split round up if both winners and losers
-                if (array_key_exists($idx-1, $rounds))
-                    $teams = get_standings($rounds[$idx-1]);
-                else
-                    $teams = get_standings(standings_init_round($module['module_id']));
-
-                $teams = array_filter($teams, function($t) { return ($t['status'] > 0); });
-
-                if (count($teams) == 2) { // FINALS!
-                    $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
-                    if (count($lb) == 1)
-                        echo "<div class='header'>Tournament Finals</div>";
-                    else 
-                        echo "<div class='header'>Final Finals Game</div>";
-                    disp_round_games($r); // well, there's only one
-                } else { // Not Finals (i.e. regular wb/wb and lb/lb games)
-                    $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
-                    $games = filter_games($r['round_id'], $wb);
-                    if ($games) {
-                        if ($wbterms[count($wb)])
-                            echo "<div class='header'>Winners' Bracket {$wbterms[count($wb)]}</div>";
-                        else
-                            echo "<div class='header'>Winners' Bracket Round of ".count($wb)."</div>";
-                        // filter games for wb
-                        disp_games($games);
-                    } 
-                    $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
-                    $games = filter_games($r['round_id'], $lb);
-                    if ($games) {
-                        if ($lbterms[count($teams)])
-                            echo "<div class='header'>{$lbterms[count($teams)]}</div>";
-                        else
-                            echo "<div class='header'>Losers' Bracket ".ordinal(count($teams)-count($games)+1)."-place Round</div>";
-                        disp_games($games);
-                    }
-                }
-            }
-            break;
-    }
-}
-
-function disp_games($games, $filter = null) {
-    if ($filter) {
-        foreach($filter as $idx => $t) {
-            echo "<br>Team: $idx<br>";
-            print_r($t);
-        }
-        foreach ($games as $idx => $g) {
-            echo "<br>Game: $idx<br>";
-            print_r($g);
-        }
-        die();
-
-       //$games = array_filter($games, function ($t) use ($filter) { return 
-    }
-    if ($games) {
-        echo "<div class='games'>\n";
-        foreach ($games as $g)
-            disp_game($g);
-        echo "</div>";
-    }
-}
-
-function disp_round_games($round) {
-    disp_games(get_round_games($round['round_id']));
-}
-
-function disp_game($game) {
-    $status_class = array("game-scheduled", "game-finished", "game-inprogress");
-    $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
-    echo "<div class='game {$status_class[$game['status']]}' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>";
-
-    if (count($teams) == 1)
-        echo "{$teams[0]['team_name']} has a BYE";
-    else {
-        if ($game['status'] == 1) {
-            if ($teams[0]['score'] > $teams[1]['score'])
-                $teams[0]['team_name'] = "<div class='victor'>{$teams[0]['team_name']}</div>";
-            elseif ($teams[0]['score'] < $teams[1]['score'])
-                $teams[1]['team_name'] = "<div class='victor'>{$teams[1]['team_name']}</div>";
-        }
-        echo "{$teams[0]['team_name']} vs {$teams[1]['team_name']}";
-        if ($game['status'] > 0) {
-            echo ", {$teams[0]['score']}-{$teams[1]['score']}";
-        }
-    }
-    echo "</div>";
-}
-
-function disp_team_select($mid, $name) {
-    echo "<select name='$name'>";
-    foreach (get_module_teams($mid) as $t)
-        echo "<option value='{$t['team_id']}'>{$t['team_name']}</option>";
-    echo "<option value='-1'>BYE</option>";
-    echo "</select>";
-}
+//
+// End crappy bracket display logic
+// (which should maybe at this point get its own file)
+//
 
 ?>

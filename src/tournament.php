@@ -38,8 +38,10 @@
     if (isset($_POST['case'])) {
         switch ($_POST['case']) {
             case 'delete_tournament':
-                $redir = tournament_delete($_POST);
-                $redir || die("Failed tournament delete!");
+                if (tournament_delete($_POST))
+                    header_redirect("/private/");
+                else
+                    die("Failed to delete tournament!");
                 break;
             case 'new_module':
                 if (! tournament_new_module($_POST))

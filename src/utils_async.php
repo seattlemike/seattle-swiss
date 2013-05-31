@@ -5,54 +5,60 @@ function asyncError($errno, $msg) {
 }
 
 function dbAttempt($query, $vars) {
-    if (sql_try($query, $vars))
-        return array("success" => true);
-    else
-        return asyncError(50, "database access failed");
+    if (! sql_try($query, $vars))
+        throw new Exception("Database access failed on: $query");
+}
+
+function checkTournamentPrivs($tid) {
+    if (! tournament_isadmin($tid))
+        throw new Exception("Not admin for tournament [$tid]");
+    return true;
 }
 
 
-function asyncModuleTeamPrivs($mid, $team_id) {
-    if (! $module = get_module($mid))
-        return asyncError(20, "Couldn't find bracket");
-    elseif (! tournament_isadmin($module['parent_id']) )
-        return asyncError(100, "Not admin for tournament {$module['parent_id']}");
-    elseif (! tournament_hasteam($module['parent_id'], $team_id))
-        return asyncError(22, "Coudln't find team in tournament");
-    else
-        return true;
+function checkTeamPrivs($mid, $team_id) {
+    $module = get_module($mid);
+    checkTournamentPrivs($module['parent_id']);
+    if (! tournament_hasteam($module['parent_id'], $team_id))
+        throw new Exception("Couldn't find team [$team_id] in tournament [{$module['parent_id']}]");
+    return true;
 }
 
-function asyncModuleTeamAdd($mid, $tid, $seed) {
-    if (is_array($status = asyncModuleTeamPrivs($mid, $tid)))
-        return $status;
-    elseif (module_hasteam($mid, $tid))
-        return asyncError(24, "Team already present in this module");
-    return dbAttempt("INSERT INTO tblModuleTeams (module_id, team_id, team_seed) VALUES (?, ?, ?)", array($mid, $tid, $seed));
+function asyncModuleTeamAdd($mid, $team_id, $seed) {
+    checkTeamPrivs($mid, $team_id);
+    if (! module_hasteam($mid, $team_id))
+        dbAttempt("INSERT INTO tblModuleTeams (module_id, team_id, team_seed) VALUES (?, ?, ?)", array($mid, $team_id, $seed));
 }
 
-function asyncModuleTeamDel($mid, $tid) {
-    if (is_array($status = asyncModuleTeamPrivs($mid, $tid)))
-        return $status;
-    elseif (! module_hasteam($mid, $tid))
-        return asyncError(23, "Couldn't find team enabled in this module");
-    return dbAttempt("DELETE FROM tblModuleTeams WHERE module_id = ? AND team_id = ?", array($mid, $tid));
+function asyncModuleTeamDel($mid, $team_id) {
+    checkTeamPrivs($mid, $team_id);
+    if (module_hasteam($mid, $team_id))
+        dbAttempt("DELETE FROM tblModuleTeams WHERE module_id = ? AND team_id = ?", array($mid, $team_id));
 }
 
 function asyncGameUpdate($game_data, $score_data) {
-    if (! $game = get_game($game_data['game_id']))
-        return asyncError(30, "Couldn't find game: {$data['game_id']}");
-    if (! $round = get_round($game['round_id']))
-        return asyncError(30, "Couldn't find round {$data['round_id']} for game {$data['game_id']}");
-    if (! $module = get_module($round['module_id']))
-        return asyncError(30, "Couldn't find module {$data['module_id']} for game {$data['game_id']}");
-    
-    if (! tournament_isadmin($module['parent_id']))
-        return asyncError(100, "Not admin for tournament {$module['parent_id']}");
-    else {
-        foreach ($score_data as $score)
-            dbAttempt("UPDATE tblGameTeams SET score = ? WHERE game_id = ? AND team_id = ?", array($score['score'], $game['game_id'], $score['team_id']));
-        return dbAttempt("UPDATE tblGame SET status = ?, game_time = NOW() WHERE game_id = ?", array($game_data['status'], $game['game_id']));
+    $game = get_game($game_data['game_id']);
+    $round = get_round($game['round_id']);
+    $module = get_module($round['module_id']);
+    checkTournamentPrivs($module['parent_id']);
+    foreach ($score_data as $score)
+        dbAttempt("UPDATE tblGameTeams SET score = ? WHERE game_id = ? AND team_id = ?", array($score['score'], $game['game_id'], $score['team_id']));
+    dbAttempt("UPDATE tblGame SET status = ?, game_time = NOW() WHERE game_id = ?", array($game_data['status'], $game['game_id']));
+}
+
+function asyncNextRound($mid) {
+    $module = get_module($mid);
+    checkTournamentPrivs($module['parent_id']);
+    $status = sql_select_one("SELECT MAX(ABS(1-status)) value FROM tblGame JOIN tblRound USING (round_id) WHERE module_id = ?", array($mid));
+    // if all status are 0 (or if no entries at all), add/populate new round
+    if ($status['value'] == 0) {
+        $rid = module_add_round($mid);
+        round_populate($rid);
+        $games = array_map( 
+            function ($g) { return array( "game_data" => $g, 
+                                "score_data" => sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($g['game_id']))); },
+            get_round_games($rid));
+        return(array("round" => get_round($rid), "games" => $games));
     }
 }
 

@@ -102,7 +102,7 @@ function disp_modnav_topbar($tourney, $module, $page) {
         $navs = array( array( $tourney['tournament_name'], "/private/tournament/{$tourney['tournament_id']}/" ),
                        array( $module['module_title'], "/private/module/{$module['module_id']}/" ),
                        array( "Run", "/private/module/{$module['module_id']}/run/" ), 
-                       array( "Standings", "/private/module/{$module['module_id']}/view/" ));
+                       array( "Standings", "/private/module/{$module['module_id']}/view/standings" ));
 
     echo "<div class='rHead'>";
     foreach ($navs as $idx => $link) {
@@ -117,7 +117,7 @@ function disp_modnav_topbar($tourney, $module, $page) {
 
 // assert: already checked tid/mid/has_privs/etc
 function disp_topbar($tourney=null, $module=null, $page=null) {
-    echo "<div class='topNav nav'>";
+    echo "<div class='topNav'>";
     if (check_login()) {
         disp_modnav_topbar($tourney, $module, $page);
         disp_admin_topbar();

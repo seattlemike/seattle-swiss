@@ -26,6 +26,7 @@
         header_redirect("/private/");
   
     disp_header("Login");
+    disp_topbar();
     disp_titlebar();
 
     if ($_POST['action'] == 'login') {

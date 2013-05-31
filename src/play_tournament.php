@@ -20,15 +20,8 @@
 */
     include("header.php");
 
-    // check for round
-    ($rid = $_POST['round_id']) || ($rid = $_GET['round']);
-    $round = get_round($rid);
-    if ($round)
-        $mid = $round['module_id'];
-    else
-        ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
-
     // Ensure mid/tid are valid and that we have privs to edit
+    ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
     $module = get_module($mid) ;
     if (! $module) 
         header_redirect("/private/");
@@ -55,19 +48,17 @@
         $_POST['module_id'] = $mid;
 
         switch ($_POST['case']) {
-            case 'start_module':
+            case 'add_round':
                 if ($rounds)
                     $round_id = $rounds[count($rounds)-1]['round_id'];
                 else 
                     $round_id = module_new_round($mid);
-                header_redirect("play_tournament.php?round=$round_id");
                 break;
             case 'next_round':
                 if ($rounds[count($rounds)-1]['round_id'] != $_POST['round_id']) 
                     $round_id = $rounds[count($rounds)-1]['round_id'];
                 else
                     $round_id = module_new_round($mid);
-                header_redirect("play_tournament.php?round=$round_id");
                 break;
 
 
@@ -81,9 +72,12 @@
                 tournament_update_score($_POST['game_id'], $_POST);
                 break;
             case 'delete_round':
-                if ($round && round_delete($round))
-                    header_redirect("play_tournament.php?module=$mid");
-                die("Failed to delete round");
+                $round = get_current_round($mid);
+                if (!$round)
+                    throw new Exception("Trying to delete round from empty module");
+                round_delete($round);
+                $rounds = get_module_rounds($mid);
+                break;
             case 'empty_round':
                 round_empty($rid);
                 break;
@@ -101,23 +95,21 @@
         }
     }
 
-    // adds a round id to the url if rounds exist
-    $url = "play_tournament.php?" . $round ? "round=$rid" : "module=$mid";
 ?>
 <div class="con">
     <div class="centerBox"> 
         <?php
         if (! count(get_tournament_teams($tid))) {
             echo "<div class='mainBox'><div class='header'>Tournament has no teams yet</div>";
-            echo "<a class='button' href='tournament.php?id=$tid'>Back</a></div>\n";
+            echo "<a class='button' href='../../../tournament/$tid/'>Back</a></div>\n";
         } elseif (! count(get_module_teams($mid))) {
             echo "<div class='mainBox'><div class='header'>Round has no active teams yet</div>";
-            echo "<a class='button' href='module.php?module=$mid'>Back</a></div>\n";
+            echo "<a class='button' href='../'>Back</a></div>\n";
         } else {
         ?>
         <div class='mainBox'>
-            <div class='nav'><a class='button disabled'>Next Round</a></div>
-            <div id='games'>
+            <div class='nav'><a id='next' class='button disabled'>Next Round</a></div>
+            <div id='games' module-data='<? echo json_encode($module) ?>'>
             <? disp_module_games($module, $rounds) ?>
             </div>
         </div>
@@ -136,7 +128,7 @@
                             //    <a id="delete-btn" class="button">Delete Round</a>
                                 disp_tournament_button('Fill Round', 'populate_round');
                                 disp_tournament_button('Empty Round', 'empty_round');
-                                disp_tournament_button('Delete Round', 'delete_round');
+                                disp_tournament_button('Delete Latest Round', 'delete_round');
                                 ?>
                             </div>
                             <div class="line">
