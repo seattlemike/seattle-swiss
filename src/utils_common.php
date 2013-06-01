@@ -230,6 +230,7 @@ function round_empty($rid) {
     if (count($games)) {
         foreach ($games as $g)
             sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($g['game_id']), $db);
+        // delete all games in round $rid
         sql_try("DELETE FROM tblGame WHERE round_id = ?", array($rid), $db);
     }
 }
@@ -500,28 +501,19 @@ function tournament_update($data) {
 }
 
 function tournament_delete($tid) {
-  // TODO IMMEDIATE -- delete modules
-  $db = connect_to_db();
-  require_privs(tournament_isowner($tid));
-  $success = sql_try("DELETE FROM tblTournament WHERE tournament_id = ?", array($tid), $db);
-  $success &= sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ?", array($tid), $db);
-
-  // not sure how to measure success here - we don't always have Teams, Rounds, Games, Scores
-  sql_try("DELETE FROM tblTeam WHERE tournament_id = ?", array($tid), $db);
-  $rounds = sql_select_all("SELECT * FROM tblRound WHERE tournament_id = :tid", array(":tid" => $tid), $db);
-  if ($rounds) {
-    $success &= sql_try("DELETE FROM tblRound WHERE tournament_id = :tid", array(":tid" => $tid), $db);
-    foreach ($rounds as $r) {
-      $games = sql_select_all("SELECT * FROM tblGame WHERE round_id = :rid", array(":rid" => $r['round_id']), $db);
-      if ($games) {
-        $success &= sql_try("DELETE FROM tblGame WHERE round_id = :rid", array(":rid" => $r['round_id']), $db);
-        foreach ($games as $g) {
-          $success &= sql_try("DELETE FROM tblGameTeams WHERE game_id = :gid", array(":gid" => $g['game_id']), $db);
-        }
-      }
+    // TODO: $db = connect_to_db();
+    $modules = get_tournament_modules($tid);
+    foreach ($modules as $m) {
+        $rounds = get_module_rounds($m['module_id']);
+        foreach ($rounds as $r)
+            round_empty($r['round_id']);  // all games/g_teams in round
+        sql_try("DELETE FROM tblModuleTeams WHERE module_id = ?", array($m['module_id'])); // all m_teams in module
+        sql_try("DELETE FROM tblRound WHERE module_id = ?", array($m['module_id'])); // all rounds in module
     }
-  }
-  return $success;
+    sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ?", array($tid), $db); // admins in tourney
+    sql_try("DELETE FROM tblTeam WHERE tournament_id = ?", array($tid), $db); // teams in tourney
+    sql_try("DELETE FROM tblModule WHERE parent_id = ?", array($tid)); // modules in tourney
+    sql_try("DELETE FROM tblTournament WHERE tournament_id = ?", array($tid), $db); // admins in tourney
 }
 
 function tournament_next_round($rid) {

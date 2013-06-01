@@ -530,6 +530,13 @@ function disp_standings_swiss($module, $standings) {
 function disp_standings_elim($module, $standings) {
     // split teams into wb / lb / done (ranked)
 
+    //$teams = array();
+    foreach ($standings as $t )
+        $teams[$t['status']][] = $t;
+    
+    foreach($teams as $status => $tlist) {
+        echo "$status: ".count($tlist)."<br>";
+    }
 
 }
 

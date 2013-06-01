@@ -38,10 +38,8 @@
     if (isset($_POST['case'])) {
         switch ($_POST['case']) {
             case 'delete_tournament':
-                if (tournament_delete($_POST))
-                    header_redirect("/private/");
-                else
-                    die("Failed to delete tournament!");
+                tournament_delete($tourney['tournament_id']);
+                header_redirect("/private/");
                 break;
             case 'new_module':
                 if (! tournament_new_module($_POST))
@@ -162,11 +160,10 @@
         </div>
         <div class="nav rHead">
             <form id="delForm" name='delete' method='post' action=''>
-                <input type='hidden' name='action' value='delete_tournament' />
+                <input type='hidden' name='case' value='delete_tournament' />
                 <?php 
                     if (tournament_isowner($tourney['tournament_id']))
                         echo '<a href="#" onClick="delTournament()">Delete Tournament</a>';
-                        //disp_tournament_button('Delete Tournament', 'delete_tournament');
                 ?>
             </form>
             <div class='header'></div>
