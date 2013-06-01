@@ -360,8 +360,12 @@ function disp_teams_list($mid) {
     //$teams = sql_select_all("SELECT * FROM tblTeam WHERE module_id = ? ORDER BY team_name ASC", array($mid));
     if ($teams) {
         echo "<div class='line'><div class='centerCtr'>";
-        foreach ($teams as $t)
-            echo "<div class='team'><div class='info'>{$t['team_name']}</div><div class='dark info'>{$t['team_text']}</div></div>";
+        foreach ($teams as $t) {
+            echo "<div class='team'><div class='info'>{$t['team_name']}</div>";
+            if ($t['team_text'])
+                echo "<div class='dark info'>{$t['team_text']}</div>";
+            echo "</div>";
+        }
         echo "</div></div>";
     }
 }
@@ -492,8 +496,7 @@ function disp_places($round) {
 
 function disp_standings_swiss($module, $standings) {
     // TODO IMMEDIATE: figure out how we're going to deal with partially completed rounds (split standings)
-    $standings = get_standings($rounds[count($rounds)-1], $all_breaks);
-    if (count($standings) == 0) { return; } // ay!  when does this happen?
+    // TODO: option to sort by record (buchholz tie-break) or by strength (iterative calc)
     array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
 
     // should we display number of draws?  Yes, if anyone has a draw.
