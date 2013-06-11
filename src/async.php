@@ -30,5 +30,5 @@
         $status = array( "errno" => $e->getCode(), "msg" => $e->getMessage());
         die(json_encode($status));
     }
-    echo json_encode($return_data);
+    echo json_encode($return_data, JSON_HEX_APOS);
 ?>

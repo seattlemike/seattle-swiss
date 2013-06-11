@@ -297,7 +297,8 @@ function disp_view_nav($module, $rounds, $view) {
             $views["standings"] = "Standings";
             break;
         case 2:
-            $views["bracket"] = "Brackets";
+            $views["wbracket"] = "Winners' Bracket";
+            $views["lbracket"] = "Losers' Bracket";
             $views["standings"] = "Standings";
             break;
     }
@@ -344,9 +345,22 @@ function disp_standings($module, $view=null) {
             }
             break;
         case "bracket":
-            //disp_sglelim($module, $rounds);
-            //disp_dblelim_wbracket($module, $rounds);
-            //disp_dblelim_lbracket($module, $rounds);
+            if ($module['module_mode'] == 0) {
+                echo "<div class='header'>Elimintaion Bracket</div>";
+                disp_sglelim($module, $rounds);
+            }
+            break;
+        case "wbracket":
+            if ($module['module_mode'] == 2) {
+                echo "<div class='header'>Winners' Bracket</div>";
+                disp_dblelim_wbracket($module, $rounds);
+            }
+            break;
+        case "lbracket":
+            if ($module['module_mode'] == 2) {
+                echo "<div class='header'>Losers' Bracket</div>";
+                disp_dblelim_lbracket($module, $rounds);
+            }
             break;
     }
 }
@@ -389,7 +403,7 @@ function disp_module_games($module, $rounds) {
             break;
         case 2:
             $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
-            $lbterms = array(5=> "Fifth Place Games", 3 => "Losers' Bracket Finals");
+            $lbterms = array(4 => "Fourth Place Games", 3 => "Losers' Bracket Finals");
             foreach(array_reverse($rounds, true) as $idx => $r) {
                 // split round up if both winners and losers
                 if (array_key_exists($idx-1, $rounds))
@@ -461,7 +475,7 @@ function disp_round_games($round) {
 function disp_game($game) {
     $status_class = array("game-scheduled", "game-finished", "game-inprogress");
     $teams = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game['game_id']), $db);
-    echo "<div class='game {$status_class[$game['status']]}' data-game='".json_encode($game)."' data-score='".json_encode($teams)."'>";
+    echo "<div class='game {$status_class[$game['status']]}' data-game='".json_encode($game, JSON_HEX_APOS)."' data-score='".json_encode($teams, JSON_HEX_APOS)."'>";
 
     if (count($teams) == 1)
         echo "{$teams[0]['team_name']} has a BYE";
@@ -532,13 +546,26 @@ function disp_standings_swiss($module, $standings) {
 
 function disp_standings_elim($module, $standings) {
     // split teams into wb / lb / done (ranked)
+    $cats = array(2 => "Winners Bracket", 1 => "Losers Bracket", 0 => "Finished");
+
 
     //$teams = array();
+    array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, 
+                    array_map(function($t) {return $t['name'];}, $standings), SORT_STRING,
+                    $standings);
+
     foreach ($standings as $t )
         $teams[$t['status']][] = $t;
     
-    foreach($teams as $status => $tlist) {
-        echo "$status: ".count($tlist)."<br>";
+    if (count($teams[1]) + count($teams[2]) == 1) {
+        // Tournament is over
+        echo "<div class='header'>Final Standings</div>";
+        echo "<div class='line'><div class='centerCtr'>";
+        foreach ($standings as $t)
+            echo "<div class='team'><span class='rank'>{$t['rank']}</span>{$t['name']}</div>";
+    } else {
+        // TODO: Elim Standings for GAME IN PROGRESS
+        //foreach ($cats 
     }
 
 }
@@ -723,15 +750,16 @@ function get_bracket($standings, $rounds) {
     $nrounds = intval(ceil(log(count($standings),2)));
     $bsize = pow(2, $nrounds);
 
-
     // build the display $bracket
     foreach ($rounds as $rnum) {
         $bracket[] = array();
         $psize = pow(2, count($bracket)-1);
         foreach ($standings as $t) {
+            // display hints added to $t:
+            //     top/bottom.  placeholder.  insertion.
             if ((! isset($prev)) || ($t['results'][$prev]['res'])) {
                 //if ($rnum > 3)
-                //    debug_alert("$rnum [$prev], {$t['name']} vs {$t['results'][$prev]['opp_name']}");
+                    debug_alert("$rnum [$prev], {$t['name']} vs {$t['results'][$prev]['opp_name']}");
                 $idx = $t['bracket_idx'];
                 $is_upper = ($idx % (2 * $psize)) - ($idx % $psize);
                 if ($is_upper) $offset = -1 * ($idx % $psize);
@@ -804,11 +832,34 @@ function disp_elim($bracket, $height, $rounds) {
 
     // print the table
     echo "<table class='elim standings'>\n";
-    echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*count($rounds)-2).">Results</th></tr>\n";
-    echo "<tr><th colspan='".(1 + 3 * count($rounds))."'> &nbsp;</th></tr>";
+    //echo "<tr><th>Team</th><th>Score</th><th colspan=".(3*count($rounds)-2).">Results</th></tr>\n";
+    //echo "<tr><th colspan='".(1 + 3 * count($rounds))."'> &nbsp;</th></tr>";
     foreach ($table as $rownum => $row) {
         echo "<tr>";
+        $pow = 1;
         foreach (range(0, count($rounds)-1) as $colnum) {
+            $pow *= 2;
+            if ($colnum > 0) { // connecting lines
+                if ($colnum == count($rounds)-1) {
+                    echo "<td class='spacer'></td>\n";
+                    echo "<td class='spacer'></td>\n";
+                } else {
+                    if (($rownum % $pow) == $pow/4)
+                        echo "<td class='spacer top-left'></td>\n";
+                    elseif (($rownum % $pow) == 3*$pow/4-1)
+                        echo "<td class='spacer bottom-left'></td>\n";
+                    elseif (($rownum % $pow) > $pow/4 && ($rownum % $pow) < 3*$pow/4-1)
+                        echo "<td class='spacer spacer-right'></td>";
+                    else
+                        echo "<td class='spacer'></td>";
+
+                    if (($rownum % $pow) == $pow/2-1)
+                        echo "<td class='spacer top-right'></td>";
+                    else
+                        echo "<td class='spacer'></td>";
+                }
+            }
+            //$top = (
             disp_team($row[$colnum], $colnum, $rounds[$colnum]);
         }
         echo "</tr>\n";
@@ -817,7 +868,6 @@ function disp_elim($bracket, $height, $rounds) {
 }
 
 function disp_team($team, $index, $rnum) {
-    if ($index > 0) echo "<td class='spacer'></td>\n";  // gap between columns
     if ($team) {
         // figure out color for table entry
         if     (isset($team['color']))   $color = $team['color'];
@@ -825,18 +875,19 @@ function disp_team($team, $index, $rnum) {
         else                             $color = get_td_color(0, $team['bracket_idx']);
 
         // team name/seed
-        echo "<td class='$color'>";
-        echo "<span class='tiny'>{$team['seed']}</span>";
-        echo "<span class='result' title=\"{$team['text']}\">{$team['name']}</span> </td>\n";
+        echo "<td class='standings-entry'>";
+        echo "<div class='$color standings-team'>";
+        //echo "<span class='tiny'>{$team['seed']}</span>";
+        echo "<span class='result' title=\"{$team['text']}\">{$team['name']}</span>\n";
 
         // display score
-        echo "<td class='numeric $color'>\n";
+        echo "<div class='score $color'>\n";
         if ($team['results'][$rnum] && ($team['results'][$rnum]['opp_id'] != -1))
             echo "<span class='score'>{$team['results'][$rnum]['score'][0]}</span>";
-        echo "</td>\n";
+        echo "</div></div></td>\n";
     }
     else
-        echo "<td colspan=2></td>";  // blank entry in table
+        echo "<td></td>";  // blank entry in table
 }
 
 //

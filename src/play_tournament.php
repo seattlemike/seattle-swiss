@@ -109,7 +109,7 @@
         ?>
         <div class='mainBox'>
             <div class='nav'><a id='next' class='button disabled'>Next Round</a></div>
-            <div id='games' module-data='<? echo json_encode($module) ?>'>
+            <div id='games' module-data='<? echo json_encode($module, JSON_HEX_APOS) ?>'>
             <? disp_module_games($module, $rounds) ?>
             </div>
         </div>

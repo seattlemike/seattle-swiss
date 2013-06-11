@@ -1,7 +1,13 @@
 *Readme* - major stuff
 
+#### June 2013
+  Fix Immediate:
+    Initial team seeds
+    Display of elim tournaments
+    Add-games for elim tournaments
+
 #### May 2013
-  Urgent:
+  Pending:
     finish moving to raise new Exception(msg) paradigm that I should've done ages ago
     #finish tournament->module->round->game hierarchy
     delete tournament should recurse properly over modules/moduleteams/games/etc 
