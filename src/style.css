@@ -102,10 +102,8 @@ hr { height: 1px; color: #aaf; border: none; }
 }
 
 /* Text Layout */
-.line { margin: 0.5em 0 0.5em 0; }
 p { margin: 1em 2em; }
 .item { margin: 1em; }
-.centerCtr { border-radius: 0.5em; overflow: hidden; display: inline-block; text-align: left;} /*put inside of div class='line' */
 
 
 /* Run Module */
@@ -161,6 +159,13 @@ p { margin: 1em 2em; }
     margin: 1em 0;
     padding: 0.5em;
 }
+.line { margin: 0.5em 0 0.5em 0; }
+.list-box {   /*center this inside of a .line */
+    border-radius: 0.5em; 
+    overflow: hidden; display: 
+    inline-block; 
+    text-align: left;
+} 
 
 /* tabulated display */
 .bracket {
@@ -182,27 +187,25 @@ td.numeric { min-width: 40px; }
     top: 0.3em;
 }
 
-.twocolor tr:nth-child(2n) { background: #ddd; }
+/*.twocolor tr:nth-child(2n) { background: #ddd; }
 .twocolor tr:nth-child(2n+1) { background: #aaa; }
 .twocolor td {
     min-width: 100px;
-}
+}*/
 
 /* Standings */
-
 .standings-entry {
 }
-
 .standings .score {
     position: absolute;
     text-align: right;
     right: 0.5em;
     top: 0.2em;
 }
-
 .standings { padding: 0; margin: 0; }
 .standings .spacer { min-width: 1em; }
 .standings-team { 
+    white-space: nowrap;
     position: relative;
     padding: 0.5em 3em 0.5em 1em; 
     height: 100%;
@@ -210,13 +213,13 @@ td.numeric { min-width: 40px; }
     margin: 0.1em;*/
     overflow: hidden;
 }
-.standings-team .top { 
-    margin-top: 0.1em;
+.standings-top { 
+    margin-top: 0.5em;
     border-top-left-radius: 0.5em;
     border-top-right-radius: 0.5em;
 }
-.standings-team .bottom { 
-    margin-bottom: 0.1em;
+.standings-bottom { 
+    margin-bottom: 0.5em;
     border-bottom-left-radius: 0.5em;
     border-bottom-right-radius: 0.5em;
 }
@@ -246,14 +249,30 @@ td.numeric { min-width: 40px; }
     border-bottom-left-radius: 0.5em; 
 }
 
-.standings .dark  { 
-    background: #658ab3; 
-}
-.standings .light { 
-    background: #b4cfed;
-}
+.standings .dark  { background: #658ab3; }
+.standings .light { background: #b4cfed; }
 .standings .blank { background: #fff; border-bottom: 1px solid black; height: 20px;}
 .elim .bold { background: #99f;}
+
+.list-box .entry {
+    position: relative;
+    overflow: hidden;
+    min-width: 15em;
+    /*background: #87a8cc;*/
+    background: #b4cfed;
+    /*padding-right: 4em;*/
+    margin: 1px 0;
+    padding-right: 1em;
+}
+.list-box .date {
+    display: inline-block;
+    padding: 0.5em 1em;
+    height: 100%;
+    min-width: 6em;
+    text-align: center;
+    margin-right: 1em;
+    background: #658ab3;
+}
 
 .team { 
     position: relative;

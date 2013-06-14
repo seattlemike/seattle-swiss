@@ -57,7 +57,7 @@
             disp_modules(get_tournament_modules($tid));
     }
     else {  // List of public tournaments
-        $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
+        $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 AND is_fixed = 1 ORDER BY tournament_date DESC", array());
 
         // don't display anything more than a week into the future
         foreach( $tlist as $k => $t ) {
@@ -70,7 +70,7 @@
         if (! isset($_GET['all'])) {
             echo "<div class='header'>Recent Tournaments</div>";
             disp_tournaments(array_slice($tlist,0,10));
-            echo "<div class='line'> <a class='button' href='all'>Older Tournaments</a> </div>";
+            //echo "<div class='line'> <a class='button' href='all'>Older Tournaments</a> </div>";
         } else {
             echo "<div class='header'>Public Tournaments</div>";
             disp_tournaments($tlist, 'view.php');

@@ -49,10 +49,11 @@
             <?php
             if (isset($_GET['super'])) {
                 require_privs(false);  // dies unless $_SESSION['admin_type']=='super'
+                // should super get un-fixed tournaments? -- "WHERE is_fixed=1" if no
                 $tlist = sql_select_all( "SELECT * FROM tblTournament ORDER BY tournament_date DESC", array() );
             }
             else
-                $tlist = get_my_tournaments($_SESSION['admin_id']);
+                $tlist = get_my_tournaments();
             disp_tournaments($tlist);
             ?>
         </div>

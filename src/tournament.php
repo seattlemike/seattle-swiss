@@ -58,7 +58,7 @@
                     echo "<div class='header warning'>Failed to remove admin</div>";
                 break;
             case 'import_teams': 
-                teams_import($_POST) || die("import failed"); 
+                //teams_import($_POST) || die("import failed"); 
                 break;
             case 'team_add': 
                 team_add($_POST);
@@ -79,7 +79,7 @@
 <div class="con">
     <div class="centerBox">
         <?  //disp_status($tourney) ?>
-        <div class="mainBox">
+        <div class="mainBox modules">
             <div class="header">Rounds</div>
             <?
                 $t_rounds = get_tournament_modules($tid);
@@ -137,27 +137,12 @@
             </form>
             <div class='header'></div>
         </div>
-        <div class="mainBox">
-            <div class="header">Import Teams</div>
-            <form name="import" method="post" action="">
-                Import top <input class='numeric' type='text' name='imp_num' />
-                teams from <select name='imp_tid'>
-                <?php
-                    $tournaments = get_my_tournaments($_SESSION['admin_id']);
-                    foreach ($tournaments as $t)
-                        if ($t['tournament_id'] != $tid)
-                            echo "<option value='{$t['tournament_id']}'>{$t['tournament_name']}</option>";
+                <?php // IMPORT TEAMS
+                    //$tournaments = get_my_tournaments($_SESSION['admin_id']);
+                    //foreach ($tournaments as $t)
+                    //    if ($t['tournament_id'] != $tid)
+                    //        echo "<option value='{$t['tournament_id']}'>{$t['tournament_name']}</option>";
                 ?>
-                </select>
-
-                <br>
-
-                Import teams from web URL <input type='text' name='imp_url' >
-
-                <input type='hidden' name='action' value='import_teams' />
-                <p><input class='button' type='submit' name='submit' value='Import' /></p>
-           </form>
-        </div>
         <div class="nav rHead">
             <form id="delForm" name='delete' method='post' action=''>
                 <input type='hidden' name='case' value='delete_tournament' />

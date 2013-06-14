@@ -113,7 +113,7 @@ function gamesList() {
         if (self.games.length == 0)
             nextBtn.innerHTML = "Start"
         else
-            nextBtn.innerHTML = "Next Button"
+            nextBtn.innerHTML = "Next Round"
 
         if (self.nextReady()) {
             nextBtn.className = "button"

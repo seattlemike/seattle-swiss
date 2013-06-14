@@ -398,11 +398,11 @@ function get_tournament($tid) {
     return sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = ?', array($tid));
 }
 
-function get_my_tournaments($aid) {
+function get_my_tournaments() {
     return sql_select_all("SELECT * FROM tblTournamentAdmins JOIN tblTournament USING (tournament_id)
-         WHERE tblTournamentAdmins.admin_id = :admin_id
+         WHERE tblTournamentAdmins.admin_id = ? AND is_fixed = 1
          ORDER BY tblTournament.tournament_date DESC",
-            array(':admin_id' => $aid));
+            array($_SESSION['admin_id']));
 }
 
 function get_tournament_admins($tid) {

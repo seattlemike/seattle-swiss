@@ -4,7 +4,10 @@
   Fix Immediate:
     Initial team seeds
     Display of elim tournaments
-    Add-games for elim tournaments
+        #display lines connecting games
+        display empty [winner of] [loser of] lines
+        display game numbers / identifier?
+    Auto add-games for elim tournaments
 
 #### May 2013
   Pending:
