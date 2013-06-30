@@ -301,16 +301,15 @@ function module_update_seeds($data) {
 }
 
 // ASSERT (mid is valid and admin_id can edit them)
-function module_update($data) {
-    $module = get_module($data['module_id']);
+function module_update($module, $data) {
     $bind_vars = array(':title' => htmlspecialchars($data['module_title']),
                        ':date' => date("Y-m-d", strtotime($data['module_date'])),
                        ':notes' => htmlspecialchars($data['module_notes']),
                        ':mode' => $module['module_mode'], // unchanged
-                       ':mid' => $data['module_id']);
+                       ':mid' => $module['module_id']);
 
     // only set 'module_mode' when no rounds have yet been scheduled/played
-    if (! is_array(sql_select_one("SELECT * from tblRound WHERE module_id = ?", array($mid))))
+    if (! is_array(sql_select_one("SELECT * from tblRound WHERE module_id = ?", array($module['module_id']))))
         $bind_vars[':mode'] = $data['module_mode'];
 
     $success = sql_try("UPDATE tblModule SET module_title = :title, module_date = :date, 

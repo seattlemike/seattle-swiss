@@ -47,7 +47,7 @@
                 header_redirect("/private/tournament/$tid/");
                 break;
             case 'update_module':
-                module_update($_POST);
+                module_update($module, $_POST);
                 header_redirect("/private/module/$mid/");
                 break;
             case 'update_seeds':

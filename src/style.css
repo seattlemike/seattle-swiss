@@ -172,12 +172,7 @@ p { margin: 1em 2em; }
     display: inline-block;
 }
 
-table {
-}
-
-td {
-    min-width: 100px;
-}
+td { min-width: 100px; }
 td.numeric { min-width: 40px; }
 .tiny{ 
     font-size: 0.9em;
@@ -202,7 +197,11 @@ td.numeric { min-width: 40px; }
     right: 0.5em;
     top: 0.2em;
 }
-.standings { padding: 0; margin: 0; }
+.standings { 
+    margin: 0;
+    padding: 0;
+    border-collapse: collapse;
+}
 .standings .spacer { min-width: 1em; }
 .standings-team { 
     white-space: nowrap;
@@ -213,13 +212,23 @@ td.numeric { min-width: 40px; }
     margin: 0.1em;*/
     overflow: hidden;
 }
+
+.game-number {
+    padding: 0 0.1em;
+    position: relative;
+    bottom: -1.25em;
+}
+.standings-solo { 
+    position: relative;
+    bottom: -1.25em;
+    border-radius: 0.5em;
+}
+
 .standings-top { 
-    margin-top: 0.5em;
     border-top-left-radius: 0.5em;
     border-top-right-radius: 0.5em;
 }
 .standings-bottom { 
-    margin-bottom: 0.5em;
     border-bottom-left-radius: 0.5em;
     border-bottom-right-radius: 0.5em;
 }
@@ -251,8 +260,10 @@ td.numeric { min-width: 40px; }
 
 .standings .dark  { background: #658ab3; }
 .standings .light { background: #b4cfed; }
+.standings .grey { background: #ddd; border: 1px solid #888; font-style: italic; min-height: 1.2em;}
 .standings .blank { background: #fff; border-bottom: 1px solid black; height: 20px;}
-.elim .bold { background: #99f;}
+/*c99, 99f*/
+.elim .bold { background: #c99;}
 
 .list-box .entry {
     position: relative;
@@ -314,14 +325,6 @@ td.numeric { min-width: 40px; }
     min-width: 4em;
     margin-left: 1em;
 }
-
-/*  TODO: get rid of these ASAP */
-table { border-collapse:collapse; }
-table.list { width: 100%; }
-th { text-align: center; padding: 0.2em; font-size: 1.2em; font-weight: normal;}
-/*td { padding: 0 5px 0 5px; }*/
-td.right { text-align: right; }
-td.center, td.numeric { text-align: center; }
 
 /* Run Tournament */
     .losers, .rematch { background: #9af; }

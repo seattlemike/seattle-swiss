@@ -199,7 +199,7 @@ function GameDialog(game) {
     this.dialog.insert(line);
     for(var i=0; i<game.scores.length; i++) {
         var team = buildNode("div", "team")
-        team.appendChild(buildNode("span", ""))
+        team.appendChild(buildNode("span", "rank"))
         inputs[i] = buildNode("input", "dialog-score")
         inputs[i].value = game.scores[i]['score']
         team.firstChild.appendChild(inputs[i])

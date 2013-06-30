@@ -101,7 +101,7 @@
         </div>
 
         <div class="mainBox">
-            <div class="header">Admins</div>
+            <div class="header">Tournament Admins</div>
                 <form name='admin' method='post' action=''>
                     <input type='hidden' name='case' value='add_admin' />
                     <?php disp_admins($tourney, $_SESSION['admin_id']); ?>
