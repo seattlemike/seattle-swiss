@@ -58,7 +58,7 @@
                 disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
             } else {
                 echo "<div class='header'>Not yet started</div>";
-                disp_teams_list($mid);
+                disp_teams_list(get_module_teams($mid));
             }
         } elseif ($tourney) {
             if ($tourney['tournament_privacy'] > 0)

@@ -157,10 +157,8 @@ function disp_tournament_details($tourney = null) {
     }
 }
 
-function disp_modules($modules) {
-    if ((! $modules) || (count($modules) == 0))
-        echo "<div class='header'>No Brackets Scheduled Yet</div>";
-    else {
+function disp_modules_list($modules) {
+    if ($modules && count($modules)) {
         echo "<div class='line'><div class='list-box'>";
         foreach ($modules as $m) {
             echo "<div class='item'>";
@@ -206,6 +204,12 @@ function disp_tournaments($tlist) {
         }
         echo "</div></div>";
     }
+}
+
+function disp_admins_list($t) {
+    $admins = get_tournament_admins($t['tournament_id']);
+    foreach ($admins as $a)
+        echo "<p>{$a['admin_name']} ({$a['admin_email']})</p>\n";
 }
 
 function disp_admins($t, $aid) {
@@ -333,7 +337,7 @@ function disp_standings($module, $view=null) {
         case "teams":
             if (! $rounds)
                 echo "<div class='header'>Not yet started</div>";
-            disp_teams_list($module['module_id']);
+            disp_teams_list(get_module_teams($module['module_id']));
             break;
         case "games":
             disp_module_games($module, $rounds);
@@ -381,11 +385,9 @@ function disp_standings($module, $view=null) {
 //
 // Display Teams
 //
-function disp_teams_list($mid) {
+function disp_teams_list($teams) {
     // TODO: starting seed?  sort alphabetically?
-    $teams = get_module_teams($mid);
-    //$teams = sql_select_all("SELECT * FROM tblTeam WHERE module_id = ? ORDER BY team_name ASC", array($mid));
-    if ($teams) {
+    if ($teams && count($teams)) {
         echo "<div class='line'><div class='list-box'>";
         foreach ($teams as $t) {
             echo "<div class='team'><div class='info'>{$t['team_name']}</div>";

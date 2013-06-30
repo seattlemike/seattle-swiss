@@ -82,11 +82,3 @@ function Dialog( titleText="", okfn = function() {} ) {
     this.display = function(css) { self.dialog.style.position = css }
     this.setTitle = function(text) { self.titleBox.innerHTML=text }
 }
-
-// Tournament
-
-function delTournament() {
-    d = new Dialog("Delete this tournament?",
-                    function () { var form = document.getElementById("delForm"); if (form) form.submit() })
-    d.show()
-}

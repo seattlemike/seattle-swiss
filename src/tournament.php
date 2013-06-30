@@ -29,7 +29,7 @@
     require_privs( tournament_isadmin($tid) );
     $tourney = get_tournament($tid);
 
-    $js_extra = array("/ui.js");
+    $js_extra = array("/ui.js", "/tournament_ui.js");
     disp_header($tourney['tournament_name'], $js_extra);
     disp_topbar($tourney, null, 0);
     disp_titlebar($tourney['tournament_name']);
@@ -57,21 +57,6 @@
                 if (! tournament_remove_admin($_POST, $_SESSION['admin_id']))
                     echo "<div class='header warning'>Failed to remove admin</div>";
                 break;
-            case 'import_teams': 
-                //teams_import($_POST) || die("import failed"); 
-                break;
-            case 'team_add': 
-                team_add($_POST);
-                break;
-            case 'disable_team':
-                team_disable($_POST);
-                break;
-            case 'delete_team':  
-                team_delete($_POST);
-                break;
-            case 'update_team':
-                team_update($_POST);
-                break;
         }
         if ($redir) header("location:/private/");
     }
@@ -82,60 +67,47 @@
         <div class="mainBox modules">
             <div class="header">Rounds</div>
             <?
-                $t_rounds = get_tournament_modules($tid);
-                disp_modules($t_rounds);
+                $t_modules = get_tournament_modules($tid);
+                if (! $t_modules)
+                    echo "<p>No rounds scheduled yet</p>";
+                disp_modules_list($t_modules);
             ?>
             <form name="modules" method="post" action="">
                 <input type='hidden' name='case' value='new_module' />
-                <div class='line'><input class='button' type='submit' name='add_round' value="Add Round"></div>
+                <input class='button' type='submit' name='add_round' value="Add Round">
             </form>
         </div>
 
         <div class="mainBox">
             <div class="header">Details</div>
-            <form name="details" method="post" action="">
-                <input type='hidden' name='case' value='update_tournament' />
-                <?php disp_tournament_details($tourney); ?>
-                <div class='line'><input class='button' type='submit' name='save' value="Save Details"></div>
-            </form>
+            <?php
+            echo "<p>".date("M d, Y", strtotime($tourney['tournament_date']))."</p>";
+            echo "<p>{$tourney['tournament_name']}</p>";
+            echo "<p>{$tourney['tournament_notes']}</p>";
+            $privacy = array("Private", "Link-only", "Public");
+            echo "<p>Display: {$privacy[$tourney['tournament_privacy']]}</p>"; 
+            ?>
+            <a class='button'>Edit</a>
         </div>
 
         <div class="mainBox">
             <div class="header">Tournament Admins</div>
-                <form name='admin' method='post' action=''>
-                    <input type='hidden' name='case' value='add_admin' />
-                    <?php disp_admins($tourney, $_SESSION['admin_id']); ?>
-                    <?php
-                    if ($tourney['tournament_owner'] == $_SESSION['admin_id']) {
-                        echo "<div class='line'><input class='button' type='submit' name='add_admin' value='Add'>";
-                        echo "<input type='text' name='admin_email' value='admin email'/> </div>\n";
-                    }
-                    ?>
-                </form>
-            <div class='header'></div>
+            <? 
+                disp_admins_list($tourney);
+                if ($tourney['tournament_owner'] == $_SESSION['admin_id'])
+                    echo "<a class='button'>Edit</a>";
+            ?>
         </div>
-
         <div class="mainBox">
             <div id='teams' class="header">Teams</div>
-            <form name='admin' method='post' action='#teams'>
-                <input type='hidden' name='team_id' value=''>
-                <input type='hidden' name='case' value='team_add' />
-                <table>
-                    <tr><th></th><th>Name</th><th>Note</th>
-                        <th title="<? echo "Unique ID for external stat-keeping.\nIf unsure, leave blank";?>"><i>UID</i></th></tr>
-                    <tr><td><input class='button' type='submit' name='team_add' value="Add"></td>
-                        <td><input type='text' name='name_add'></td>
-                        <td><input type='text' name='text_add'></td>
-                        <td><input class='numeric' type='text' name='uid_add'></td>
-                    </tr>
-                    <tr style='height:20px;'><th colspan=7>&nbsp;</th></tr>
-                    <?php
-                    foreach (get_tournament_teams($tid, "team_id") as $team)
-                        disp_team_edit($team);
-                    ?>
-                </table>
-            </form>
-            <div class='header'></div>
+            <?  
+                $teams = get_tournament_teams($tid);
+                if (count($teams))
+                    disp_teams_list($teams);
+                else
+                    echo "<p>No Teams Yet</p>";
+            ?>
+            <a class='button' id='edit-teams'>Edit</a>
         </div>
                 <?php // IMPORT TEAMS
                     //$tournaments = get_my_tournaments($_SESSION['admin_id']);
