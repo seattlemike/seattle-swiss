@@ -159,14 +159,12 @@ function disp_tournament_details($tourney = null) {
 
 function disp_modules_list($modules) {
     if ($modules && count($modules)) {
-        echo "<div class='line'><div class='list-box'>";
         foreach ($modules as $m) {
             echo "<div class='item'>";
             echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
             echo "<a href='../../module/{$m['module_id']}/'>{$m['module_title']}</a>";
             echo "</div>";
         }
-        echo "</div></div>";
     }
 }
 
@@ -197,10 +195,10 @@ function disp_tournaments($tlist) {
         echo "<div class='line'><div class='list-box'>";
         foreach ($tlist as $tourney) {
             $date = date("M d, Y", strtotime($tourney['tournament_date']));
-            echo "<div class='entry'><span class='date'>$date</span>";
+            echo "<div class='tournament-entry'><span class='date'>$date</span>";
             // if ($tourney['tournamnent_owner'] == $aid) { $class = 'owner'; }
             // else                                       { $class = ''; }
-            echo "<span><a href='tournament/{$tourney['tournament_id']}/'>{$tourney['tournament_name']}</a></span></div>";
+            echo "<a href='tournament/{$tourney['tournament_id']}/'>{$tourney['tournament_name']}</a></div>";
         }
         echo "</div></div>";
     }
@@ -209,7 +207,7 @@ function disp_tournaments($tlist) {
 function disp_admins_list($t) {
     $admins = get_tournament_admins($t['tournament_id']);
     foreach ($admins as $a)
-        echo "<p>{$a['admin_name']} ({$a['admin_email']})</p>\n";
+        echo "<div class='item'>{$a['admin_name']} ({$a['admin_email']})</div>\n";
 }
 
 function disp_admins($t, $aid) {
@@ -387,16 +385,16 @@ function disp_standings($module, $view=null) {
 //
 function disp_teams_list($teams) {
     // TODO: starting seed?  sort alphabetically?
+    echo "<div class='line'><div class='list-box' id='teams-list'>";
     if ($teams && count($teams)) {
-        echo "<div class='line'><div class='list-box'>";
         foreach ($teams as $t) {
-            echo "<div class='team'><div class='info'>{$t['team_name']}</div>";
-            if ($t['team_text'])
-                echo "<div class='dark info'>{$t['team_text']}</div>";
+            echo "<div class='team' data-name='{$t['team_name']}' data-text='{$t['team_text']}' data-uid='${t['team_uid']}' data-teamid='${t['team_id']}'>";
+            echo "<div class='info team-name'>{$t['team_name']}</div>";
+            echo "<div class='dark info'>{$t['team_text']}</div>";
             echo "</div>";
         }
-        echo "</div></div>";
     }
+    echo "</div></div>";
 }
 
 //
@@ -406,20 +404,25 @@ function disp_module_games($module, $rounds) {
     switch ($module['module_mode']) {
         case 0:
             foreach (array_reverse($rounds) as $r) {
+                echo "<div class='round' data-rid='{$r['round_id']}'>";
                 echo "<div class='header'>Round {$r['round_number']}</div>";
                 disp_games(get_round_games($r['round_id'])); // get rid of byes?
+                echo "</div>";
             }
             break;
         case 1:
             $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
             foreach(array_reverse($rounds) as $r) {
+                echo "<div class='round'>";
                 disp_round_games($r);
+                echo "</div>";
             }
             break;
         case 2:
             $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
             $lbterms = array(4 => "Fourth Place Games", 3 => "Losers' Bracket Finals");
             foreach(array_reverse($rounds, true) as $idx => $r) {
+                echo "<div class='round'>";
                 // split round up if both winners and losers
                 if (array_key_exists($idx-1, $rounds))
                     $teams = get_standings($rounds[$idx-1]);
@@ -456,12 +459,14 @@ function disp_module_games($module, $rounds) {
                         disp_games($games);
                     }
                 }
+                echo "</div>";
             }
             break;
     }
 }
 
 function disp_games($games, $filter = null) {
+    echo "<div class='games-list'>\n";
     if ($filter) {
         foreach($filter as $idx => $t) {
             echo "<br>Team: $idx<br>";
@@ -475,12 +480,10 @@ function disp_games($games, $filter = null) {
 
        //$games = array_filter($games, function ($t) use ($filter) { return 
     }
-    if ($games) {
-        echo "<div class='games'>\n";
+    if ($games)
         foreach ($games as $g)
             disp_game($g);
-        echo "</div>";
-    }
+    echo "</div>";
 }
 
 function disp_round_games($round) {

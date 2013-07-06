@@ -19,6 +19,13 @@
 
 // Common UI
 
+function buildInput(elName, elValue) {
+    var el = document.createElement("input")
+    el.name = elName
+    el.value = elValue
+    return el
+}
+
 function buildNode(elType, elClass, elText) {
     var el = document.createElement(elType)
     el.className = elClass
@@ -27,14 +34,14 @@ function buildNode(elType, elClass, elText) {
     return el
 }
 
-function makeTop(el) {
-    var elements = document.getElementsByTagName("*")
-    var idx = 0;
-    for(var i=0; i<elements.length; i++)
-        if (parseInt(elements[i].style.zIndex) > idx)
-            idx=parseInt(elements[i].style.zIndex)
+function removeChildren(node) {
+    while (node.hasChildNodes())
+        node.removeChild(node.firstChild);
+}
 
-    el.style.zIndex = idx;
+function newNodeText(node, text) {
+    removeChildren(node)
+    node.appendChild(document.createTextNode(text))
 }
 
 function toggleHide(id) {
@@ -45,6 +52,16 @@ function toggleHide(id) {
 }
 
 // Modal Dialog
+
+function makeTop(el) {
+    var elements = document.getElementsByTagName("*")
+    var idx = 0;
+    for(var i=0; i<elements.length; i++)
+        if (parseInt(elements[i].style.zIndex) > idx)
+            idx=parseInt(elements[i].style.zIndex)
+
+    el.style.zIndex = idx;
+}
 
 function Dialog( titleText="", okfn = function() {} ) {
     var self = this
@@ -75,6 +92,7 @@ function Dialog( titleText="", okfn = function() {} ) {
         makeTop(self.dialog)
         if (self.dialog.offsetWidth-34 < self.minWidth)  
             self.setWidth(self.minWidth)
+        self.dialog.scrollIntoView()
     }
     this.hide = function() { document.body.removeChild(self.dialog);  document.body.removeChild(self.overlay) }
     this.insert = function(node) { self.dialog.insertBefore(node, self.buttonBox); return node }

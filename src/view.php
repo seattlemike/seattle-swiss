@@ -62,7 +62,7 @@
             }
         } elseif ($tourney) {
             if ($tourney['tournament_privacy'] > 0)
-                disp_modules(get_tournament_modules($tid), "view.php");
+                disp_modules_list(get_tournament_modules($tid), "view.php");
         }
         else {  // List of public tournaments
             $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());

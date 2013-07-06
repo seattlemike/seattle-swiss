@@ -54,8 +54,9 @@ function sql_try( $query, $values, $db=null) {
 // insert a record into the db
 function sql_insert( $query, $values, $db=null) {
     list($success, , $lastid) = db_execute($query, $values, $db);
-    if ($success) return $lastid;
-    else          return false;
+    if (! $success)
+        throw new Exception("Database insert attempt failed: $query");
+    return $lastid;
 }
 
 // returns only the top result from a query

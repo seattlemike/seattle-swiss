@@ -168,10 +168,17 @@ function is_poweruser() {
 // Game Functions
 //
 
-function get_game($game_id) {  // fail quietly when no $game_id
-    if (! $game_id)
-        return false;
-    $game = sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
+function get_game_scores($game_id) {
+    if ($game_id)
+        $scores = sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($game_id));
+    if (!$scores)
+        throw new Exception("Unable to find scores for game [$game_id]");
+    return $scores;
+}
+
+function get_game($game_id) {
+    if ($game_id)
+        $game = sql_select_one('SELECT * FROM tblGame WHERE game_id = ?', array($game_id));
     if (!$game)
         throw new Exception("Unable to find game [$game_id]"); // fail noisily if $game_id not in database
     return $game;
@@ -371,11 +378,11 @@ function round_add_game($rid, $teams, $db=null) {
         foreach ($teams as $team)
             if (! sql_insert("INSERT INTO tblGameTeams (game_id, team_id, score) VALUES (?, ?, 0)", 
                     array($game_id, $team['id']), $db)) 
-                return false;
+                throw new Exception("Failed to build score for game");
+        return $game_id;
     } else {
-        return false;
+        throw new Exception("Failed to build game");
     }
-    return true;
 }
 
 //

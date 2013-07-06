@@ -95,58 +95,33 @@
         }
     }
 
+// Display message about no-teams-yet with relocate to appropriate place to add?
+//      if (count(get_tournament_teams($tid)) && count(get_module_teams($mid))) {
 ?>
 <div class="con">
     <div class="centerBox"> 
-        <?php
-        if (! count(get_tournament_teams($tid))) {
-            echo "<div class='mainBox'><div class='header'>Tournament has no teams yet</div>";
-            echo "<a class='button' href='../../../tournament/$tid/'>Back</a></div>\n";
-        } elseif (! count(get_module_teams($mid))) {
-            echo "<div class='mainBox'><div class='header'>Round has no active teams yet</div>";
-            echo "<a class='button' href='../'>Back</a></div>\n";
-        } else {
-        ?>
         <div class='mainBox'>
-            <div class='nav'><a id='next' class='button disabled'>Next Round</a></div>
-            <div id='games' module-data='<? echo json_encode($module, JSON_HEX_APOS) ?>'>
-            <? disp_module_games($module, $rounds) ?>
-            </div>
-        </div>
-            
-            <? if ($round) { ?>
-            <div class="mainBox">
-                <div class="header toggle" id="edit_round" onclick="toggleHide('edit-round-controls')">Edit Round</div> 
-                    <div id="edit-round-controls" style="display: none;">
-                        <form name='populate_tournament' action='' method='post'>
-                            <input type='hidden' name='case' value='edit_round' />
-                            <input type='hidden' name='round_id' value='<? echo $rid ?>' />
-                            <div class="line">
-                                <?php
-                            //    <a id="fill-btn" class="button">Fill Round</a>
-                            //    <a id="empty-btn" class="button">Empty Round</a>
-                            //    <a id="delete-btn" class="button">Delete Round</a>
-                                disp_tournament_button('Fill Round', 'populate_round');
-                                disp_tournament_button('Empty Round', 'empty_round');
-                                disp_tournament_button('Delete Latest Round', 'delete_round');
-                                ?>
-                            </div>
-                            <div class="line">
-                                <?
-                                disp_tournament_button('Add Game', 'add_game');
-                                disp_team_select($mid, 'team_a');
-                                disp_team_select($mid, 'team_b');
-                                ?>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-<?php
+            <?
+            if (count($rounds)) {
+                $data_module = json_encode($module, JSON_HEX_APOS);
+                $data_mteams = json_encode(get_module_teams($module['module_id']), JSON_HEX_APOS);
+                echo "<div class='nav'><a id='next' class='button disabled'>Next Round</a></div>";
+                echo "<div id='module' data-module='$data_module' data-teams='$data_mteams'>";
+                disp_module_games($module, $rounds);
+                echo "</div>";
             }
-        }
-?>
-
+            ?>
+        </div>
     </div>
 </div>
+<div class='light-box' id='edit-games'>
+    <div class='header' id='edit-header'>Edit Games</div> 
+        <div class='line' id="edit-controls">
+            <a class='button' id='game-add'>Add Game</a>
+            <a class='button' id='game-del'>Delete Game</a>
+            <a class='button' id='game-move'>Move Game</a>
+        </div>
+    </div>
+</div>
+
 <?php include("footer.php"); ?>

@@ -29,8 +29,9 @@
     require_privs( tournament_isadmin($tid) );
     $tourney = get_tournament($tid);
 
-    $js_extra = array("/ui.js", "/tournament_ui.js");
-    disp_header($tourney['tournament_name'], $js_extra);
+    $js_extra = array("/ui.js", "/tournament_ui.js", "/async.js");
+    $header_extra = array( '<script type="text/javascript">window.onload = tournamentOnLoad</script>' );
+    disp_header($tourney['tournament_name'], $js_extra, $header_extra);
     disp_topbar($tourney, null, 0);
     disp_titlebar($tourney['tournament_name']);
 
@@ -72,22 +73,25 @@
                     echo "<p>No rounds scheduled yet</p>";
                 disp_modules_list($t_modules);
             ?>
+            <a class='button' id='add-round'>Add Round</a>
+            <? /*
             <form name="modules" method="post" action="">
                 <input type='hidden' name='case' value='new_module' />
                 <input class='button' type='submit' name='add_round' value="Add Round">
             </form>
+            */ ?>
         </div>
 
-        <div class="mainBox">
+        <div class="mainBox" id="details" data-tid="<? echo $tid ?>">
             <div class="header">Details</div>
             <?php
-            echo "<p>".date("M d, Y", strtotime($tourney['tournament_date']))."</p>";
-            echo "<p>{$tourney['tournament_name']}</p>";
-            echo "<p>{$tourney['tournament_notes']}</p>";
+            echo "<div class='item'>".date("M d, Y", strtotime($tourney['tournament_date']))."</div>";
+            echo "<div class='item'>{$tourney['tournament_name']}</div>";
+            echo "<div class='item'>{$tourney['tournament_notes']}</div>";
             $privacy = array("Private", "Link-only", "Public");
-            echo "<p>Display: {$privacy[$tourney['tournament_privacy']]}</p>"; 
+            echo "<div class='item'>Display: <i>{$privacy[$tourney['tournament_privacy']]}</i></div>";
             ?>
-            <a class='button'>Edit</a>
+            <a class='button' id='edit-details'>Edit</a>
         </div>
 
         <div class="mainBox">
@@ -95,26 +99,19 @@
             <? 
                 disp_admins_list($tourney);
                 if ($tourney['tournament_owner'] == $_SESSION['admin_id'])
-                    echo "<a class='button'>Edit</a>";
+                    echo "<a class='button' id='edit-admins'>Edit</a>";
             ?>
         </div>
-        <div class="mainBox">
-            <div id='teams' class="header">Teams</div>
+        <div class="mainBox" id="teams">
+            <div class="header">Teams</div>
             <?  
                 $teams = get_tournament_teams($tid);
-                if (count($teams))
-                    disp_teams_list($teams);
-                else
-                    echo "<p>No Teams Yet</p>";
+                disp_teams_list($teams);
             ?>
-            <a class='button' id='edit-teams'>Edit</a>
+            <a class='button' id='add-teams'>Add Teams</a>
+            <a class='button' id='add-team'>+1</a>
         </div>
-                <?php // IMPORT TEAMS
-                    //$tournaments = get_my_tournaments($_SESSION['admin_id']);
-                    //foreach ($tournaments as $t)
-                    //    if ($t['tournament_id'] != $tid)
-                    //        echo "<option value='{$t['tournament_id']}'>{$t['tournament_name']}</option>";
-                ?>
+        <? /*
         <div class="nav rHead">
             <form id="delForm" name='delete' method='post' action=''>
                 <input type='hidden' name='case' value='delete_tournament' />
@@ -125,6 +122,7 @@
             </form>
             <div class='header'></div>
         </div>
+        */ ?>
     </div>
 </div>
 <?php include("footer.php"); ?>
