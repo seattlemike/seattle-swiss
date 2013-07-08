@@ -38,7 +38,9 @@
     else
         $title = $tourney['tournament_name'];
 
-    disp_header($title);
+    $js_extra = array("/ui.js", "/view_ui.js");
+    $header_extra = array( '<script type="text/javascript">window.onload = viewOnLoad</script>' );
+    disp_header($title, $js_extra, $header_extra);
     disp_topbar();
     disp_titlebar($title);
 

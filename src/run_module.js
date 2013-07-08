@@ -259,13 +259,13 @@ function GameDialog(game) {
     line.appendChild(box);
     this.dialog.insert(line);
     for(var i=0; i<game.scores.length; i++) {
-        var team = buildNode("div", "team")
-        team.appendChild(buildNode("span", "rank"))
+        var team = buildNode("div", "rank-team")
+        team.appendChild(buildNode("div", "rank"))
         inputs[i] = buildNode("input", "dialog-score")
         inputs[i].value = game.scores[i]['score']
         inputs[i].onclick = function () { this.select() }
         team.firstChild.appendChild(inputs[i])
-        team.appendChild(buildNode("span", "dialog-team", game.scores[i]['team_name']))
+        team.appendChild(buildNode("div", "dialog-team", game.scores[i]['team_name']))
         box.appendChild(team)
     }
     this.statusNode = buildNode("div", "dialog-status")

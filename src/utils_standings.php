@@ -446,11 +446,14 @@ class stats {
         // Initialize teams
         foreach($this->teams as $id => $team) {
             $this->teams[$id]['maxprob'] = 1;  // initialize maxprob
+            $spread = array(0.01, 0.03, 0.06, 0.12, 0.25, 0.5, 0.75, 0.88, 0.94, 0.97, 0.99);
             foreach ($team['results'] as $r) {
                 $this->teams[$id]['faced'][$r['opp_id']]++;
-                $this->teams[$id]['performed'][$r['opp_id']] += ($r['res'] - 0.5) * 0.95 + 0.5;
+                //$this->teams[$id]['performed'][$r['opp_id']] += ($r['res'] - 0.5) * 0.95 + 0.5;
                 // Win is 2/3, Loss is 1/3, Draw is 1/2; goal diff contributes the remaining third
-                $this->teams[$id]['adjscore'] += 1/3 + $r['res'] * 1/6 + ($r['score'][0]-$r['score'][1])/15;
+
+                //$this->teams[$id]['adjscore'] += 1/3 + $r['res'] * 1/6 + ($r['score'][0]-$r['score'][1])/15;
+                $this->teams[$id]['adjscore'] += $spread[$r['score'][0]-$r['score'][1]+5];
                 //$this->teams[$id]['adjscore'] += ($r['res'] - 0.5) * 0.95 + 0.5;
             }
         }

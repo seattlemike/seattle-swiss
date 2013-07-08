@@ -38,7 +38,7 @@ body {
 .light-box, .dialog, .topHeader, .mainBox { background: #e6ecf8; }
 
 /* Fonts */
-.dialog-text, .nav, .button, .footer { font-family: 'Rosario', sans-serif; }
+.nav, .button, .footer { font-family: 'Rosario', sans-serif; }
 h1, .nav { text-align: center; }
 
 
@@ -294,30 +294,83 @@ td.numeric { min-width: 40px; }
     background: #658ab3;
 }
 
+.viable {
+    cursor: pointer;
+}
 .viable:hover {
-    background: #a4bfcd;
+    /*background: #a4bfcd;*/
+    background: #cde;
+}
+.viable:hover .rank, .viable:hover .dark {
+    background: #fff;
+}
+
+
+.result { padding: 1em; }
+.result, .rank-team {
+    position: relative;
+    background: #b4cfed;
+    margin: 1px 0;
+    overflow: hidden;
+}
+.rank-team .team-name {
+    margin: 0 8em 0 6em;
+    padding: 0.5em 0;
+}
+.rank-team .record {
+    position: absolute;
+    right: 1em;
+    bottom: 1em;
+    font-size: 0.7em;
+}
+.rank-team .strength {
+    position: absolute;
+    font-size: 0.7em;
+    right: 5em;
+    bottom: 1em;
+    text-align: right;
+}
+.rank-team .rank {
+    position: absolute;
+    left: 0;
+    text-align: center;
+    width: 4em;
+    padding: 0.5em 0;
+    overflow: hidden;
+}
+.num-details {
+    display: inline-block;
+    vertical-align: top;
+    left: 0;
+}
+.clear {
+    clear: both;
 }
 
 .team { 
     position: relative;
     overflow: hidden;
-    min-width: 15em;
     /*background: #87a8cc;*/
     background: #b4cfed;
-    /*padding-right: 4em;*/
     margin: 1px 0;
 }
+.team-text {
+    background: #658ab3;
+}
+
 .team-name {
     white-space: nowrap;
 }
+
 .info {
     display: inline-block;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     padding: 0.5em 1em;
-    vertical-align: middle;
     width: 50%;
+    vertical-align: middle;
+    min-height: 2.5em;
     /*margin-right: 1em;*/
 }
 .dark-ctr {
@@ -328,22 +381,15 @@ td.numeric { min-width: 40px; }
     min-height: 2.5em;
 }
 
-.strength, .rank {
+.rank {
     display: inline-block;
     padding: 0.5em 1em;
     height: 100%;
     min-width: 2em;
-}
-.rank {
+
     text-align: center;
     margin-right: 1em;
     background: #658ab3;
-}
-.strength{
-    float: right;
-    text-align: right;
-    min-width: 4em;
-    margin-left: 1em;
 }
 
 /* Run Tournament */
@@ -491,7 +537,7 @@ td.numeric { min-width: 40px; }
 
     .dialog-text { 
         margin: 1em 0; 
-        font-size: 1.2em; 
+        font-size: 1.5em; 
         font-style: italic;
         text-align: center; 
     }
@@ -504,21 +550,28 @@ td.numeric { min-width: 40px; }
     .dialog-line {
         text-align: left;
     }
+    .dialog .dark-head {
+        background: #658ab3;
+        margin: 1em -1em;
+        padding: 1em 0;
+    }
+
     .dialog-team {
+        white-space: nowrap;
         text-align: right;
-        display: inline-block;
         min-width: 5em;
-        margin: 0 1em;
+        padding: 1em;
+        margin-left: 10em;
     }
     input.dialog-score {
-        display: inline-block;
-        padding: 0.5em 1em;
+        margin-top: -0.75em;
+        padding: 1em 0;
         text-align: center;
-        margin: 0 1em 0 0;
         background: #658ab3;
         border: none;
         border-radius: 0;
-        width: 2em;
+        width: 2.5em;
+        font-size: 1.5em;
     }
     .dialog-buttons { margin-top: 1em; text-align: left; }
     .rt-button { float: right; }

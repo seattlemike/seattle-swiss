@@ -326,9 +326,6 @@ function disp_view_nav($module, $rounds, $view) {
 
 // ASSERT: check is_public/has_privs has already happened
 function disp_standings($module, $view=null) {
-    // TODO URGENT: grey out lbracket when nrounds==1
-    //        pass nrounds to disp_view_nav to do this
-    
     $rounds = get_module_rounds($module['module_id']);
     disp_view_nav($module, $rounds, $view);
     switch ($view) {
@@ -338,7 +335,9 @@ function disp_standings($module, $view=null) {
             disp_teams_list(get_module_teams($module['module_id']));
             break;
         case "games":
+            echo "<div id='module'>";
             disp_module_games($module, $rounds);
+            echo "</div>";
             break;
         case "debug":
             //disp_swiss($module['module_id'], count($rounds), true);
@@ -347,7 +346,6 @@ function disp_standings($module, $view=null) {
             if (count($rounds > 0)) {
                 $standings = get_standings($rounds[count($rounds)-1]);
                 if (count($standings) == 0) { throw new Exception("Problem: attempted to view empty standings"); }
-
                 switch($module['module_mode']) {
                     case 0: // Swiss
                         disp_standings_swiss($module, $standings);
@@ -390,8 +388,7 @@ function disp_teams_list($teams) {
         foreach ($teams as $t) {
             echo "<div class='team' data-name='{$t['team_name']}' data-text='{$t['team_text']}' data-uid='${t['team_uid']}' data-teamid='${t['team_id']}'>";
             echo "<div class='info team-name'>{$t['team_name']}</div>";
-            echo "<div class='dark info'>{$t['team_text']}</div>";
-            echo "</div>";
+            echo "<div class='info team-text'>{$t['team_text']}</div></div>";
         }
     }
     echo "</div></div>";
@@ -529,7 +526,7 @@ function disp_places($round) {
 function disp_standings_swiss($module, $standings) {
     // TODO IMMEDIATE: figure out how we're going to deal with partially completed rounds (split standings)
     // TODO: option to sort by record (buchholz tie-break) or by strength (iterative calc)
-    array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, $standings);
+    array_multisort(array_map(function($t) {return $t['maxprob'];}, $standings), SORT_NUMERIC, SORT_DESC, $standings);
 
     // should we display number of draws?  Yes, if anyone has a draw.
     foreach ($standings as $t)
@@ -540,18 +537,22 @@ function disp_standings_swiss($module, $standings) {
     echo "<div class='header'>Standings</div>\n";
     echo "<div class='line'><div class='list-box'>";
     foreach ($standings as $seed => $team) {
-        echo "<div class='team'>";
-        echo "<span class='rank'>".($seed+1)."</span>";
-        echo "<span class='' title=\"{$team['text']}\">{$team['name']}\n";
-        $result = array('losses', 'draws', 'wins');
+        $result = array("losses", "draws", "wins");
         $team['wins'] = $team['losses'] = $team['draws'] = 0;
         foreach ($team['results'] as $r) { // increment appropriate w/l/d column
             $team[$result[$r['res']*2]] += 1;
         }
-        echo "<span class='strength'>{$team['wins']}-{$team['losses']}";
-        if ($draws)
-            echo "-{$team['draws']}";
-        echo "</span></span></div>";
+        $record = $draws ? "{$team['wins']}-{$team['losses']}-{$team['draws']}" : "{$team['wins']}-{$team['losses']}";
+
+        echo "<div class='rank-team viable' data-team='".json_encode($team, JSON_HEX_APOS)."'>";
+        echo "<div class='rank'>".($seed+1)."</div>";
+        echo "<div class='team-name'>{$team['name']}</div>";
+        echo "<div class='strength'>".sprintf("%.3f",$team['maxprob'])."</div>";
+        echo "<div class='record'>$record</div>";
+        //if ($draws)
+        //    echo "-{$team['draws']}";
+        //echo "</div>";
+        echo "</div>\n";
         //echo "<span class='strength'>".sprintf("%.4f",$team['maxprob'])."</span></div>";
     }
     echo "</div></div>";
@@ -913,7 +914,7 @@ function disp_team($team, $index, $rnum) {
         echo "<td class='standings-entry'>";
         echo "<div class='$color standings-team {$team['class']}'>";
         //echo "<span class='tiny'>{$team['seed']}</span>";
-        echo "<span class='result' title=\"{$team['text']}\">{$team['name']}</span>\n";
+        echo "<span class='team-name' title=\"{$team['text']}\">{$team['name']}</span>\n";
 
         // display score
         echo "<div class='score'>\n";

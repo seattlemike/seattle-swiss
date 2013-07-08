@@ -63,8 +63,10 @@ function makeTop(el) {
     el.style.zIndex = idx;
 }
 
-function Dialog( titleText="", okfn = function() {} ) {
+function Dialog( titleText, okfn) {
     var self = this
+    if (! okfn) 
+        okfn = function () {}
 
     this.minWidth = 0
     this.overlay = buildNode("div", "window-overlay")
