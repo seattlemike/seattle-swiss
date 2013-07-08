@@ -94,6 +94,17 @@ function Dialog( titleText, okfn) {
         makeTop(self.dialog)
         if (self.dialog.offsetWidth-34 < self.minWidth)  
             self.setWidth(self.minWidth)
+
+        // center dialog
+        var newTop = (window.innerHeight-self.dialog.offsetHeight)/2
+        if (newTop < 0) {
+            newTop = 0
+            self.dialog.style.position = "absolute" // if taller than innerHeight, better allow scrolling
+        }
+        self.dialog.style.top = newTop+"px"
+        var newLeft = (window.innerWidth-self.dialog.offsetWidth)/2
+        self.dialog.style.left= newLeft+"px"
+
         self.dialog.scrollIntoView()
     }
     this.hide = function() { document.body.removeChild(self.dialog);  document.body.removeChild(self.overlay) }

@@ -22,24 +22,16 @@
 function teamDialog() {
     var team = JSON.parse(this.getAttribute("data-team"))
 
-    //var d = new Dialog(team.name, function () {
-    var d = new Dialog(team.name, function () {
-        //for (var i=0; i<games.length; i++)
-        //   if (games[i].delTag)
-        //       list.deleteGame(games[i].original)
-    })
+    var d = new Dialog(team.name, function () { })
     d.insert(buildNode("div", "dark-head", team.text))
 
     var gameDetails = buildNode("div","num-details");
-
     gameDetails.appendChild(buildNode("div", "item"))
     gameDetails.lastChild.appendChild(buildNode("div","label", "Rank"))
     gameDetails.lastChild.appendChild(buildNode("div","", this.firstChild.innerHTML))
-
     gameDetails.appendChild(buildNode("div", "item"))
     gameDetails.lastChild.appendChild(buildNode("div","label", "Strength"))
     gameDetails.lastChild.appendChild(buildNode("div","", team.maxprob.toFixed(3)))
-
     gameDetails.appendChild(buildNode("div", "item"))
     gameDetails.lastChild.appendChild(buildNode("div","label", "Record"))
     gameDetails.lastChild.appendChild(buildNode("div","", this.lastChild.innerHTML))
