@@ -1,4 +1,23 @@
 <?php 
+/*  
+    Copyright 2011, 2012, 2013 Mike Bell and Paul Danos
+
+    This file is part of 20Swiss.
+    
+    20Swiss is free software: you can redistribute it and/or modify it under the
+    terms of the GNU Affero General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    20Swiss is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+    more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
+*/
+
 	include("header.php"); 
     require_once("utils_async.php");
 
@@ -7,17 +26,8 @@
     try {
         if (check_login()) {
             switch ($_POST['case']) {
-                case 'ModuleTeamAdd':  // add team_id to the teams competing in module_id
-                    asyncModuleTeamAdd($_POST['module_id'], $_POST['team_id'], $_POST['team_seed']);
-                    break;
-                case 'ModuleTeamDel':  // add team_id to the teams competing in module_id
-                    asyncModuleTeamDel($_POST['module_id'], $_POST['team_id']);
-                    break;
-                case 'GameUpdate':  // update score/status for game
-                    asyncGameUpdate(json_decode($_POST['game_data'], true), json_decode($_POST['score_data'], true));
-                    break;
-                case 'AddRound':  // update score/status for game
-                    $retval = asyncAddRound($_POST['module_id']);
+                case 'NewModule':
+                    $retval = asyncNewModule($_POST['tournament_id']);
                     break;
                 case 'NewTeam':
                     $retval = asyncTrnNewTeam($_POST['tournament_id'], $_POST['team_name'], $_POST['team_details'], $_POST['team_uid']);
@@ -28,15 +38,31 @@
                 case 'UpdateTeam':
                     asyncTrnUpdTeam($_POST['tournament_id'], $_POST);
                     break;
-                case 'DeleteGame':
-                    asyncDelGame($_POST['game_id']);
+
+                case 'ModuleAddTeam':  // add team_id to the teams competing in module_id
+                    asyncModuleAddTeam($_POST['module_id'], $_POST['team_id'], $_POST['team_seed']);
                     break;
-                case 'AddGame':
-                    $retval = asyncAddGame($_POST['module_id'], $_POST['a_id'], $_POST['b_id']);
+                case 'ModuleDelTeam':  // add team_id to the teams competing in module_id
+                    asyncModuleDelTeam($_POST['module_id'], $_POST['team_id']);
+                    break;
+
+                case 'AddRound':  // update score/status for game
+                    $retval = asyncAddRound($_POST['module_id']);
                     break;
                 case 'DeleteRound':
                     asyncDelRound($_POST['round_id']);
                     break;
+
+                case 'AddGame':
+                    $retval = asyncAddGame($_POST['module_id'], $_POST['a_id'], $_POST['b_id']);
+                    break;
+                case 'UpdateGame':  // update score/status for game
+                    asyncUpdateGame(json_decode($_POST['game_data'], true), json_decode($_POST['score_data'], true));
+                    break;
+                case 'DeleteGame':
+                    asyncDelGame($_POST['game_id']);
+                    break;
+
                 default:
                     throw new Exception("Unexpected ASYNC case: {$_POST['case']}");
             }

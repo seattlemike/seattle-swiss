@@ -100,7 +100,7 @@
 ?>
 <div class="con">
     <div class="centerBox"> 
-        <div class='mainBox'>
+        <div id='run-module' class='mainBox'>
             <?
             if (count($rounds)) {
                 $data_module = json_encode($module, JSON_HEX_APOS);

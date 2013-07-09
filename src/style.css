@@ -119,10 +119,10 @@ p { margin: 1em 2em; }
 }
 .game { 
     text-align: left; 
-    cursor: pointer;
     padding: 1em 2em;
 }
-.game:hover { background: #cde; }
+#run-module .game { cursor: pointer; }
+#run-module .game:hover { background: #cde; }
 
 .compact { margin: 0 4em; font-size: 0.8em;}
 .compact .game { margin: 0; padding: 0.3em; }
@@ -137,7 +137,7 @@ p { margin: 1em 2em; }
 .red-box, .game-inprogress { background: #c9a; }
 
 
-#module .victor {
+.result .victor, #module .victor {
     /*background: #fc5; a83 a38*/
     display: inline-block;
     border: 2px dashed #fff;
@@ -163,7 +163,6 @@ p { margin: 1em 2em; }
     margin: 1em 0;
     padding: 0.5em;
 }
-.line { margin: 0.5em 0 0.5em 0; }
 .list-box {   /*center this inside of a .line */
     border-radius: 0.5em; 
     overflow: hidden; display: 
@@ -301,7 +300,7 @@ td.numeric { min-width: 40px; }
     /*background: #a4bfcd;*/
     background: #cde;
 }
-.viable:hover .rank, .viable:hover .dark {
+.viable:hover .rank, .viable:hover .dark, .viable:hover .team-text {
     background: #fff;
 }
 
@@ -309,8 +308,8 @@ td.numeric { min-width: 40px; }
 .result { padding: 1em; }
 .result, .rank-team {
     position: relative;
-    background: #b4cfed;
     margin: 1px 0;
+    background: #b4cfed;
     overflow: hidden;
 }
 .rank-team .team-name {
@@ -339,39 +338,36 @@ td.numeric { min-width: 40px; }
     overflow: hidden;
 }
 .num-details {
+    margin-left: -1em;
     display: inline-block;
     vertical-align: top;
-    left: 0;
 }
+
 .clear {
     clear: both;
 }
 
 .team { 
     position: relative;
-    overflow: hidden;
+    overflow: auto;
     /*background: #87a8cc;*/
     background: #b4cfed;
     margin: 1px 0;
 }
 .team-text {
+    display: inline-block;
+    width: 15em;
     background: #658ab3;
+    padding: 1em;
+    min-height: 1.5em;
+    float: right;
 }
-
 .team-name {
     white-space: nowrap;
 }
-
 .info {
     display: inline-block;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    padding: 0.5em 1em;
-    width: 50%;
-    vertical-align: middle;
-    min-height: 2.5em;
-    /*margin-right: 1em;*/
+    padding: 1em;
 }
 .dark-ctr {
     text-align-right;
@@ -433,6 +429,7 @@ td.numeric { min-width: 40px; }
     input:hover, .button:hover, .nav a:hover {
         color: #224365;
         background: #97bfed;
+        /*background: #cde;*/
     }
     .button.disabled:hover {
         color: #68819b;
@@ -531,7 +528,7 @@ td.numeric { min-width: 40px; }
 
     .dialog-text { 
         margin: 1em 0; 
-        font-size: 1.5em; 
+        font-size: 1.2em; 
         font-style: italic;
         text-align: center; 
     }
@@ -565,7 +562,7 @@ td.numeric { min-width: 40px; }
         border: none;
         border-radius: 0;
         width: 2.5em;
-        font-size: 1.5em;
+        font-size: 1.2em;
     }
     .dialog-buttons { margin-top: 1em; text-align: left; }
     .rt-button { float: right; }

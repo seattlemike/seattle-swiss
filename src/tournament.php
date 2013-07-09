@@ -65,15 +65,17 @@
 <div class="con">
     <div class="centerBox">
         <?  //disp_status($tourney) ?>
-        <div class="mainBox modules">
-            <div class="header">Rounds</div>
-            <?
+        <div id="modules" class="mainBox">
+            <div class="header">Tournament Modules</div>
+            <div id='modules-list'>
+            <?php
                 $t_modules = get_tournament_modules($tid);
                 if (! $t_modules)
-                    echo "<p>No rounds scheduled yet</p>";
+                    echo "<p>No modules scheduled yet</p>";
                 disp_modules_list($t_modules);
             ?>
-            <a class='button' id='add-round'>Add Round</a>
+            </div>
+            <a class='button' id='add-module'>Add Module</a>
             <? /*
             <form name="modules" method="post" action="">
                 <input type='hidden' name='case' value='new_module' />
@@ -83,7 +85,7 @@
         </div>
 
         <div class="mainBox" id="details" data-tid="<? echo $tid ?>">
-            <div class="header">Details</div>
+            <div class="header">Tournament Details</div>
             <?php
             echo "<div class='item'>".date("M d, Y", strtotime($tourney['tournament_date']))."</div>";
             echo "<div class='item'>{$tourney['tournament_name']}</div>";
@@ -94,7 +96,7 @@
             <a class='button' id='edit-details'>Edit</a>
         </div>
 
-        <div class="mainBox">
+        <div id="admins" class="mainBox">
             <div class="header">Tournament Admins</div>
             <? 
                 disp_admins_list($tourney);
@@ -103,7 +105,7 @@
             ?>
         </div>
         <div class="mainBox" id="teams">
-            <div class="header">Teams</div>
+            <div class="header">Tournament Teams</div>
             <?  
                 $teams = get_tournament_teams($tid);
                 disp_teams_list($teams);

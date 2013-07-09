@@ -161,7 +161,7 @@ function disp_modules_list($modules) {
     if ($modules && count($modules)) {
         foreach ($modules as $m) {
             echo "<div class='item'>";
-            echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
+            echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>";
             echo "<a href='../../module/{$m['module_id']}/'>{$m['module_title']}</a>";
             echo "</div>";
         }
@@ -387,8 +387,8 @@ function disp_teams_list($teams) {
     if ($teams && count($teams)) {
         foreach ($teams as $t) {
             echo "<div class='team' data-name='{$t['team_name']}' data-text='{$t['team_text']}' data-uid='${t['team_uid']}' data-teamid='${t['team_id']}'>";
-            echo "<div class='info team-name'>{$t['team_name']}</div>";
-            echo "<div class='info team-text'>{$t['team_text']}</div></div>";
+            echo "<div class='team-name info'>{$t['team_name']}</div>";
+            echo "<div class='team-text'>{$t['team_text']}</div></div>";
         }
     }
     echo "</div></div>";

@@ -31,9 +31,8 @@ function buildTeamNode(node, team) {
     node.setAttribute("data-uid", team.uid)
     if (team.teamid)
         node.setAttribute("data-teamid", team.teamid)
-
-    node.appendChild(buildNode("div", "info", team.name))
-    node.appendChild(buildNode("div", "dark info", team.details))
+    node.appendChild(buildNode("div", "team-name info", team.name))
+    node.appendChild(buildNode("div", "team-text", team.details))
     return node
 }
 
@@ -44,7 +43,8 @@ function processBulk(text) {
 function bulkAddTeams() {
     var teamInput = buildNode("textarea","medium","team name / details / uid, one team per line");
     teamInput.onclick = clearOnce
-    var d = new Dialog("Add many teams",
+    //TODO
+    var d = new Dialog("Add many teams [NOT YET WORKING]",
                     function () { processBulk(teamInput.value) })
     d.insert(teamInput)
     d.show()
@@ -53,14 +53,15 @@ function bulkAddTeams() {
 function addTeam(tid, name, details, uid) {
     // build team node
     var t = buildNode("div", "team", "")
-    var list = document.getElementById("teams-list")
-    t.appendChild(buildNode("div", "info", name))
-    t.appendChild(buildNode("div", "dark info", details))
+    t.appendChild(buildNode("div", "team-name info", name))
+    t.appendChild(buildNode("div", "team-text", details))
     t.setAttribute("data-name", name)
     t.setAttribute("data-text", details)
     t.setAttribute("data-uid", uid)
+    var list = document.getElementById("teams-list")
     list.appendChild(t)
 
+    // add team to database
     var async = new asyncPost()
     var fd = new FormData()
     fd.append("case", "NewTeam")
@@ -153,15 +154,71 @@ function editTeam(node) {
     d.show()
 }
 
-function addRound() {
-    
+function addModule(tid) {
+    // build module node
+    var rssBtn = buildNode("img")
+    rssBtn.width=14
+    rssBtn.height=14
+    rssBtn.src="/img/feed-icon-28x28.png"
+    rssBtn.href="/"
+    var m = buildNode("div", "item")
+    m.appendChild(document.createElement('a'))
+    m.firstChild.title = "Follow via RSS"
+    m.firstChild.appendChild(rssBtn)
+    m.appendChild(buildNode("a", "", "New Module"))
+    document.getElementById("modules-list").appendChild(m)
+
+    // add module to database
+    var async = new asyncPost()
+    var fd = new FormData()
+    fd.append("case", "NewModule")
+    fd.append("tournament_id", tid)
+    async.onSuccess = function (r) { 
+        m.firstChild.href="/rss/"+r.moduleId+"/";
+        m.lastChild.href="/private/module/"+r.moduleId+"/";
+    }
+    async.post(fd)
 }
 
-function addAdmin() {
+function editAdmins() {
 
 }
 
 function editDetails() {
+    var tourney = {}
+    team.name = node.getAttribute("data-name")
+    team.details = node.getAttribute("data-text")
+    team.uid = node.getAttribute("data-uid")
+    var teamList = buildNode("form", "lline", "")
+    var name = buildNode("label", "", "Name")
+    name.appendChild( buildInput("team-name", team.name) )
+    var details = buildNode("label", "", "Details")
+    details.appendChild( buildInput("team-details", team.details) )
+    var uid = buildNode("label", "", "UID")
+    uid.appendChild( buildInput("team-uid", team.uid) )
+    uid.lastChild.className = "numeric"
+    var delBtn = buildNode("a", "button", "Delete");
+    delBtn.onclick = function () {
+        var del = new Dialog("Are you sure you want to delete "+team.name+"?", function () { tryDeleteTeam(node); d.hide() } )
+         del.show()
+    }
+    teamList.appendChild(name)
+    teamList.appendChild(details)
+    teamList.appendChild(uid)
+    teamList.appendChild(delBtn)
+
+    var d = new Dialog(team.name, 
+                       function () { 
+                            team.teamid = node.getAttribute("data-teamid")
+                            team.name = name.lastChild.value
+                            team.details = details.lastChild.value
+                            team.uid = uid.lastChild.value
+                            node.className = "team"
+                            node.onclick = ""
+                            tryUpdateTeam(node, team)
+                        } )
+    d.insert(teamList)
+    d.show()
 
 }
 
@@ -181,7 +238,7 @@ function tournamentOnLoad() {
     document.getElementById("add-team").onclick = function () { addTeam(tid, "Team Name", "Details", 0) }
     document.getElementById("add-teams").onclick = function () { bulkAddTeams(tid) }
     document.getElementById("edit-details").onclick = function () { editDetails(tid) }
-    document.getElementById("add-round").onclick = function () { addRound(tid) }
+    document.getElementById("add-module").onclick = function () { addModule(tid) }
     
     teams = document.getElementById("teams-list").children
     for(var i=0; i<teams.length; i++) {

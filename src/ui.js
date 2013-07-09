@@ -28,7 +28,8 @@ function buildInput(elName, elValue) {
 
 function buildNode(elType, elClass, elText) {
     var el = document.createElement(elType)
-    el.className = elClass
+    if (elClass)
+        el.className = elClass
     if (elText != undefined)
         el.appendChild(document.createTextNode(elText))
     return el

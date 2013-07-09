@@ -114,12 +114,11 @@ function GamesList() {
         this.increment = function() { return(++self.count) }
     }
 
-    // build rounds-list and games-list from existing round/game nodes
-    var rounds = document.querySelectorAll(".round")
-    for(var i=0; i<rounds.length; i++) {
-        var rid = rounds[i].getAttribute("data-rid")
-        var games = rounds[i].lastChild.children
-        this.rounds[rid] = new Round(rounds[i], rid)
+    this.addRoundNode = function(round) {
+        var rid = round.getAttribute("data-rid")
+        this.rounds[rid] = new Round(round, rid)
+
+        var games = round.lastChild.children
         for(var j=0; j<games.length; j++) {
             var scores = JSON.parse(games[j].getAttribute("data-score"))
             var data = JSON.parse(games[j].getAttribute("data-game"))
@@ -237,7 +236,7 @@ function GameDialog(game) {
         var async = new asyncPost()
         async.onSuccess = function () { game.node.onclick = self.show; list.updateNextBtn() }
         var fd = game.getFormData()
-        fd.append("case", "GameUpdate")
+        fd.append("case", "UpdateGame")
         async.post(fd)
     }
 
@@ -420,7 +419,13 @@ function runModuleOnLoad() {
     //document.getElementById("empty-round").onclick = fillRound;
     //document.getElementById("delete-round").onclick = fillRound;
 
-    list = new GamesList() // global gamesList list
+    list = new GamesList() // global games list (with game nodes)
+    // build rounds-list and games-list from existing round/game nodes
+    var rounds = document.querySelectorAll(".round")
+    for(var i=0; i<rounds.length; i++)
+        list.addRoundNode(rounds[i])
+
+
     list.updateNextBtn()
     document.getElementById("game-add").onclick = addGameDialog 
     document.getElementById("game-del").onclick = deleteGamesDialog

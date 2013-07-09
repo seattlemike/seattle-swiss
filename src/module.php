@@ -31,7 +31,7 @@
     $tourney = get_tournament($tid);
 
     // logged in / have privs, so display header
-    $js_extra = array("/ui.js", "/async.js", "/module.js");
+    $js_extra = array("/ui.js", "/async.js", "/module_ui.js");
     $header_extra = array( '<script type="text/javascript">window.onload = moduleOnLoad</script>' );
     disp_header("{$tourney['tournament_name']} : {$module['module_title']}", $js_extra, $header_extra);
     disp_topbar($tourney, $module, 1);
@@ -72,7 +72,7 @@
                     disp_tournament_button("Save Details", 'update_module'); 
                     echo "</div>";
                     if (tournament_isowner($tid))
-                        echo "<a id='del-btn' class='button'>Delete Round</a>";
+                        echo "<a id='del-btn' class='button'>Delete Module</a>";
                 ?>
             </form>
         </div>

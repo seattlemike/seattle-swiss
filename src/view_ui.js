@@ -31,7 +31,7 @@ function teamDialog() {
     gameDetails.lastChild.appendChild(buildNode("div","", this.firstChild.innerHTML))
     gameDetails.appendChild(buildNode("div", "item"))
     gameDetails.lastChild.appendChild(buildNode("div","label", "Strength"))
-    gameDetails.lastChild.appendChild(buildNode("div","", team.maxprob.toFixed(3)))
+    gameDetails.lastChild.appendChild(buildNode("div","line", team.maxprob.toFixed(5)))
     gameDetails.appendChild(buildNode("div", "item"))
     gameDetails.lastChild.appendChild(buildNode("div","label", "Record"))
     gameDetails.lastChild.appendChild(buildNode("div","", this.lastChild.innerHTML))
@@ -40,7 +40,13 @@ function teamDialog() {
     var gameCtr = buildNode("div","list-box")
     for(var i=0; i<team.results.length; i++) {
         var res = team.results[i]
-        var game = buildNode("div", "result", res.score[0]+"-"+res.score[1]+" vs "+team.results[i].opp_name)
+        var game = buildNode("div", "result", res.score[0]+"-"+res.score[1]+" vs ")
+        if (res.score[0] < res.score[1])
+            game.appendChild(buildNode("span","victor",res.opp_name));
+        else
+            game.appendChild(buildNode("span","",res.opp_name));
+
+        //var game = buildNode("div", "result", res.score[0]+"-"+res.score[1]+" vs "+team.results[i].opp_name)
         gameCtr.appendChild(game);
     }
 
