@@ -132,6 +132,7 @@ p { margin: 1em 2em; }
 .compact .game { margin: 0; padding: 0.3em; }
 .compact .header { font-size: 1em; }
 .compact .selected { background: #9ca; }
+.compact .selected:hover { background: #dfe; }
 .compact .team { margin: 0; padding: 0.3em; background: #658ab3; }
 
 .status { cursor: pointer; }

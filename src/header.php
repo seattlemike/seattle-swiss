@@ -130,7 +130,7 @@ function disp_topbar($tourney=null, $module=null, $page=null) {
 function disp_titlebar($title = null) {
     if (! isset($title))
         $title = "20Swiss";
-    echo "<h1>$title</h1>";
+    echo "<h1 id='title'>$title</h1>";
 }
 
 // checks for $tid in POST and GET

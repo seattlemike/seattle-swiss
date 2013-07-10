@@ -266,6 +266,7 @@ function get_round_games($rid, $db=null) {
 //
 
 function module_delete($mid) {
+    // TODO: delete games/rounds or check for present?
     return sql_try('DELETE FROM tblModuleTeams WHERE module_id = ?', array($mid)) &&
            sql_try('DELETE FROM tblModule WHERE module_id = ?', array($mid));
 }

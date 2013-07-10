@@ -60,6 +60,13 @@ function asyncAddAdmin($tid, $email) {
     }
     return array("added" => false);
 }
+function asyncRemoveAdmin($tid, $email) {
+    if (! tournament_isowner($tid))
+        throw new Exception("Must be tournament owner to Remove Admins");
+    $adm = sql_select_one("SELECT * FROM tblAdmin WHERE admin_email = ?", array($email));
+    if ($adm && ($adm['admin_id'] != $_SESSION['admin_id'])) // don't remove self
+        sql_try("DELETE FROM tblTournamentAdmins WHERE admin_id = ? AND tournament_id = ?", array($adm['admin_id'], $tid));
+}
 
 // Add/Delete Modules for Tournament $tid
 function asyncNewModule($tid) {

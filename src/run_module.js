@@ -373,7 +373,6 @@ function addGameDialog() {
     d.insert(listBox)
     d.dialog.style.position = "absolute"
     d.show()
-
 }
 
 // Actions

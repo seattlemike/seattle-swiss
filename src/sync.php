@@ -25,7 +25,7 @@
             switch ($_POST['case']) {
                 case 'DelTournament':
                     require_privs(tournament_isowner($_POST['tournament_id']));
-                    tournament_delete($tid);
+                    tournament_delete($_POST['tournament_id']);
                     break;
                 case 'DelSelf':
                     sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($_POST['tournament_id'], $_SESSION['admin_id']));

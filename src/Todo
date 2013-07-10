@@ -1,5 +1,25 @@
 *Readme* - major stuff
 
+#### July 2013
+  Interface:
+    module teams / seeding
+    tournament details
+    module details
+    finish blank entries on elim bracket display
+    elim standings in-progress should give ranks for eliminated teams only
+    options for various under-the-hood mechanisms (tie-break, matchups, odd#)
+  Core:
+    better max likelihood?
+    link-only mode
+    no rematches
+    EVENT LOG
+    auto game-add in elim
+    figure out round/game-add for swiss
+    add round-robin mode
+  Other:
+    update the About page
+    admin settings?
+    
 #### June 2013
   Fix Immediate:
     Initial team seeds
@@ -11,20 +31,19 @@
 
 #### May 2013
   Pending:
-    finish moving to raise new Exception(msg) paradigm that I should've done ages ago
+    #finish moving to raise new Exception(msg) paradigm that I should've done ages ago
     #finish tournament->module->round->game hierarchy
-    delete tournament should recurse properly over modules/moduleteams/games/etc 
-    delete module should recurse properly
-    sort rank based on MaxLikelihood
-    figure out how we're going to pick matchups
-        (still buchholz but now with max likelihood as secondary tiebreak?)
-    make a tblLogEntry and log basic things
+    #delete tournament should recurse properly over modules/moduleteams/games/etc 
+    delete module should recurse
+    #sort rank based on MaxLikelihood
+    figure out how we're going to pick matchups (consecutive or +8 or something)
+    EVENT LOG
         new/delete tournament
         login/out
-    Delete Game
-    Run Module should work:
-        move next-round button into javascript
-        update 'victor' class in javascript
+    #Delete Game
+    #Run Module should work:
+    #    move next-round button into javascript
+    #    update 'victor' class in javascript
         #display-games all at once (list 'round' in swiss, 'final-four' in sglelim)
         add games automatically as other games finish
             don't actually add these games to the db until in-progress/score/etc
@@ -34,8 +53,8 @@
                and in this fashion work out the swiss-continuation problem?
         #split dblelim into winners/losers brackets (wb-bye / lb-bye?)
   Less Urgent:      
-    standings should style as a table, as should disp_teams_list
-    tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
+    #standings should style as a table, as should disp_teams_list
+    #tournament_isadmin($tid,$aid) => ($tid) and gets aid from $_SESSION -- need to change all instances
     #redesign new-tournament creation
     #better way to do page header 
     #    not just include(header.php) but more like display_head(extra_bits)
@@ -46,7 +65,7 @@
     #(n.b. totally restructuring in-place.  leaving old db stuff as a scaffold until we hot-swap)
     Choice between Min Likelihood / wins-buchholz for seeding
     Status string (Round 2: x games finished or Losers Bracket Finals or sweet sixteen/elite eight/final four)
-    any POSTS to self should be rewritten as xmlhttprequest
+    #any POSTS to self should be rewritten as xmlhttprequest
 
 ##### Feb 2013:
   Urgent: 
@@ -58,7 +77,7 @@
     #use Min Likelihood for team Rankings
   Soon:
     Better team add (javascript async, cut/paste, import from various files)
-    Tournament modules
+    #Tournament modules
     #Consolidate forms (score, etc) and use javascript for async form update
     #Better game sched page
     #Modal dialogs

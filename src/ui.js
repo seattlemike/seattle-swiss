@@ -21,10 +21,15 @@
 
 function buildSyncForm(fData) {
     var form = document.createElement("form")
-        form.action="/sync.php"
-    for(var e in fData)
-        form.appendChild(buildInput(e, fData.e))
-    form.submit()
+    form.method="post"
+    form.action="/sync.php"
+    form.style="display: none;"
+    for(var key in fData) {
+        form.appendChild(buildInput(key, fData[key]))
+        form.lastChild.setAttribute("type", "hidden")
+    }
+    document.body.appendChild(form)
+    return form
 }
 
 function buildInput(elName, elValue) {

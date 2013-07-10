@@ -200,7 +200,6 @@ function addAdmin(tid) {
             if (r.adminEmail) {
                 node.removeChild(node.firstChild)
                 node.appendChild(document.createTextNode(r.adminName+" ("+r.adminEmail+")"))
-                node.setAttribute("admin-id", r.adminId)
             } else {
                 node.appendChild(document.createTextNode(" FAILED TO ADD ADMIN"))
             }
@@ -222,11 +221,9 @@ function tryUpdateDetails(details) {
     fd.append("tournament_text", details.text)
     fd.append("tournament_date", details.date)
     fd.append("tournament_display", details.display)
-    async.onSuccess = function(r) {
-        // TODO: replace all instances?
-    }
+    async.onSuccess = function(r) { document.getElementById("title").innerHTML=details.name}
     async.post(fd)
-    // TODO: replace immediate instances
+
 }
 
 function editDetails() {
@@ -271,10 +268,53 @@ function editDetails() {
 }
 
 function removeAdminDialog() {
-    //TODO
-
+    var dialogToggle = function(oldNode) {
+        var self = this
+        var adminText = oldNode.innerHTML
+        var re = /\((.*?)\)$/
+        var matches = adminText.match(re)
+        if (!matches) return false;
+        this.original = oldNode
+        this.node = buildNode("div", "game dark-box viable", adminText)
+        this.email = matches[1]
+        this.selected = 0
+        this.toggle = function() {
+            if (self.selected) {
+                self.selected = 0;
+                self.node.className = "game dark-box viable";
+            } else {
+                self.selected = 1;
+                self.node.className = "game selected viable";
+            }
+        }
+        this.node.onclick = this.toggle
+    }
+    var adminList = []
+    var admins = document.getElementById("admins-list").children
+    var listBox = buildNode("div", "compact games-list")
+    for (var i=1; i<admins.length; i++) { // is excluding children[0] good enough? is that always tournament owner?
+        var a = new dialogToggle(admins[i])
+        if (a.email) {
+            adminList.push(a)
+            listBox.appendChild(a.node)
+        }
+    }
+    var d = new Dialog("Remove Admins", function () {
+        var newTeams = []
+        for (var i=0; i<adminList.length; i++)
+            if (adminList[i].selected) {
+                var async = new asyncPost()
+                var fd = new FormData()
+                fd.append("case", "RemoveAdmin")
+                fd.append("tournament_id", document.getElementById("details").getAttribute("data-tid"))
+                fd.append("admin_email", adminList[i].email)
+                async.post(fd)
+                adminList[i].original.parentNode.removeChild(adminList[i].original)
+            }
+    })
+    d.insert(listBox)
+    d.show()
 }
-
 
 function tournamentOnLoad() {
     var tourney = document.getElementById("details")
