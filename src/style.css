@@ -1,4 +1,4 @@
-lastChild./*  Copyright 2011, 2012 Mike Bell and Paul Danos
+/*  Copyright 2011, 2012 Mike Bell and Paul Danos
 
     This file is part of 20Swiss.
     
@@ -17,14 +17,16 @@ lastChild./*  Copyright 2011, 2012 Mike Bell and Paul Danos
 */
 
 /* setup */
+
+@import url(http://fonts.googleapis.com/css?family=Oxygen+Mono);
+
 body {
-	margin: 1em 0;
+    margin: 0;
 	padding:0;
 	border:0;
-	width:100%;
     background: #fff;
     font-size: 100%;
-    font-family: 'Rosario', sans-serif;
+    font-family: 'Oxygen Mono', sans-serif;
 }
 
 .con {
@@ -38,7 +40,7 @@ body {
 .light-box, .dialog, .topHeader, .mainBox { background: #e6ecf8; }
 
 /* Fonts */
-.nav, .button, .footer { font-family: 'Rosario', sans-serif; }
+.nav, .button, .footer { font-family: 'Oxygen Mono', sans-serif; }
 h1, .nav { text-align: center; }
 
 
@@ -64,7 +66,8 @@ hr { height: 1px; color: #aaf; border: none; }
 
 .topNav {
     position: relative;
-    top: -1em;
+    top: 0;
+    margin-bottom: 1em;
     padding: 1em 0;
     background: #e6ecf8;
 }
@@ -89,6 +92,7 @@ hr { height: 1px; color: #aaf; border: none; }
 
 .lHead, .rHead { margin: 0 2em; }
 .rHead { float: right; }
+.right { float: right; }
 
 .rBox, { float: right; }
 .lBox { float: left; }
@@ -347,6 +351,9 @@ td.numeric { min-width: 40px; }
     clear: both;
 }
 
+.teams-list {
+    width: 100%;
+}
 .team { 
     position: relative;
     overflow: auto;

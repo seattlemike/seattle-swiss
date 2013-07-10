@@ -44,6 +44,23 @@ function checkTournamentTeam($tid, $team_id) {
 // Functions called from async.php
 // *****
 
+// if Admin exists with $email, add to Tournament $tid
+function asyncAddAdmin($tid, $email) {
+    if (! tournament_isowner($tid))
+        throw new Exception("Must be tournament owner to Add Admin");
+    // find in db
+    $adm = sql_select_one("SELECT * FROM tblAdmin WHERE admin_email = ?", array($email));
+    if ($adm) {
+        // make sure not currently in tournament
+        $already = sql_select_one("SELECT * FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($tid, $adm['admin_id']));
+        if (! $already) {
+            sql_insert("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($tid, $adm['admin_id']));
+            return array("adminName" => $adm['admin_name'], "adminEmail" => $adm['admin_email'], "adminId" => $adm['admin_id']);
+        }
+    }
+    return array("added" => false);
+}
+
 // Add/Delete Modules for Tournament $tid
 function asyncNewModule($tid) {
     checkTournamentPrivs($tid);

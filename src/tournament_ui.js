@@ -130,6 +130,7 @@ function editTeam(node) {
     var uid = buildNode("label", "", "UID")
     uid.appendChild( buildInput("team-uid", team.uid) )
     uid.lastChild.className = "numeric"
+    //TODO: make this look better
     var delBtn = buildNode("a", "button", "Delete");
     delBtn.onclick = function () {
         var del = new Dialog("Are you sure you want to delete "+team.name+"?", function () { tryDeleteTeam(node); d.hide() } )
@@ -180,60 +181,124 @@ function addModule(tid) {
     async.post(fd)
 }
 
-function editAdmins() {
+function addAdmin(tid) {
+    // build module node
+    var form = buildNode("form", "lline", "")
+    form.appendChild(buildNode("label", "", "Admin Email"))
+    var email = buildInput("admin-email", "")
+    form.lastChild.appendChild(email)
+    var node = buildNode("div", "item")
 
+    var d = new Dialog(details.name, function () { 
+        // check for admin-email valid and add to tournament 
+        var async = new asyncPost()
+        var fd = new FormData()
+        fd.append("case", "AddAdmin")
+        fd.append("tournament_id", tid)
+        fd.append("admin_email", email.value)
+        async.onSuccess = function (r) { 
+            if (r.adminEmail) {
+                node.removeChild(node.firstChild)
+                node.appendChild(document.createTextNode(r.adminName+" ("+r.adminEmail+")"))
+                node.setAttribute("admin-id", r.adminId)
+            } else {
+                node.appendChild(document.createTextNode(" FAILED TO ADD ADMIN"))
+            }
+        }
+        async.post(fd)
+        node.appendChild(document.createTextNode(email.value))
+        document.getElementById("admins-list").appendChild(node)
+    } )
+    d.insert(form);
+    d.show()
+}
+
+function tryUpdateDetails(details) {
+    var async = new asyncPost()
+    var fd = new FormData()
+    fd.append("case", "UpdateDetails")
+    fd.append("tournament_id", details.tid)
+    fd.append("tournament_name", details.name)
+    fd.append("tournament_text", details.text)
+    fd.append("tournament_date", details.date)
+    fd.append("tournament_display", details.display)
+    async.onSuccess = function(r) {
+        // TODO: replace all instances?
+    }
+    async.post(fd)
+    // TODO: replace immediate instances
 }
 
 function editDetails() {
-    var tourney = {}
-    team.name = node.getAttribute("data-name")
-    team.details = node.getAttribute("data-text")
-    team.uid = node.getAttribute("data-uid")
-    var teamList = buildNode("form", "lline", "")
+    var node = document.getElementById("details")
+    var details = {}
+    details.date = node.children[1].innerHTML
+    details.name = node.children[2].innerHTML
+    details.text = node.children[3].innerHTML
+    details.display = node.children[4].lastChild.innerHTML
+    details.tid = node.getAttribute("data-tid")
+
+    var form = buildNode("form", "lline", "")
+    var date = buildNode("label", "", "Date")
+    date.appendChild( buildInput("tourney-date", details.date) )
     var name = buildNode("label", "", "Name")
-    name.appendChild( buildInput("team-name", team.name) )
-    var details = buildNode("label", "", "Details")
-    details.appendChild( buildInput("team-details", team.details) )
-    var uid = buildNode("label", "", "UID")
-    uid.appendChild( buildInput("team-uid", team.uid) )
-    uid.lastChild.className = "numeric"
-    var delBtn = buildNode("a", "button", "Delete");
-    delBtn.onclick = function () {
-        var del = new Dialog("Are you sure you want to delete "+team.name+"?", function () { tryDeleteTeam(node); d.hide() } )
-         del.show()
-    }
-    teamList.appendChild(name)
-    teamList.appendChild(details)
-    teamList.appendChild(uid)
-    teamList.appendChild(delBtn)
+    name.appendChild( buildInput("tourney-name", details.name) )
+    var text = buildNode("label", "", "Description")
+    text.appendChild( buildInput("tourney-text", details.text) )
+    // TODO: make display a three-way toggle, and figure out how link-only is
+    //       going to work
+    var display = buildNode("label", "", "Display")
+    display.appendChild( buildInput("team-display", details.display) )
+    form.appendChild(date)
+    form.appendChild(name)
+    form.appendChild(text)
+    form.appendChild(display)
 
-    var d = new Dialog(team.name, 
+    var d = new Dialog(details.name, 
                        function () { 
-                            team.teamid = node.getAttribute("data-teamid")
-                            team.name = name.lastChild.value
-                            team.details = details.lastChild.value
-                            team.uid = uid.lastChild.value
-                            node.className = "team"
-                            node.onclick = ""
-                            tryUpdateTeam(node, team)
+                            details.date = date.value
+                            details.name = name.value
+                            details.text = text.value
+                            details.display = display.value
+                            var btn = document.getElementById("edit-details")
+                            btn.onclick = ""
+                            btn.className = "button disabled"
+                            tryUpdateDetails(details)
                         } )
-    d.insert(teamList)
+    d.insert(form)
     d.show()
 
 }
 
-function delTournament() {
-    var d = new Dialog("Delete this tournament?",
-                    function () { var form = document.getElementById("delForm"); if (form) form.submit() })
-    d.show()
+function removeAdminDialog() {
+    //TODO
+
 }
+
 
 function tournamentOnLoad() {
     var tourney = document.getElementById("details")
     var tid = tourney.getAttribute("data-tid")
-    var adminBtn = document.getElementById("add-admin")
-    if (adminBtn)
-        adminBtn.onclick = addAdmin
+    if (tourney.getAttribute("data-owner")) {
+        document.getElementById("delete-tournament").onclick = function() { 
+            // recursive delete with delform?
+            var fd = { "case" : "DelTournament", "tournament_id" : tid }
+            var d = new Dialog("Delete this tournament?", function () { buildSyncForm(fd).submit() })
+            d.show()
+        }
+        document.getElementById("add-admin").onclick = function() { addAdmin(tid) }
+        document.getElementById("remove-admin").onclick = removeAdminDialog
+    } else {
+        document.getElementById("add-admin").className = "button disabled"
+        document.getElementById("delete-tournament").className = "button disabled"
+        document.getElementById("remove-admin").onclick = function () {
+        var fd = { "case" : "DelSelf", "tournament_id" : tid }
+        var d = new Dialog("Remove yourself from the Admin list?", function () { buildSyncForm(fd).submit() })
+        d.show()
+        }
+    }
+
+            
 
     document.getElementById("add-team").onclick = function () { addTeam(tid, "Team Name", "Details", 0) }
     document.getElementById("add-teams").onclick = function () { bulkAddTeams(tid) }

@@ -19,6 +19,14 @@
 
 // Common UI
 
+function buildSyncForm(fData) {
+    var form = document.createElement("form")
+        form.action="/sync.php"
+    for(var e in fData)
+        form.appendChild(buildInput(e, fData.e))
+    form.submit()
+}
+
 function buildInput(elName, elValue) {
     var el = document.createElement("input")
     el.name = elName

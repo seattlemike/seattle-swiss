@@ -65,6 +65,28 @@
 <div class="con">
     <div class="centerBox">
         <?  //disp_status($tourney) ?>
+
+            <?php
+            $isowner = ( $tourney['tournament_owner'] == $_SESSION['admin_id'] );
+            echo "<div class='mainBox' id='details' data-tid='$tid' data-owner='$isowner'>";
+            echo "<div class='header'>Tournament Details</div>";
+            echo "<div class='item'>".date("M d, Y", strtotime($tourney['tournament_date']))."</div>";
+            echo "<div class='item'>{$tourney['tournament_name']}</div>";
+            echo "<div class='item'>{$tourney['tournament_notes']}</div>";
+            $privacy = array("Private", "Link-only", "Public");
+            echo "<div class='item'>Display: <i>{$privacy[$tourney['tournament_privacy']]}</i></div>";
+            ?>
+            <a class='button' id='edit-details'>Edit</a>
+            <a class='button' id='delete-tournament'>Delete</a>
+        </div>
+        <div id="admins" class="mainBox">
+            <div class="header">Tournament Admins</div>
+            <div id='admins-list'>
+            <?  disp_admins_list($tourney); ?>
+            </div>
+            <a class='button' id='add-admin'>Add</a>
+            <a class='button' id='remove-admin'>Remove</a>
+        </div>
         <div id="modules" class="mainBox">
             <div class="header">Tournament Modules</div>
             <div id='modules-list'>
@@ -76,33 +98,6 @@
             ?>
             </div>
             <a class='button' id='add-module'>Add Module</a>
-            <? /*
-            <form name="modules" method="post" action="">
-                <input type='hidden' name='case' value='new_module' />
-                <input class='button' type='submit' name='add_round' value="Add Round">
-            </form>
-            */ ?>
-        </div>
-
-        <div class="mainBox" id="details" data-tid="<? echo $tid ?>">
-            <div class="header">Tournament Details</div>
-            <?php
-            echo "<div class='item'>".date("M d, Y", strtotime($tourney['tournament_date']))."</div>";
-            echo "<div class='item'>{$tourney['tournament_name']}</div>";
-            echo "<div class='item'>{$tourney['tournament_notes']}</div>";
-            $privacy = array("Private", "Link-only", "Public");
-            echo "<div class='item'>Display: <i>{$privacy[$tourney['tournament_privacy']]}</i></div>";
-            ?>
-            <a class='button' id='edit-details'>Edit</a>
-        </div>
-
-        <div id="admins" class="mainBox">
-            <div class="header">Tournament Admins</div>
-            <? 
-                disp_admins_list($tourney);
-                if ($tourney['tournament_owner'] == $_SESSION['admin_id'])
-                    echo "<a class='button' id='edit-admins'>Edit</a>";
-            ?>
         </div>
         <div class="mainBox" id="teams">
             <div class="header">Tournament Teams</div>
@@ -113,18 +108,6 @@
             <a class='button' id='add-teams'>Add Teams</a>
             <a class='button' id='add-team'>+1</a>
         </div>
-        <? /*
-        <div class="nav rHead">
-            <form id="delForm" name='delete' method='post' action=''>
-                <input type='hidden' name='case' value='delete_tournament' />
-                <?php 
-                    if (tournament_isowner($tourney['tournament_id']))
-                        echo '<a href="#" onClick="delTournament()">Delete Tournament</a>';
-                ?>
-            </form>
-            <div class='header'></div>
-        </div>
-        */ ?>
     </div>
 </div>
 <?php include("footer.php"); ?>

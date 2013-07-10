@@ -26,6 +26,9 @@
     try {
         if (check_login()) {
             switch ($_POST['case']) {
+                case 'AddAdmin':
+                    $retval = asyncAddAdmin($_POST['tournament_id'], $_POST['admin_email']);
+                    break;
                 case 'NewModule':
                     $retval = asyncNewModule($_POST['tournament_id']);
                     break;
