@@ -36,9 +36,9 @@
 
     $js_extra = array("/ui.js", "/async.js", "/run_module.js");
     $header_extra = array( '<script type="text/javascript">window.onload = runModuleOnLoad</script>' );
-    disp_header($module['module_title']." : Run", $js_extra, $header_extra);
+    disp_header($module['module_name']." : Run", $js_extra, $header_extra);
     disp_topbar($tourney, $module, 2);
-    disp_titlebar($module['module_title']);
+    disp_titlebar($module['module_name']);
 
     $rounds = get_module_rounds($mid);
 
@@ -102,14 +102,12 @@
     <div class="centerBox"> 
         <div id='run-module' class='mainBox'>
             <?
-            if (count($rounds)) {
-                $data_module = json_encode($module, JSON_HEX_APOS);
-                $data_mteams = json_encode(get_module_teams($module['module_id']), JSON_HEX_APOS);
-                echo "<div class='nav'><a id='next' class='button disabled'>Next Round</a></div>";
-                echo "<div id='module' data-module='$data_module' data-teams='$data_mteams'>";
-                disp_module_games($module, $rounds);
-                echo "</div>";
-            }
+            echo "<div class='nav'><a id='next' class='button disabled'>Next Round</a></div>";
+            $data_mteams = json_encode(get_module_teams($module['module_id']), JSON_HEX_APOS);
+            $data_module = json_encode($module, JSON_HEX_APOS);
+            echo "<div id='module' data-module='$data_module' data-teams='$data_mteams'>";
+            disp_module_games($module, $rounds);
+            echo "</div>";
             ?>
         </div>
     </div>

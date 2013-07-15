@@ -20,14 +20,6 @@
 */
     include("header.php");
     require_login();
-
-    if (isset($_POST['action'])) {
-        if ($_POST['action'] == 'new_tournament') {
-            if ($new_id = new_tournament())
-                header("location:/private/tournament/$new_id/");
-        }
-    }
-
     disp_header("Tournaments");
     disp_topbar();
     disp_titlebar();
@@ -38,8 +30,8 @@
     <div class="centerBox">
         <div class='mainBox'>
             <div class='line'>
-            <form name="new_tourney" method="post" action="">
-                <input type='hidden' name='action' value='new_tournament' />
+            <form name="new_tourney" method="post" action="/sync.php">
+                <input type='hidden' name='case' value='NewTournament' />
                 <input class='button' type='submit' name='submit' value='New Tournament' />
             </form>
             </div>

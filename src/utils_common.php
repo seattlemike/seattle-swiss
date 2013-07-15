@@ -310,9 +310,9 @@ function module_update_seeds($data) {
 
 // ASSERT (mid is valid and admin_id can edit them)
 function module_update($module, $data) {
-    $bind_vars = array(':title' => htmlspecialchars($data['module_title']),
+    $bind_vars = array(':title' => htmlspecialchars($data['module_name']),
                        ':date' => date("Y-m-d", strtotime($data['module_date'])),
-                       ':notes' => htmlspecialchars($data['module_notes']),
+                       ':notes' => htmlspecialchars($data['module_text']),
                        ':mode' => $module['module_mode'], // unchanged
                        ':mid' => $module['module_id']);
 
@@ -320,8 +320,8 @@ function module_update($module, $data) {
     if (! is_array(sql_select_one("SELECT * from tblRound WHERE module_id = ?", array($module['module_id']))))
         $bind_vars[':mode'] = $data['module_mode'];
 
-    $success = sql_try("UPDATE tblModule SET module_title = :title, module_date = :date, 
-                        module_notes = :notes, module_mode = :mode WHERE module_id = :mid", $bind_vars);
+    $success = sql_try("UPDATE tblModule SET module_name= :title, module_date = :date, 
+                        module_text = :notes, module_mode = :mode WHERE module_id = :mid", $bind_vars);
 }
 
 function module_new_round($mid) {
@@ -479,19 +479,19 @@ function tournament_remove_admin($data, $aid) {
 function tournament_new_module($data) {
     require_privs(tournament_isadmin($data['tournament_id']));
     $tourney = get_tournament($data['tournament_id']);
-    return sql_try("INSERT INTO tblModule (module_title, module_date, parent_id) VALUES (?, ?, ?)",
+    return sql_try("INSERT INTO tblModule (module_name, module_date, parent_id) VALUES (?, ?, ?)",
                    array("New Round", $tourney['tournament_date'], $data['tournament_id']));
 }
 
 function new_tournament() {
+    // TODO the RAND() is silly, but I don't know how to reference my new id value in the same query
     $newid = sql_insert("INSERT INTO tblTournament 
-                (tournament_name, tournament_date, tournament_owner, is_fixed) VALUES (?, ?, ?, 1)", 
+                (tournament_name, tournament_date, tournament_owner, tournament_slug, is_fixed) VALUES (?, ?, ?, RAND(), 1)", 
                 array("New Tournament", date("Y-m-d"), $_SESSION['admin_id']));
-    if ($newid) {
-        $success = sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $_SESSION['admin_id']));
-        if (! $success) // TODO: created orphan tournament!  should remove! (shouldn't ever happen though)
-            return false;
-    }
+    if (! $newid)
+        throw new Exception("Failed to create new tournament");
+    sql_try("UPDATE tblTournament SET tournament_slug = ? WHERE tournament_id = ?", array("new-tournament-$newid", $newid));
+    sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $_SESSION['admin_id']));
     return $newid;
 }
 
@@ -503,7 +503,7 @@ function tournament_update($data) {
         ':tpriv' => $data['t_privacy'],
         ':tid' => $data['tournament_id'] );
     $success = sql_try("UPDATE tblTournament SET tournament_name = :tname, tournament_date = :tdate,
-    tournament_notes = :tnotes, tournament_privacy = :tpriv WHERE tournament_id = :tid", $bind_vars);
+    tournament_text = :tnotes, tournament_privacy = :tpriv WHERE tournament_id = :tid", $bind_vars);
     return $success;
 }
 

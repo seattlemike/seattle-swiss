@@ -23,6 +23,11 @@
     try {
         if (check_login()) {
             switch ($_POST['case']) {
+                case 'NewTournament':
+                    require_login();
+                    $new_id = new_tournament();
+                    $dest = "/private/tournament/$new_id/";
+                    break;
                 case 'DelTournament':
                     require_privs(tournament_isowner($_POST['tournament_id']));
                     tournament_delete($_POST['tournament_id']);

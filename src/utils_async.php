@@ -44,6 +44,20 @@ function checkTournamentTeam($tid, $team_id) {
 // Functions called from async.php
 // *****
 
+// update everything but slug, then try to update slug for uniqueness
+function asyncTrnUpdate($tid, $data) {
+    checkTournamentPrivs($tid);
+    sql_try("UPDATE tblTournament SET tournament_name=?, tournament_date=?, tournament_privacy=?, tournament_text=? WHERE tournament_id=?", 
+            array($data['tournament_name'], date("Y-m-d", strtotime($data['tournament_date'])), $data['tournament_privacy'], $data['tournament_text'], $tid));
+    try {
+        sql_try("UPDATE tblTournament SET tournament_slug=? WHERE tournament_id=?",
+                array($data['tournament_slug'], $tid));
+    } catch(Exception $e) {
+        return array("unique" => false);
+    }
+    return array("unique" => true);
+}
+
 // if Admin exists with $email, add to Tournament $tid
 function asyncAddAdmin($tid, $email) {
     if (! tournament_isowner($tid))
@@ -71,7 +85,7 @@ function asyncRemoveAdmin($tid, $email) {
 // Add/Delete Modules for Tournament $tid
 function asyncNewModule($tid) {
     checkTournamentPrivs($tid);
-    $mid = sql_insert("INSERT INTO tblModule (module_title, module_date, parent_id) 
+    $mid = sql_insert("INSERT INTO tblModule (module_name, module_date, parent_id) 
                        VALUES (?, (SELECT tournament_date FROM tblTournament WHERE tournament_id=?), ?)",
                       array("New Module", $tid, $tid));
     return array("moduleId" => $mid);
@@ -101,13 +115,23 @@ function asyncTrnDelTeam($tid, $team_id) {
     }
 }
 
+// Update module details
+function asyncModuleUpdate($mid, $data) {
+    $module = get_module($mid);
+    checkTournamentPrivs($module['parent_id']);
+    //TODO REWRITE
+    sql_try("UPDATE tblModule SET module_name=?, module_date=?, module_text=?, module_mode=? WHERE module_id=?", 
+            array($data['module_name'], date("Y-m-d", strtotime($data['module_date'])), $data['module_text'], $data['module_mode'], $mid));
+}
+
 // add/remove Teams for Module $mid
-function asyncModuleAddTeam($mid, $team_id, $seed) {
+function asyncModuleAddTeam($mid, $team_id) {
     $module = get_module($mid);
     checkTournamentPrivs($module['parent_id']);
     checkTournamentTeam($module['parent_id'], $team_id);
+    $seed = sql_select_one("SELECT MAX(team_seed) maxseed FROM tblModuleTeams JOIN tblTeam USING (team_id) WHERE module_id = ?", array($mid));
     if (! module_hasteam($mid, $team_id))
-        sql_try("INSERT INTO tblModuleTeams (module_id, team_id, team_seed) VALUES (?, ?, ?)", array($mid, $team_id, $seed));
+        sql_try("INSERT INTO tblModuleTeams (module_id, team_id, team_seed) VALUES (?, ?, ?)", array($mid, $team_id, $seed["maxseed"] + 1));
 }
 function asyncModuleDelTeam($mid, $team_id) {
     $module = get_module($mid);

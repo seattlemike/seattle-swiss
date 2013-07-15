@@ -34,50 +34,23 @@
     disp_header($tourney['tournament_name'], $js_extra, $header_extra);
     disp_topbar($tourney, null, 0);
     disp_titlebar($tourney['tournament_name']);
-
-    //   ASSERT $_POST[tournament_id] is set to tid
-    if (isset($_POST['case'])) {
-        switch ($_POST['case']) {
-            case 'delete_tournament':
-                tournament_delete($tourney['tournament_id']);
-                header_redirect("/private/");
-                break;
-            case 'new_module':
-                if (! tournament_new_module($_POST))
-                    echo "<div class='header warning'>Failed to add new round</div>";
-                break;
-            case 'update_tournament':
-                tournament_update($_POST);
-                header("location:/private/tournament/$tid/");
-                break;
-            case 'add_admin':
-                if (! tournament_add_admin($_POST, $_SESSION['admin_id']))
-                    echo "<div class='header warning'>Failed to add admin</div>";
-                break;
-            case 'remove_admin':
-                if (! tournament_remove_admin($_POST, $_SESSION['admin_id']))
-                    echo "<div class='header warning'>Failed to remove admin</div>";
-                break;
-        }
-        if ($redir) header("location:/private/");
-    }
 ?>
 <div class="con">
     <div class="centerBox">
         <?  //disp_status($tourney) ?>
 
-            <?php
-            $isowner = ( $tourney['tournament_owner'] == $_SESSION['admin_id'] );
-            echo "<div class='mainBox' id='details' data-tid='$tid' data-owner='$isowner'>";
+        <?php
+        $isowner = ( $tourney['tournament_owner'] == $_SESSION['admin_id'] );
+        echo "<div class='mainBox' id='details' data-tid='$tid' data-owner='$isowner'>";
             echo "<div class='header'>Tournament Details</div>";
             echo "<div class='item'>".date("M d, Y", strtotime($tourney['tournament_date']))."</div>";
             echo "<div class='item'>{$tourney['tournament_name']}</div>";
-            echo "<div class='item'>{$tourney['tournament_notes']}</div>";
-            $privacy = array("Private", "Link-only", "Public");
-            echo "<div class='item'>Display: <i>{$privacy[$tourney['tournament_privacy']]}</i></div>";
+            echo "<div class='item'>{$tourney['tournament_text']}</div>";
+            echo "<div class='item'><a href='http://codex.wordpress.org/Glossary#Slug'>Slug</a>: <i>{$tourney['tournament_slug']}</i></div>";
+            $privacy = array("Private", "Anyone-with-link", "Public");
+            echo "<div class='item' data-priv='{$tourney['tournament_privacy']}'>Privacy: <i>{$privacy[$tourney['tournament_privacy']]}</i></div>";
             ?>
             <a class='button' id='edit-details'>Edit</a>
-            <a class='button' id='delete-tournament'>Delete</a>
         </div>
         <div id="admins" class="mainBox">
             <div class="header">Tournament Admins</div>
@@ -89,22 +62,24 @@
         </div>
         <div id="modules" class="mainBox">
             <div class="header">Tournament Modules</div>
-            <div id='modules-list'>
             <?php
+                echo "<div id='modules-list'>";
                 $t_modules = get_tournament_modules($tid);
                 if (! $t_modules)
                     echo "<p>No modules scheduled yet</p>";
                 disp_modules_list($t_modules);
+                echo "</div>";
             ?>
-            </div>
             <a class='button' id='add-module'>Add Module</a>
         </div>
         <div class="mainBox" id="teams">
             <div class="header">Tournament Teams</div>
+            <div class='item'>
             <?  
                 $teams = get_tournament_teams($tid);
                 disp_teams_list($teams);
             ?>
+            </div>
             <a class='button' id='add-teams'>Add Teams</a>
             <a class='button' id='add-team'>+1</a>
         </div>

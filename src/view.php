@@ -37,7 +37,7 @@
     require_privs( tournament_isadmin($tid) );
 
     if ($module)
-        $title = $module['module_title'];
+        $title = $module['module_name'];
     else
         $title = $tourney['tournament_name'];
 
@@ -46,11 +46,6 @@
     disp_header($title, $js_extra, $header_extra);
     disp_topbar($tourney, $module, 3);
     disp_titlebar($title);
-    //} else {
-    //    disp_header($tourney['tournament_name']);
-    //    disp_topbar($tourney);
-    //    disp_titlebar($tourney['tournament_name']);
-    //}
 
         // default view if nothing explicitly chosen
         echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
@@ -59,8 +54,9 @@
                 $default_view = array("results", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
                 disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
             } else {
-                echo "<div class='header'>Not yet started</div>";
+                echo "<div class='header'>Not yet started</div><div class='line'>";
                 disp_teams_list(get_module_teams($mid));
+                echo "</div>";
             }
         } elseif ($tourney) {
             if ($tourney['tournament_privacy'] > 0)

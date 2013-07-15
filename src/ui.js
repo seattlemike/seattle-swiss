@@ -32,6 +32,37 @@ function buildSyncForm(fData) {
     return form
 }
 
+// public:  index, state, next(), setState(s), setIndex(i)
+function Toggle(states) {
+    var self = this
+    this.callback = function(s) { }
+    this.setIndex = function(i) {
+        self.index = i
+        self.state = states[i]
+        self.callback(states[i]) 
+    }
+    this.next = function () { self.setIndex((self.index + 1) % states.length) }
+    this.setState = function(s) { self.setIndex(states.indexOf(s)) }
+    this.setIndex(0)
+}
+
+function ToggleText(node, labels) {
+    var self = new Toggle(labels)
+    node.onclick = self.next
+    self.callback = function(s) {
+        node.removeChild(node.firstChild)
+        node.appendChild(document.createTextNode(s))
+    }
+    return self
+}
+
+function ToggleClass(node, labels) {
+    var self = new Toggle(labels)
+    node.onclick = self.next
+    self.callback = function(s) { node.className = s }
+    return self
+}
+
 function buildInput(elName, elValue) {
     var el = document.createElement("input")
     el.name = elName

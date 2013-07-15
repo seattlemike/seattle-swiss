@@ -126,8 +126,8 @@ function disp_module_details($module = null) {
     $modes = array("Swiss Rounds", "Single Elimination", "Double Elimination");
     $mode_select = build_select("module_mode", $modes, $module['module_mode']);
     $def = "class='wide' type='text' maxlength='40'";
-    $inputs = array( "Name" => "<input $def name='module_title' value=\"{$module['module_title']}\" />",
-                     "Notes" => "<input $def name='module_notes' value=\"{$module['module_notes']}\" />",
+    $inputs = array( "Name" => "<input $def name='module_name' value=\"{$module['module_name']}\" />",
+                     "Text" => "<input $def name='module_text' value=\"{$module['module_text']}\" />",
                      "Date" => "<input $def name='module_date' value='$date' />",
                      "Mode" => $mode_select );
     // if we've got games in the module, don't allow changes to module_mode
@@ -148,9 +148,9 @@ function disp_tournament_details($tourney = null) {
     $def = "class='wide' type='text' maxlength='40'";
     $inputs = array("Name" => "<input $def name='t_name' value=\"{$tourney['tournament_name']}\" />",
                     "Date" => "<input $def name='t_date' value='$date' />", 
-                    "Notes" => "<input $def name='t_notes' value=\"{$tourney['tournament_notes']}\" />",
+                    //TODO: should this be a textbox or an input?
+                    "Text" => "<input $def name='t_notes' value=\"{$tourney['tournament_text']}\" />",
                     "Who Can See Tournament Results" => $privacy_select);
-    // TODO: tournament_notes should be a [text] in the db, and should be a textbox here
 
     foreach ($inputs as $text => $input) {
         echo "<label>$text $input</label>\n";
@@ -162,30 +162,20 @@ function disp_modules_list($modules) {
         foreach ($modules as $m) {
             echo "<div class='item'>";
             echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>";
-            echo "<a href='../../module/{$m['module_id']}/'>{$m['module_title']}</a>";
+            echo "<a href='../../module/{$m['module_id']}/'>{$m['module_name']}</a>";
             echo "</div>";
         }
     }
 }
 
-function old_disp_modules($modules) {
-    $mode = array("Swiss", "Single Elim", "Double Elim");
-    if ((! $modules) || (count($modules) == 0))
-        echo "<div class='header'>No Brackets Scheduled Yet</div>";
-    else {
-        echo "<table>\n";
-        foreach ($modules as $m) {
-            echo "<tr>\n";
-            echo "<td class='btnCtr'>\n";
-            echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>\n";
-            echo "</td>\n";
-            echo "<td><a href='../../module/{$m['module_id']}/'>{$m['module_title']}</a></td>";
-            $date = date("m/d/Y", strtotime($m['module_date']));
-            echo "<td>{$mode[$m['module_mode']]}</td><td>$date</td>\n";
-            echo "</tr>\n";
-        }
-        echo "</table>\n";
+function disp_tournament_list($tlist) {
+    echo "<div class='list-box'>";
+    foreach ($tlist as $tourney) {
+        $date = date("M d, Y", strtotime($tourney['tournament_date']));
+        echo "<div class='tournament-entry'><span class='date'>$date</span>";
+        echo "<a href='tournament/{$tourney['tournament_id']}/'>{$tourney['tournament_name']}</a></div>";
     }
+    echo "</div>";
 }
 
 function disp_tournaments($tlist) {
@@ -330,12 +320,14 @@ function disp_standings($module, $view=null) {
     disp_view_nav($module, $rounds, $view);
     switch ($view) {
         case "teams":
+            echo "<div class='line'>";
             if (! $rounds)
                 echo "<div class='header'>Not yet started</div>";
             disp_teams_list(get_module_teams($module['module_id']));
+            echo "</div>";
             break;
         case "games":
-            echo "<div id='module'>";
+            echo "<div class='line' id='module'>";
             disp_module_games($module, $rounds);
             echo "</div>";
             break;
@@ -383,7 +375,7 @@ function disp_standings($module, $view=null) {
 //
 function disp_teams_list($teams) {
     // TODO: starting seed?  sort alphabetically?
-    echo "<div class='line'><div class='list-box' id='teams-list'>";
+    echo "<div class='list-box' id='teams-list'>";
     if ($teams && count($teams)) {
         foreach ($teams as $t) {
             echo "<div class='team' data-name='{$t['team_name']}' data-text='{$t['team_text']}' data-uid='${t['team_uid']}' data-teamid='${t['team_id']}'>";
@@ -391,7 +383,7 @@ function disp_teams_list($teams) {
             echo "<div class='team-text'>{$t['team_text']}</div></div>";
         }
     }
-    echo "</div></div>";
+    echo "</div>";
 }
 
 //

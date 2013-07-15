@@ -10,42 +10,12 @@ function asyncTogTeam(teamId, teamSeed, doCase, cbk) {
 }
 
 function delModule() {
-    d = new Dialog("Delete this round?",
+    d = new Dialog("Delete this module?",
                     function () { var form = document.forms.details; form["case"].value="delete_module"; form.submit() } )
     d.show()
-}
-
-function togTeamCompeting(button, row) {
-    var teamId = row.getAttribute("data-id");
-    var input = row.getElementsByTagName('input')[0];
-    if (row.getAttribute("data-seed")) { // if we have a seed / are enabled
-        button.onclick = "";
-        button.innerHTML = "[working...]";
-        asyncTogTeam(teamId, 0, "ModuleTeamDel", 
-                    function () { 
-                        row.setAttribute("data-seed", "")
-                        button.innerHTML = "Not Competing"
-                        button.className = "button"
-                        button.onclick = function () { togTeamCompeting(button, row) }
-                        input.value = ""
-                        input.disabled = true
-                        checkSaveSeeds()
-                    })
-    } else {
-        var newSeed = getMaxSeed()+1;
-        button.onclick = "";
-        button.innerHTML = "[working...]";
-        asyncTogTeam(teamId, newSeed, "ModuleTeamAdd", 
-                    function () { 
-                        row.setAttribute("data-seed", newSeed);
-                        button.innerHTML = "Competing" 
-                        button.className = "button selected"
-                        button.onclick = function () { togTeamCompeting(button, row) } 
-                        input.value = newSeed;
-                        input.disabled = false
-                        checkSaveSeeds()
-                    });
-    }
+    var fd = { "case" : "DelModule", "module_id" : tid }
+    var d = new Dialog("Remove yourself from the Admin list?", function () { buildSyncForm(fd).submit() })
+    d.show()
 }
 
 function getMaxSeed() {
@@ -112,14 +82,129 @@ function saveSeeds() {
     document.forms.teams.submit()
 }
 
-function moduleOnLoad() {
-    var teams = document.querySelectorAll(".module-team")
-    for (var i=0; i<teams.length; i++) {
-        var button = teams[i].getElementsByTagName('a')[0]
-        // closure here to assign appropriately scoped value of teams[i]
-        button.onclick = (function (row) { return function () { togTeamCompeting( this, row ) } })(teams[i])
-        var input = teams[i].getElementsByTagName('input')[0]
-        input.onkeyup = checkSaveSeeds
+function tryUpdateDetails(details) {
+    var async = new asyncPost()
+    var fd = new FormData()
+    fd.append("case", "UpdateModule")
+    fd.append("module_id", details.mid)
+    fd.append("module_name", details.Name.input.value)
+    fd.append("module_text", details.Text.input.value)
+    fd.append("module_date", details.DateStr.input.value)
+    fd.append("module_mode", details.Mode.index)
+    async.onSuccess = function(r) { 
+        document.getElementById("title").innerHTML=details.Name.input.value
+        details.Name.original.innerHTML = details.Name.input.value
+        details.Text.original.innerHTML = details.Text.input.value
+        details.DateStr.original.innerHTML = details.DateStr.input.value
+        details.Mode.original.innerHTML = details.Mode.state
+        var btn = document.getElementById("edit-details")
+        btn.className = "button"
+        btn.onclick = editDetails
     }
-    document.getElementById("del-btn").onclick = delModule;
+    async.post(fd)
+}
+function editDetails() {
+    // Label, Input, Value
+    var Detail = function(node, title) {
+        this.original = node
+        this.value = node.innerHTML
+        this.node = buildNode("label","",title)
+        this.input = document.createElement("input")
+        this.input.value = this.value
+        this.node.appendChild(this.input)
+    }
+
+    var node = document.getElementById("module-details")
+    var form = buildNode("div", "dialog-form", "")
+    var details = {}
+    details.DateStr = new Detail(node.children[1], "Date")
+    details.Name = new Detail(node.children[2], "Name")
+    details.Text = new Detail(node.children[3], "Text")
+    for (i in details)
+        form.appendChild(details[i].node)
+
+    details.mid = node.getAttribute("data-mid")
+    togBtn = buildNode("a","button","")
+    details.Mode = new ToggleText(togBtn, ["Swiss Rounds", "Single Elimination", "Double Elimination"])
+    details.Mode.original = node.children[4]
+    details.Mode.setState(node.children[4].innerHTML)
+    form.appendChild(buildNode("label","","Privacy"))
+    form.lastChild.appendChild(buildNode("div", "lline"))
+    form.lastChild.lastChild.appendChild(togBtn)
+
+    if (node.getAttribute("data-owner")) {
+        var delBtn = buildNode("a","button","Delete")
+        form.appendChild(buildNode("label","","Delete Module?"))
+        form.lastChild.appendChild(buildNode("div", "lline"))
+        form.lastChild.lastChild.appendChild(delBtn)
+        delBtn.onclick = function() { 
+            var fd = { "case" : "DelModule", "module_id" : details.mid }
+            var delDialog = new Dialog("Delete this module?", function () { buildSyncForm(fd).submit() })
+            delDialog.show()
+        }
+    }
+    var d = new Dialog(details.Name.value, 
+                       function () { 
+                            // disable edit-details until success
+                            var btn = document.getElementById("edit-details")
+                            btn.onclick = ""
+                            btn.className = "button disabled"
+                            tryUpdateDetails(details)
+                        } )
+    d.insert(form)
+    d.show()
+}
+
+function editTeams() {
+    var listBox = buildNode("div", "compact dialog-form")
+    var teamList = {}
+
+    var allteams = JSON.parse(document.getElementById("module-teams").getAttribute("data-teams"))
+    for (var i=0; i<allteams.length; i++) {
+        var node = buildNode("div", "viable item greyed", allteams[i].team_name)
+        allteams[i].toggle = new ToggleClass(node, ["viable item greyed", "viable item selected"])
+        teamList[allteams[i].team_id] = allteams[i]
+        listBox.appendChild(node)
+    }
+
+    var midteams = document.getElementById("team-list").children
+    for (var i=0; i<midteams.length; i++) {
+        var t = teamList[parseInt(midteams[i].getAttribute("data-id"))]
+        t.original = midteams[i]
+        t.toggle.setIndex(1)
+    }
+
+    var d = new Dialog("Participating Teams", function () {
+        var tList = document.getElementById("team-list")
+        var mid = document.getElementById("module-details").getAttribute("data-mid")
+        for (var i=0; i<allteams.length; i++) {
+            var fd = new FormData()
+            fd.append("team_id", allteams[i].team_id)
+            fd.append("module_id", mid)
+            if ((! allteams[i].toggle.index) && (allteams[i].original)) {
+                var async = new asyncPost()
+                fd.append("case","ModuleDelTeam")
+                async.post(fd)
+                tList.removeChild(allteams[i].original)
+            } else if ((allteams[i].toggle.index) && (! allteams[i].original)) {
+                var async = new asyncPost()
+                fd.append("case","ModuleAddTeam")
+                async.post(fd)
+                tList.appendChild(buildNode("div", "item", allteams[i].team_name))
+                tList.lastChild.setAttribute("data-id", allteams[i].team_id)
+            }
+        }
+    })
+    d.insert(listBox)
+    d.show()
+
+}
+function editSeeds() {
+
+}
+
+function moduleOnLoad() {
+    document.getElementById("edit-details").onclick = editDetails;
+    document.getElementById("edit-teams").onclick = editTeams;
+    document.getElementById("edit-seeds").onclick = editSeeds;
 }

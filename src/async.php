@@ -27,6 +27,9 @@
         if (check_login()) {
             switch ($_POST['case']) {
                 // Async Tournament
+                case 'UpdateTournament':
+                    $retval = asyncTrnUpdate($_POST['tournament_id'], $_POST);
+                    break;
                 case 'AddAdmin':
                     $retval = asyncAddAdmin($_POST['tournament_id'], $_POST['admin_email']);
                     break;
@@ -47,8 +50,11 @@
                     break;
 
                 // Async Module
+                case 'UpdateModule':
+                    asyncModuleUpdate($_POST['module_id'], $_POST);
+                    break;
                 case 'ModuleAddTeam':  // add team_id to the teams competing in module_id
-                    asyncModuleAddTeam($_POST['module_id'], $_POST['team_id'], $_POST['team_seed']);
+                    asyncModuleAddTeam($_POST['module_id'], $_POST['team_id']);
                     break;
                 case 'ModuleDelTeam':  // add team_id to the teams competing in module_id
                     asyncModuleDelTeam($_POST['module_id'], $_POST['team_id']);

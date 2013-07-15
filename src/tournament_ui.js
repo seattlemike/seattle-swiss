@@ -122,7 +122,7 @@ function editTeam(node) {
     team.name = node.getAttribute("data-name")
     team.details = node.getAttribute("data-text")
     team.uid = node.getAttribute("data-uid")
-    var teamList = buildNode("form", "lline", "")
+    var teamForm = buildNode("div", "dialog-form", "")
     var name = buildNode("label", "", "Name")
     name.appendChild( buildInput("team-name", team.name) )
     var details = buildNode("label", "", "Details")
@@ -130,16 +130,19 @@ function editTeam(node) {
     var uid = buildNode("label", "", "UID")
     uid.appendChild( buildInput("team-uid", team.uid) )
     uid.lastChild.className = "numeric"
-    //TODO: make this look better
     var delBtn = buildNode("a", "button", "Delete");
     delBtn.onclick = function () {
         var del = new Dialog("Are you sure you want to delete "+team.name+"?", function () { tryDeleteTeam(node); d.hide() } )
          del.show()
     }
-    teamList.appendChild(name)
-    teamList.appendChild(details)
-    teamList.appendChild(uid)
-    teamList.appendChild(delBtn)
+    teamForm.appendChild(name)
+    teamForm.appendChild(details)
+    teamForm.appendChild(uid)
+    var input = buildNode("label","","Delete Team?")
+    teamForm.appendChild(input)
+    input.appendChild(buildNode("div", "lline"))
+    input.lastChild.appendChild(delBtn)
+
 
     var d = new Dialog(team.name, 
                        function () { 
@@ -151,7 +154,7 @@ function editTeam(node) {
                             node.onclick = ""
                             tryUpdateTeam(node, team)
                         } )
-    d.insert(teamList)
+    d.insert(teamForm)
     d.show()
 }
 
@@ -167,7 +170,10 @@ function addModule(tid) {
     m.firstChild.title = "Follow via RSS"
     m.firstChild.appendChild(rssBtn)
     m.appendChild(buildNode("a", "", "New Module"))
-    document.getElementById("modules-list").appendChild(m)
+    var mList = document.getElementById("modules-list")
+    if (mList.firstChild.nodeName == "P")
+        mList.removeChild(mList.firstChild)
+    mList.appendChild(m)
 
     // add module to database
     var async = new asyncPost()
@@ -198,8 +204,7 @@ function addAdmin(tid) {
         fd.append("admin_email", email.value)
         async.onSuccess = function (r) { 
             if (r.adminEmail) {
-                node.removeChild(node.firstChild)
-                node.appendChild(document.createTextNode(r.adminName+" ("+r.adminEmail+")"))
+                node.replaceChild(document.createTextNode(r.adminName+" ("+r.adminEmail+")"), node.firstChild)
             } else {
                 node.appendChild(document.createTextNode(" FAILED TO ADD ADMIN"))
             }
@@ -215,48 +220,74 @@ function addAdmin(tid) {
 function tryUpdateDetails(details) {
     var async = new asyncPost()
     var fd = new FormData()
-    fd.append("case", "UpdateDetails")
+    fd.append("case", "UpdateTournament")
     fd.append("tournament_id", details.tid)
-    fd.append("tournament_name", details.name)
-    fd.append("tournament_text", details.text)
-    fd.append("tournament_date", details.date)
-    fd.append("tournament_display", details.display)
-    async.onSuccess = function(r) { document.getElementById("title").innerHTML=details.name}
+    fd.append("tournament_name", details.Name.input.value)
+    fd.append("tournament_text", details.Text.input.value)
+    fd.append("tournament_date", details["Date"].input.value)
+    fd.append("tournament_slug", details.Slug.input.value)
+    fd.append("tournament_privacy", details.Privacy.index)
+    async.onSuccess = function(r) { 
+        document.getElementById("title").innerHTML=details.Name.input.value
+        details.Name.original.innerHTML = details.Name.input.value
+        details.Text.original.innerHTML = details.Text.input.value
+        details["Date"].original.innerHTML = details["Date"].input.value
+        details.Privacy.original.innerHTML = details.Privacy.state
+        details.Privacy.original.parentNode.setAttribute("data-priv", details.Privacy.index)
+        if (r.unique)
+            details.Slug.original.innerHTML = details.Slug.input.value
+        else
+            alert("Slug in use by another tournament")
+        var btn = document.getElementById("edit-details")
+        btn.className = "button"
+        btn.onclick = editDetails
+    }
     async.post(fd)
-
 }
 
 function editDetails() {
+    var Detail = function(node, title) {
+        this.original = node
+        this.value = node.innerHTML
+        this.node = buildNode("label","",title)
+        this.input = document.createElement("input")
+        this.input.value = this.value
+        this.node.appendChild(this.input)
+    }
+
     var node = document.getElementById("details")
+    var form = buildNode("div", "dialog-form", "")
     var details = {}
-    details.date = node.children[1].innerHTML
-    details.name = node.children[2].innerHTML
-    details.text = node.children[3].innerHTML
-    details.display = node.children[4].lastChild.innerHTML
+    details["Date"] = new Detail(node.children[1], "Date")
+    details.Name = new Detail(node.children[2], "Name")
+    details.Text = new Detail(node.children[3], "Text")
+    details.Slug = new Detail(node.children[4].lastChild, "Slug")
+    for (i in details)
+        form.appendChild(details[i].node)
+
     details.tid = node.getAttribute("data-tid")
+    togBtn = buildNode("a","button","")
+    details.Privacy = new ToggleText(togBtn, ["Private", "Anyone-with-link", "Public"])
+    details.Privacy.original = node.children[5].lastChild
+    details.Privacy.setIndex(parseInt(node.children[5].getAttribute("data-priv")))
+    form.appendChild(buildNode("label","","Privacy"))
+    form.lastChild.appendChild(buildNode("div", "lline"))
+    form.lastChild.lastChild.appendChild(togBtn)
 
-    var form = buildNode("form", "lline", "")
-    var date = buildNode("label", "", "Date")
-    date.appendChild( buildInput("tourney-date", details.date) )
-    var name = buildNode("label", "", "Name")
-    name.appendChild( buildInput("tourney-name", details.name) )
-    var text = buildNode("label", "", "Description")
-    text.appendChild( buildInput("tourney-text", details.text) )
-    // TODO: make display a three-way toggle, and figure out how link-only is
-    //       going to work
-    var display = buildNode("label", "", "Display")
-    display.appendChild( buildInput("team-display", details.display) )
-    form.appendChild(date)
-    form.appendChild(name)
-    form.appendChild(text)
-    form.appendChild(display)
-
-    var d = new Dialog(details.name, 
+    if (node.getAttribute("data-owner")) {
+        var delBtn = buildNode("a","button","Delete")
+        form.appendChild(buildNode("label","","Delete Tournament?"))
+        form.lastChild.appendChild(buildNode("div", "lline"))
+        form.lastChild.lastChild.appendChild(delBtn)
+        delBtn.onclick = function() { 
+            var fd = { "case" : "DelTournament", "tournament_id" : node.getAttribute("data-tid")}
+            var delDialog = new Dialog("Delete this tournament?", function () { buildSyncForm(fd).submit() })
+            delDialog.show()
+        }
+    }
+    var d = new Dialog(details.Name.value, 
                        function () { 
-                            details.date = date.value
-                            details.name = name.value
-                            details.text = text.value
-                            details.display = display.value
+                            // disable edit-details until success
                             var btn = document.getElementById("edit-details")
                             btn.onclick = ""
                             btn.className = "button disabled"
@@ -264,7 +295,6 @@ function editDetails() {
                         } )
     d.insert(form)
     d.show()
-
 }
 
 function removeAdminDialog() {
@@ -320,12 +350,6 @@ function tournamentOnLoad() {
     var tourney = document.getElementById("details")
     var tid = tourney.getAttribute("data-tid")
     if (tourney.getAttribute("data-owner")) {
-        document.getElementById("delete-tournament").onclick = function() { 
-            // recursive delete with delform?
-            var fd = { "case" : "DelTournament", "tournament_id" : tid }
-            var d = new Dialog("Delete this tournament?", function () { buildSyncForm(fd).submit() })
-            d.show()
-        }
         document.getElementById("add-admin").onclick = function() { addAdmin(tid) }
         document.getElementById("remove-admin").onclick = removeAdminDialog
     } else {
@@ -337,8 +361,6 @@ function tournamentOnLoad() {
         d.show()
         }
     }
-
-            
 
     document.getElementById("add-team").onclick = function () { addTeam(tid, "Team Name", "Details", 0) }
     document.getElementById("add-teams").onclick = function () { bulkAddTeams(tid) }

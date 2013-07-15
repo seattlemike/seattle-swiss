@@ -8,6 +8,8 @@
     finish blank entries on elim bracket display
     elim standings in-progress should give ranks for eliminated teams only
     options for various under-the-hood mechanisms (tie-break, matchups, odd#)
+    better field validation (mostly just strip certain things to alnum/etc: email, slug, name, etc)
+    seed teams from prior modules
   Core:
     better max likelihood?
     link-only mode
@@ -19,6 +21,11 @@
   Other:
     update the About page
     admin settings?
+    auto-update for view -games
+    get rid of view.php, make link from run (and tournament?) to public
+    #tblModule->module_title should be tblModule->module_name, change all
+    fix dblelim colors
+    fix winners bracket final display of winner (dblelim, sgl also?)
     
 #### June 2013
   Fix Immediate:

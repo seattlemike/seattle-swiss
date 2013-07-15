@@ -34,7 +34,7 @@
     $tourney = get_tournament($tid);
 
     if ($module)
-        $title = $module['module_title'];
+        $title = $module['module_name'];
     else
         $title = $tourney['tournament_name'];
 
@@ -51,15 +51,16 @@
             $default_view = array("results", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
             disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
         } else {
-            echo "<div class='header'>Not yet started</div>";
+            echo "<div class='header'>Not yet started</div><div class='line'>";
             disp_teams_list(get_module_teams($mid));
+            echo "</div>";
         }
     } elseif ($tourney) {
         if ($tourney['tournament_privacy'] > 0)
             disp_modules_list(get_tournament_modules($tid));
     }
     else {  // List of public tournaments
-        $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 AND is_fixed = 1 ORDER BY tournament_date DESC", array());
+        $tlist = sql_select_all("SELECT * FROM tblTournament WHERE tournament_privacy = 2 AND is_fixed = 1 ORDER BY tournament_date DESC", array());
 
         // don't display anything more than a week into the future
         foreach( $tlist as $k => $t ) {
@@ -70,12 +71,13 @@
 
         // display last 10 tournaments
         if (! isset($_GET['all'])) {
-            echo "<div class='header'>Recent Tournaments</div>";
-            disp_tournaments(array_slice($tlist,0,10));
+            echo "<div class='header'>Recent Tournaments</div><div class='line'>";
+            disp_tournament_list(array_slice($tlist,0,10));
             //echo "<div class='line'> <a class='button' href='all'>Older Tournaments</a> </div>";
+            echo "</div>";
         } else {
             echo "<div class='header'>Public Tournaments</div>";
-            disp_tournaments($tlist, 'view.php');
+            disp_tournament_list($tlist, 'view.php');
         }
     }
     echo "</div></div></div>\n";

@@ -30,9 +30,12 @@ disp_titlebar();
 <div class='con'>
     <div class='centerBox'>
         <div class='mainBox'>
-            <div class='line'><a class="button" href="/about/">About</a></div>
-            <div class='line'><a class="button" href="/public/">Tournaments</a></div>
-            <div class='line'><a class="button" href="/login/">Login</a></div>
+            <div class='header lline'>(Jul 15, 2013) Note</div><p>We're transition to a new, better version of the software here.  Things look a lot prettier, but not everything works yet.  That should get better in the next week or two.</p>
+        </div>
+        <div class='mainBox'>
+            <div class='item'><a class="button" href="/about/">About</a></div>
+            <div class='item'><a class="button" href="/public/">Tournaments</a></div>
+            <div class='item'><a class="button" href="/login/">Login</a></div>
         </div>
     </div>
 </div>

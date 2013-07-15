@@ -23,73 +23,53 @@
     // Ensure mid/tid are valid and that we have privs to edit
     ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
     $module = get_module($mid) ;
+
     if (! $module) 
         header_redirect("main_menu.php");
-    $tid = $module['parent_id'];
 	require_login();
-    require_privs( tournament_isadmin($tid) );
+    require_privs( tournament_isadmin($module['parent_id']) );
+
+    $tid = $module['parent_id'];
     $tourney = get_tournament($tid);
 
-    // logged in / have privs, so display header
+    // Display header
     $js_extra = array("/ui.js", "/async.js", "/module_ui.js");
     $header_extra = array( '<script type="text/javascript">window.onload = moduleOnLoad</script>' );
-    disp_header("{$tourney['tournament_name']} : {$module['module_title']}", $js_extra, $header_extra);
+    disp_header("{$tourney['tournament_name']} : {$module['module_name']}", $js_extra, $header_extra);
     disp_topbar($tourney, $module, 1);
-    disp_titlebar("{$module['module_title']}");
+    disp_titlebar("{$module['module_name']}");
 
-    //ASSERT: mid/tid are valid and we have privs to edit
-    if (isset($_POST['case'])) {
-        $_POST['tournament_id'] = $tid;
-        $_POST['module_id'] = $mid;
-        switch($_POST['case']) {
-            case 'delete_module':
-                module_delete($mid);
-                header_redirect("/private/tournament/$tid/");
-                break;
-            case 'update_module':
-                module_update($module, $_POST);
-                header_redirect("/private/module/$mid/");
-                break;
-            case 'update_seeds':
-                module_update_seeds($_POST);
-                header_redirect("/private/module/$mid");
-                break;
-        }
-
-    }
+    // old post functions:
+    //module_delete($mid);
+    //module_update($module, $_POST);
+    //module_update_seeds($_POST);
 ?>
 <div class="con">
     <div class="centerBox">
-        <?  //disp_status($tourney) ?>
-        <div class="mainBox">
-            <div class="header">Details</div>
-            <form name="details" method="post" action="">
-                <input type='hidden' name='case' value='update_module' />
-                <input type='hidden' name='module_id' value='<? echo $mid?>' />
-                <?php
-                    disp_module_details($module);
-                    echo "<div class='line'>";
-                    disp_tournament_button("Save Details", 'update_module'); 
-                    echo "</div>";
-                    if (tournament_isowner($tid))
-                        echo "<a id='del-btn' class='button'>Delete Module</a>";
-                ?>
-            </form>
+        <?php
+        //disp_status($tourney)
+        $isowner = ( $tourney['tournament_owner'] == $_SESSION['admin_id'] );
+            echo "<div id='module-details' data-mid='$mid' data-owner='$isowner' class='mainBox'>";
+            $modes = array("Swiss Rounds", "Single Elimination", "Double Elimination", "Round Robin");
+            echo "<div class='header'>Module Details</div>";
+            echo "<div class='item'>".date("M d, Y", strtotime($module['module_date']))."</div>";
+            echo "<div class='item'>{$module['module_name']}</div>";
+            echo "<div class='item'>{$module['module_text']}</div>";
+            echo "<div class='item'>{$modes[$module['module_mode']]}</div>";
+            ?>
+            <a class='button' id='edit-details'>Edit</a>
         </div>
-
-        <div class="mainBox">
+        <div id='module-teams' data-teams='<? echo json_encode(get_tournament_teams($tid), JSON_HEX_APOS) ?>' class="mainBox">
+            <div class="header">Module Teams</div>
             <?php
-                $tournament_teams = get_tournament_teams($tid, "team_id");
-                if (count($tournament_teams)) {
-                    disp_module_teams($mid, $tournament_teams);
-                } else {
-                    echo "<div class='header'>Tournament has no teams yet</div>\n";
-                    echo "<a href='/private/tournament/$tid/' class='button'>Back</a>";
-                }
-                ?>
-        </div>
-        <div class="nav rHead">
-            <div class='header'></div>
+                echo "<div id='team-list'>";
+                foreach (get_module_teams($mid) as $t)
+                    echo "<div data-id='{$t['team_id']}' class='item'>{$t['team_name']}</div>";
+                echo "</div>";
+            ?>
+            <a class='button' id='edit-teams'>Add/Remove</a>
+            <a class='button' id='edit-seeds'>Seeding</a>
+            </div>
         </div>
     </div>
 </div>

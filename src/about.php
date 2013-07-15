@@ -28,6 +28,10 @@
 <div class='con'>
     <div class='centerBox'>
         <div class='mainBox'> 
+            <div class="header">Note</div>
+            <p>This is the old 'about' page, and some of this content is now out-of-date.  Working on that.</p>
+        </div>
+        <div class='mainBox'> 
             <div class="header">About Tournaments</div>
             <p>20Swiss ("Two Oh Swiss") is Tournament Software.  It handles <a
             href="http://en.wikipedia.org/wiki/Swiss-system_tournament">Swiss-style</a> pairing, <a
