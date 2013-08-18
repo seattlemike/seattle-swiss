@@ -128,7 +128,7 @@ function editDetails() {
     details.Mode = new ToggleText(togBtn, ["Swiss Rounds", "Single Elimination", "Double Elimination"])
     details.Mode.original = node.children[4]
     details.Mode.setState(node.children[4].innerHTML)
-    form.appendChild(buildNode("label","","Privacy"))
+    form.appendChild(buildNode("label","","Match Mode"))
     form.lastChild.appendChild(buildNode("div", "lline"))
     form.lastChild.lastChild.appendChild(togBtn)
 

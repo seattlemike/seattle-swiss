@@ -84,11 +84,15 @@ END;
 
 function disp_admin_topbar() {
     echo "<div class='lHead'>\n";
-    echo "<a class='button' href='/private/'>{$_SESSION['admin_name']}</a>";
-    //echo "<a href='/settings/'>settings</a>";
-    if ($_SESSION['admin_type'] == 'super') 
-        echo "<a class='button' href='/super/'>super</a>";
-    echo "<a class='button' href='/logout/'>log out</a>\n";
+    if (check_login()) {
+        echo "<a class='button' href='/private/'>{$_SESSION['admin_name']}</a>";
+        //echo "<a href='/settings/'>settings</a>";
+        if ($_SESSION['admin_type'] == 'super') 
+            echo "<a class='button' href='/super/'>super</a>";
+        echo "<a class='button' href='/logout/'>log out</a>\n";
+    } else {
+        // admin/login button should go here, but not on public watch pages
+    }
     echo "</div>\n";
 }
 
@@ -117,12 +121,8 @@ function disp_modnav_topbar($tourney, $module, $page) {
 // assert: already checked tid/mid/has_privs/etc
 function disp_topbar($tourney=null, $module=null, $page=null) {
     echo "<div class='topNav'>";
-    if (check_login()) {
-        disp_modnav_topbar($tourney, $module, $page);
-        disp_admin_topbar();
-    } else {
-        disp_modnav_topbar($tourney, $module, $page);
-    }
+    disp_modnav_topbar($tourney, $module, $page);
+    disp_admin_topbar();
     echo "</div>";
 }
 

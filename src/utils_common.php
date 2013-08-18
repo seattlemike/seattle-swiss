@@ -88,6 +88,7 @@ function login($user, $pass) {
     if ($creds = get_credentials($user, $pass)) {
         //TODO: should check session_start documentation to make sure that a (potential)
         //      second call to the function without session_end isn't going to ever be an issue
+        sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($creds['admin_id'], 0));
         session_start();
         foreach ($creds as $k => $v)
             $_SESSION[$k] = $v;
@@ -98,6 +99,7 @@ function login($user, $pass) {
 
 function logout() {
     // destroy session cookie
+    sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($_SESSION['admin_id'], 1));
     setcookie(ini_get('session.name'),'',1,'/');
     session_destroy();
     header("location:/index.php");
@@ -490,6 +492,7 @@ function new_tournament() {
                 array("New Tournament", date("Y-m-d"), $_SESSION['admin_id']));
     if (! $newid)
         throw new Exception("Failed to create new tournament");
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], 2, $newid));
     sql_try("UPDATE tblTournament SET tournament_slug = ? WHERE tournament_id = ?", array("new-tournament-$newid", $newid));
     sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $_SESSION['admin_id']));
     return $newid;
@@ -509,6 +512,7 @@ function tournament_update($data) {
 
 function tournament_delete($tid) {
     // TODO: $db = connect_to_db();
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], 3, $tid));
     $modules = get_tournament_modules($tid);
     foreach ($modules as $m) {
         $rounds = get_module_rounds($m['module_id']);
