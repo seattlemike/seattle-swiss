@@ -128,9 +128,11 @@ p { margin: 1em 2em; }
 #run-module .game { cursor: pointer; }
 #run-module .game:hover { background: #cde; }
 
-.compact { overflow: hidden;}
-.compact .item { margin: -0.5em; padding: 0.5em; }
+.compact.dialog-form { overflow: hidden; padding: 0;}
+.compact .item { margin: 0; padding: 0.2em 0.5em; }
 .greyed { color: #888 }
+.compact .selected {background: #cde; }
+.compact .selected:hover { background: #ace; }
 .compact .header { font-size: 1em; }
 .compact .team { margin: 0; padding: 0.3em; background: #658ab3; }
 
@@ -577,6 +579,7 @@ input.dialog-score {
 .dialog-form {
     text-align: left;
     border: 2px dashed #4f6c8c;
+    /*border: 2px solid #ace;*/
     border-radius: 0.5em;
     padding: 0.5em;
 }

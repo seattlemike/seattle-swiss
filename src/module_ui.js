@@ -155,15 +155,22 @@ function editDetails() {
     d.show()
 }
 
+function getTeams() {
+    var teams = {}
+    var data = JSON.parse(document.getElementById("module-teams").getAttribute("data-teams"))
+    for (var i=0; i<data.length; i++) {
+        teams[data[i].team_id] = data[i]
+    }
+    return teams
+}
+
 function editTeams() {
     var listBox = buildNode("div", "compact dialog-form")
-    var teamList = {}
-
-    var allteams = JSON.parse(document.getElementById("module-teams").getAttribute("data-teams"))
-    for (var i=0; i<allteams.length; i++) {
-        var node = buildNode("div", "viable item greyed", allteams[i].team_name)
-        allteams[i].toggle = new ToggleClass(node, ["viable item greyed", "viable item selected"])
-        teamList[allteams[i].team_id] = allteams[i]
+    var teamList = getTeams()
+    
+    for (var id in teamList) {
+        var node = buildNode("div", "viable item greyed", teamList[id].team_name)
+        teamList[id].toggle = new ToggleClass(node, ["viable item greyed", "viable item"])
         listBox.appendChild(node)
     }
 
@@ -177,30 +184,91 @@ function editTeams() {
     var d = new Dialog("Participating Teams", function () {
         var tList = document.getElementById("team-list")
         var mid = document.getElementById("module-details").getAttribute("data-mid")
-        for (var i=0; i<allteams.length; i++) {
+        for (id in teamList) {
+            var t = teamList[id]
             var fd = new FormData()
-            fd.append("team_id", allteams[i].team_id)
+            fd.append("team_id", id)
             fd.append("module_id", mid)
-            if ((! allteams[i].toggle.index) && (allteams[i].original)) {
+            if ((! t.toggle.index) && (t.original)) {
                 var async = new asyncPost()
                 fd.append("case","ModuleDelTeam")
                 async.post(fd)
-                tList.removeChild(allteams[i].original)
-            } else if ((allteams[i].toggle.index) && (! allteams[i].original)) {
+                tList.removeChild(t.original)
+            } else if ((t.toggle.index) && (! t.original)) {
                 var async = new asyncPost()
                 fd.append("case","ModuleAddTeam")
                 async.post(fd)
-                tList.appendChild(buildNode("div", "item", allteams[i].team_name))
-                tList.lastChild.setAttribute("data-id", allteams[i].team_id)
+                tList.appendChild(buildNode("div", "item", t.team_name))
+                tList.lastChild.setAttribute("data-id", t.team_id)
             }
         }
-    })
+    } )
     d.insert(listBox)
     d.show()
-
 }
-function editSeeds() {
 
+function editSeeds() {
+    var listBox = buildNode("div", "compact dialog-form")
+    var teamIndex = getTeams()
+    var teamList = []
+
+    var moveTo = function(selected, t) {
+        var shift = Math.round((t.index - selected.index) / Math.abs(t.index - selected.index))
+        while (selected.index - shift != t.index) {
+            teamList[selected.index] = teamList[selected.index + shift]
+            teamList[selected.index].index = selected.index
+            selected.index += shift
+        }
+        teamList[selected.index] = selected
+
+        // redraw team list
+        for (var i=0; i<teamList.length; i++) {
+            listBox.removeChild(teamList[i].node)
+            listBox.appendChild(teamList[i].node)
+        }
+    }
+
+    var dragReset = function(selected) {
+        // reset state of list
+        for (var i=0; i<teamList.length; i++) {
+            teamList[i].node.className = "viable item"
+            teamList[i].node.onmouseenter = function () {}
+        }
+        // prime list for dragging 'selected'
+        if (selected) {
+            selected.node.className = "viable item selected"
+            for (var i=0; i<teamList.length; i++) {
+                teamList[i].node.onmouseenter = function(t) { return function () { moveTo(selected, t) } }(teamList[i])
+            }
+            selected.node.onmouseenter = function () {}
+        }
+    }
+    
+    var midteams = document.getElementById("team-list").children
+    for (var i=0; i<midteams.length; i++) {
+        var t = teamIndex[parseInt(midteams[i].getAttribute("data-id"))]
+        t.original = midteams[i]
+        t.index = i
+        t.node = buildNode("div", "viable item", t.team_name)
+        t.node.onmousedown = function (team) { return function () { dragReset(team); return false } }(t)
+        //t.toggle = new ToggleClass(node, ["viable item", "viable item selected"])
+        listBox.appendChild(t.node)
+        teamList.push(t)
+    }
+    listBox.onmouseup = function () { dragReset() }
+
+    var updateSeeds = function () {
+        var midBox = document.getElementById("team-list")
+        for (var i=0; i<teamList.length; i++) {
+            var t = teamList[i]
+            midBox.removeChild(t.original)
+            midBox.appendChild(t.original)
+        }
+    }
+
+    var d = new Dialog("Seeding order", updateSeeds)
+    d.insert(listBox)
+    d.show()
 }
 
 function moduleOnLoad() {
