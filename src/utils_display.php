@@ -411,7 +411,7 @@ function disp_module_games($module, $rounds) {
                 if (! $terms[count($teams)])
                     $terms[count($teams)] = 'Round of '.count($teams);
                 echo "<div class='header'>{$terms[count($teams)]}</div>";
-                disp_round_games($r);
+                disp_games(filter_games($r['round_id'], $teams));
                 echo "</div>";
             }
             break;
