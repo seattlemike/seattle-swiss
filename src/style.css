@@ -216,7 +216,7 @@ td.numeric { min-width: 40px; }
     padding: 0;
     border-collapse: collapse;
 }
-.standings .spacer { min-width: 1em; }
+.standings .spacer { min-width: 1em; height: 2em;}
 .standings-team { 
     white-space: nowrap;
     position: relative;

@@ -350,7 +350,7 @@ function disp_standings($module, $view=null) {
             }
             break;
         case "bracket":
-            if ($module['module_mode'] == 0) {
+            if ($module['module_mode'] == 1) {
                 echo "<div class='header'>Elimintaion Bracket</div>";
                 disp_sglelim($module, $rounds);
             }
