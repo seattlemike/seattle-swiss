@@ -56,32 +56,6 @@ function checkSaveSeeds() {
     }
 }
 
-function saveSeeds() {
-    // sort teams
-    /*
-    var teams = document.querySelectorAll(".module-team")
-    var saveButton = document.getElementById("save-seeds")
-    var inputs = []
-    var newSeeds = []
-    for (var i=0; i<teams.length; i++) {
-        inputs[i] = teams[i].getElementsByTagName('input')[0]
-        if (inputs[i].getAttribute("data-seed") && isNaN(parseInt(inputs[i].value)))
-            inputs[i].value = teams[i].getAttribute("data-seed");
-    }
-    while(teams.length) {
-        var idx=0, minSeed=parseInt(inputs[value])
-        for (var i=1; i<teams.length; i++) {
-            if isNan(parseInt(
-        }
-        newSeeds.push( teams[idx] )
-        delete teams[idx]
-        delete inputs[idx]
-    }
-    */
-    // save to db
-    document.forms.teams.submit()
-}
-
 function tryUpdateDetails(details) {
     var async = new asyncPost()
     var fd = new FormData()
@@ -232,15 +206,15 @@ function editSeeds() {
         // reset state of list
         for (var i=0; i<teamList.length; i++) {
             teamList[i].node.className = "viable item"
-            teamList[i].node.onmouseenter = function () {}
+            teamList[i].node.onmouseover = function () {}
         }
         // prime list for dragging 'selected'
         if (selected) {
             selected.node.className = "viable item selected"
             for (var i=0; i<teamList.length; i++) {
-                teamList[i].node.onmouseenter = function(t) { return function () { moveTo(selected, t) } }(teamList[i])
+                teamList[i].node.onmouseover = function(t) { return function () { moveTo(selected, t) } }(teamList[i])
             }
-            selected.node.onmouseenter = function () {}
+            selected.node.onmouseover = function () {}
         }
     }
     
@@ -251,7 +225,6 @@ function editSeeds() {
         t.index = i
         t.node = buildNode("div", "viable item", t.team_name)
         t.node.onmousedown = function (team) { return function () { dragReset(team); return false } }(t)
-        //t.toggle = new ToggleClass(node, ["viable item", "viable item selected"])
         listBox.appendChild(t.node)
         teamList.push(t)
     }
