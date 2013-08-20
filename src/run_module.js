@@ -150,7 +150,7 @@ function GamesList() {
                 var roundNode = buildNode("div", "round");
                 // TODO: async get the round number (round title?)
                 roundNode.appendChild(buildNode("div", "header", "Round "+round.round_number));
-                roundNode.appendChild(buildNode("div", "compact games-list"));
+                roundNode.appendChild(buildNode("div", "games-list"));
                 var node = document.getElementById("module")
                 node.insertBefore(roundNode, node.firstChild);
                 self.rounds[rid] = new Round(roundNode, rid)
@@ -295,7 +295,7 @@ function deleteGamesDialog() {
     var rounds = document.querySelectorAll(".round")
     for(var i=0; i<rounds.length; i++) {
         var round = buildNode("div", "round", "")
-        round.appendChild(rounds[i].firstChild.cloneNode())
+        //round.appendChild(rounds[i].firstChild.cloneNode())
         round.appendChild(buildNode("div", "games-list"))
         var gameNodes = rounds[i].lastChild.children;
         for(var j=0; j<gameNodes.length; j++) {
@@ -392,16 +392,11 @@ function delToggle() {
 }
 
 function runModuleOnLoad() {
-    //document.getElementById("fill-round").onclick = fillRound;
-    //document.getElementById("empty-round").onclick = fillRound;
-    //document.getElementById("delete-round").onclick = fillRound;
-
     list = new GamesList() // global games list (with game nodes)
     // build rounds-list and games-list from existing round/game nodes
     var rounds = document.querySelectorAll(".round")
     for(var i=0; i<rounds.length; i++)
         list.addRoundNode(rounds[i])
-
 
     list.updateNextBtn()
     document.getElementById("game-add").onclick = addGameDialog 

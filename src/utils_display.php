@@ -401,8 +401,16 @@ function disp_module_games($module, $rounds) {
             break;
         case 1:
             $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
-            foreach(array_reverse($rounds) as $r) {
+            foreach(array_reverse($rounds) as $i => $r) {
                 echo "<div class='round'>";
+                if (array_key_exists($i+1, $rounds))
+                    $teams = get_standings($rounds[$i+1]);
+                else
+                    $teams = get_standings(standings_init_round($module['module_id']));
+                $teams = array_filter($teams, function($t) { return ($t['status'] > 0); });
+                if (! $terms[count($teams)])
+                    $terms[count($teams)] = 'Round of '.count($teams);
+                echo "<div class='header'>{$terms[count($teams)]}</div>";
                 disp_round_games($r);
                 echo "</div>";
             }
