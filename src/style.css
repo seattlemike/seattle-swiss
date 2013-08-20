@@ -135,6 +135,10 @@ p { margin: 1em 2em; }
 .compact .selected:hover { background: #ace; }
 .compact .header { font-size: 1em; }
 .compact .team { margin: 0; padding: 0.3em; background: #658ab3; }
+.compact .game { padding: 0.2em 1em }
+.compact .header { margin: 0 }
+.compact .games-list { margin: 0.2em 1em 0.5em 1em }
+.game.greyed { background: #e6ecf8; }
 
 .status { cursor: pointer; }
 

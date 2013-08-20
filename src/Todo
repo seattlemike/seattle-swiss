@@ -1,7 +1,7 @@
 *Readme* - major stuff
 
 #### Aug 2013
-    I broke the styling for various of the run_module popup.compact ui
+    fix run_module.js toggles to use Toggle class
 
 #### July 2013
   Interface:

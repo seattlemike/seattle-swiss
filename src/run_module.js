@@ -150,7 +150,7 @@ function GamesList() {
                 var roundNode = buildNode("div", "round");
                 // TODO: async get the round number (round title?)
                 roundNode.appendChild(buildNode("div", "header", "Round "+round.round_number));
-                roundNode.appendChild(buildNode("div", "games-list"));
+                roundNode.appendChild(buildNode("div", "compact games-list"));
                 var node = document.getElementById("module")
                 node.insertBefore(roundNode, node.firstChild);
                 self.rounds[rid] = new Round(roundNode, rid)
@@ -280,10 +280,10 @@ function deleteGamesDialog() {
         this.toggle = function() {
             if (self.delTag) {
                 self.delTag=0
-                self.node.className = self.node.className.replace(" selected", "")
+                self.node.className = self.node.className.replace(" greyed", "")
             } else {
                 self.delTag=1;
-                self.node.className += " selected"
+                self.node.className += " greyed"
             }
         }
         this.node.onclick = this.toggle
