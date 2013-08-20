@@ -67,11 +67,11 @@ function Game(node, scores, data) {
         var statusText = ["Scheduled", "Finished", "Now Playing"]
         return statusText[s];
     }
-    this.getFormData = function () {
-        var fd = new FormData()
-        fd.append("game_data", JSON.stringify( { "status" : self.status, "game_id": data.game_id } ))
-        fd.append("score_data", JSON.stringify(scores))
-        return fd
+    this.postUpdate = function () {
+        var gameData = { "status":self.status, "game_id":data.game_id }
+        var async = new asyncPost()
+        async.onSuccess = function () { node.onclick = self.show; list.updateNextBtn() }
+        async.post( { 'case':'UpdateGame', 'score_data':JSON.stringify(scores), 'game_data':JSON.stringify(gameData) } )
     }
     this.deleteGame = function () {
         var async = new asyncPost()
@@ -79,11 +79,8 @@ function Game(node, scores, data) {
             node.parentNode.removeChild(node); 
             list.updateNextBtn() 
         }
-        var fd = new FormData()
-        fd.append("case", "DeleteGame")
-        fd.append("game_id", data.game_id)
+        async.post({'case':'DeleteGame', 'game_id':data.game_id})
         node.onclick = ""
-        async.post(fd)
     }
 
     this.node = node
@@ -197,10 +194,7 @@ function GamesList() {
                     var async = new asyncPost()
                     // anonymous function to hold reference to round id
                     async.onSuccess = (function (rid) { return function () { delete self.rounds[rid]; self.updateNextBtn() } })(round.rid)
-                    var fd = new FormData()
-                    fd.append("case", "DeleteRound")
-                    fd.append("round_id", round.rid)
-                    async.post(fd)
+                    async.post({'case':'DeleteRound', 'round_id':round.rid})
                 }
                 self.games.splice(i,1);
             }
@@ -233,11 +227,7 @@ function GameDialog(game) {
         }
         game.node.onclick = ""
         game.setStatus(tmpStatus)
-        var async = new asyncPost()
-        async.onSuccess = function () { game.node.onclick = self.show; list.updateNextBtn() }
-        var fd = game.getFormData()
-        fd.append("case", "UpdateGame")
-        async.post(fd)
+        game.postUpdate()
     }
 
     this.show = function () { 
@@ -355,23 +345,14 @@ function addGameDialog() {
         var newTeams = []
         for (var i=0; i<teamList.length; i++)
             if (teamList[i].selected)
-                newTeams.push(teamList[i])
+                newTeams.push({'id':teamList[i].id})
         if ((newTeams.length == 1) || (newTeams.length == 2)) {
             var async = new asyncPost()
-            async.onSuccess = function (response) { 
-                list.insertGame(response)
-            }
-            var fd = new FormData()
-            fd.append("case", "AddGame")
-            fd.append("module_id", moduleData.module_id)
-            fd.append("a_id", newTeams[0].id)
-            if (newTeams[1])
-                fd.append("b_id", newTeams[1].id)
-            async.post(fd)
+            async.onSuccess = function (response) { list.insertGame(response) }
+            async.post( {'case':'AddGame', 'module_id':moduleData.module_id, 'team_data':JSON.stringify(newTeams)} )
         }
     })
     d.insert(listBox)
-    d.dialog.style.position = "absolute"
     d.show()
 }
 
@@ -387,10 +368,7 @@ function addRound(module_id) {
         list.insertGames(response.round, response.games)
         list.updateNextBtn()
     }
-    var fd = new FormData()
-    fd.append("case", "AddRound")
-    fd.append("module_id", module_id)
-    async.post(fd)
+    async.post({'case':'AddRound', 'module_id':module_id})
 }
 
 function delToggle() {

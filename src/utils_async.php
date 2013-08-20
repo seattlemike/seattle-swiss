@@ -124,21 +124,24 @@ function asyncModuleUpdate($mid, $data) {
             array($data['module_name'], date("Y-m-d", strtotime($data['module_date'])), $data['module_text'], $data['module_mode'], $mid));
 }
 
-// add/remove Teams for Module $mid
-function asyncModuleAddTeam($mid, $team_id) {
+function asyncModuleSeeds($mid, $teams) {
     $module = get_module($mid);
     checkTournamentPrivs($module['parent_id']);
-    checkTournamentTeam($module['parent_id'], $team_id);
-    $seed = sql_select_one("SELECT MAX(team_seed) maxseed FROM tblModuleTeams JOIN tblTeam USING (team_id) WHERE module_id = ?", array($mid));
-    if (! module_hasteam($mid, $team_id))
-        sql_try("INSERT INTO tblModuleTeams (module_id, team_id, team_seed) VALUES (?, ?, ?)", array($mid, $team_id, $seed["maxseed"] + 1));
+    foreach($teams as $t)
+        sql_try("UPDATE tblModuleTeams SET team_seed=? WHERE team_id=? AND module_id=?", array($t->seed, $t->id, $mid));
 }
-function asyncModuleDelTeam($mid, $team_id) {
+
+function asyncModuleTeams($mid, $teams) {
     $module = get_module($mid);
     checkTournamentPrivs($module['parent_id']);
-    checkTournamentTeam($module['parent_id'], $team_id);
-    if (module_hasteam($mid, $team_id))
-        sql_try("DELETE FROM tblModuleTeams WHERE module_id = ? AND team_id = ?", array($mid, $team_id));
+    foreach($teams as $t) {
+        if (($t->state == 0) && (module_hasteam($mid, $t->id))) {
+                sql_try("DELETE FROM tblModuleTeams WHERE module_id = ? AND team_id = ?", array($mid, $t->id));
+        } elseif (($t->state == 1) && (! module_hasteam($mid, $t->id))) {
+            $seed = sql_select_one("SELECT MAX(team_seed) maxseed FROM tblModuleTeams JOIN tblTeam USING (team_id) WHERE module_id = ?", array($mid));
+            sql_try("INSERT INTO tblModuleTeams (module_id, team_id, team_seed) VALUES (?, ?, ?)", array($mid, $t->id, $seed["maxseed"] + 1));
+        }
+    }
 }
 
 // Add/Delete Rounds for Module $mid
@@ -165,16 +168,12 @@ function asyncDelRound($round_id) {
 }
 
 // Add/Update/Delete Games for module $mid
-function asyncAddGame($mid, $a_id, $b_id) {
+function asyncAddGame($mid, $teams) {
     $module = get_module($mid);
     checkTournamentPrivs($module['parent_id']);
-    checkTournamentTeam($module['parent_id'], $a_id);
+    foreach ($teams as $t)
+        checkTournamentTeam($module['parent_id'], $t['id']);
     $select = sql_select_one("SELECT MAX(round_id) AS latest FROM tblRound WHERE module_id = ?", array($mid));
-    $teams[0] = array("id" => $a_id);
-    if ($b_id) {
-        checkTournamentTeam($module['parent_id'], $b_id);
-        $teams[1] = array("id" => $b_id);
-    }
     $game_id = round_add_game($select['latest'], $teams);
     return array("game_data" => get_game($game_id), "score_data" => get_game_scores($game_id));
 }

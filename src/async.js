@@ -27,9 +27,12 @@ function asyncPost(onSuccess) {
         }
     }
     this.onSuccess = onSuccess
-    this.post = function (formdata) {
+    this.post = function (data) {
+        var fd = new FormData()
+        for (i in data)
+            fd.append(i, data[i])
         self.xhr.open("POST", "/async.php", true)
-        self.xhr.send(formdata);
+        self.xhr.send(fd);
     }
     this.addEventListener = function(eventType, callback) { self.xhr.upload.addEventListener(eventType, callback) }
 }

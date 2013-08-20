@@ -53,11 +53,11 @@
                 case 'UpdateModule':
                     asyncModuleUpdate($_POST['module_id'], $_POST);
                     break;
-                case 'ModuleAddTeam':  // add team_id to the teams competing in module_id
-                    asyncModuleAddTeam($_POST['module_id'], $_POST['team_id']);
+                case 'ModuleTeams': // add/remove teams from the module
+                    asyncModuleTeams($_POST['module_id'], json_decode($_POST['team_data']));
                     break;
-                case 'ModuleDelTeam':  // add team_id to the teams competing in module_id
-                    asyncModuleDelTeam($_POST['module_id'], $_POST['team_id']);
+                case 'ModuleSeeds':
+                    asyncModuleSeeds($_POST['module_id'], json_decode($_POST['team_data']));
                     break;
 
                 // Async Run-module
@@ -68,7 +68,7 @@
                     asyncDelRound($_POST['round_id']);
                     break;
                 case 'AddGame':
-                    $retval = asyncAddGame($_POST['module_id'], $_POST['a_id'], $_POST['b_id']);
+                    $retval = asyncAddGame($_POST['module_id'], json_decode($_POST['team_data'], true));
                     break;
                 case 'UpdateGame':  // update score/status for game
                     asyncUpdateGame(json_decode($_POST['game_data'], true), json_decode($_POST['score_data'], true));

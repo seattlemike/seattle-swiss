@@ -63,27 +63,17 @@ function addTeam(tid, name, details, uid) {
 
     // add team to database
     var async = new asyncPost()
-    var fd = new FormData()
-    fd.append("case", "NewTeam")
-    fd.append("tournament_id", tid)
-    fd.append("team_name", name)
-    fd.append("team_details", details)
-    fd.append("team_uid", uid)
     async.onSuccess = function (r) { 
         t.onclick = function () { editTeam(t) }
         t.className='team viable'
         t.setAttribute("data-teamid", r.teamId)
     }
-    async.post(fd)
+    async.post({'case':'NewTeam', 'tournament_id':tid, 'team_name':name, 'team_details':details, 'team_uid':uid})
 }
 
 function tryDeleteTeam(node) {
     var tourney = document.getElementById("details")
     var async = new asyncPost()
-    var fd = new FormData()
-    fd.append("case", "DeleteTeam")
-    fd.append("tournament_id", tourney.getAttribute("data-tid") )
-    fd.append("team_id", node.getAttribute("data-teamid") )
     async.onSuccess = function (r) {
         if (r.deleted == true) {
             node.parentNode.removeChild(node) 
@@ -93,28 +83,23 @@ function tryDeleteTeam(node) {
             node.className="team viable"
         }
     }
+    async.post( {'case':'DeleteTeam', 
+                 'tournament_id':tourney.getAttribute("data-tid"), 
+                 'team_id':node.getAttribute("data-teamid")} )
     node.onclick = ""
     node.className="team"
-    async.post(fd)
 }
 
 function tryUpdateTeam(node, team) {
     tourney = document.getElementById("details")
     var async = new asyncPost()
-    var fd = new FormData()
-    fd.append("case", "UpdateTeam")
-    fd.append("tournament_id", tourney.getAttribute("data-tid") )
-    fd.append("team_id", team.teamid)
-    fd.append("team_name", team.name)
-    fd.append("team_details", team.details)
-    fd.append("team_uid", team.uid)
     async.onSuccess = function () { 
         node.onclick = function () { editTeam(node) }
         node.className = "team viable"
     }
-
     buildTeamNode(node, team)
-    async.post(fd);
+    async.post( {'case':'UpdateTeam', 'tournament_id':tourney.getAttribute("data-tid"),
+                 'team_id':team.teamid, 'team_name':team.name, 'team_details':team.details, 'team_uid':team.uid} )
 }
 
 function editTeam(node) {
@@ -177,14 +162,11 @@ function addModule(tid) {
 
     // add module to database
     var async = new asyncPost()
-    var fd = new FormData()
-    fd.append("case", "NewModule")
-    fd.append("tournament_id", tid)
     async.onSuccess = function (r) { 
         m.firstChild.href="/rss/"+r.moduleId+"/";
         m.lastChild.href="/private/module/"+r.moduleId+"/";
     }
-    async.post(fd)
+    async.post({'case':'NewModule', 'tournament_id':tid})
 }
 
 function addAdmin(tid) {
@@ -198,10 +180,6 @@ function addAdmin(tid) {
     var d = new Dialog(details.name, function () { 
         // check for admin-email valid and add to tournament 
         var async = new asyncPost()
-        var fd = new FormData()
-        fd.append("case", "AddAdmin")
-        fd.append("tournament_id", tid)
-        fd.append("admin_email", email.value)
         async.onSuccess = function (r) { 
             if (r.adminEmail) {
                 node.replaceChild(document.createTextNode(r.adminName+" ("+r.adminEmail+")"), node.firstChild)
@@ -209,7 +187,7 @@ function addAdmin(tid) {
                 node.appendChild(document.createTextNode(" FAILED TO ADD ADMIN"))
             }
         }
-        async.post(fd)
+        async.post({'case':'AddAdmin', 'tournament_id':tid, 'admin_email':email.value})
         node.appendChild(document.createTextNode(email.value))
         document.getElementById("admins-list").appendChild(node)
     } )
@@ -219,14 +197,13 @@ function addAdmin(tid) {
 
 function tryUpdateDetails(details) {
     var async = new asyncPost()
-    var fd = new FormData()
-    fd.append("case", "UpdateTournament")
-    fd.append("tournament_id", details.tid)
-    fd.append("tournament_name", details.Name.input.value)
-    fd.append("tournament_text", details.Text.input.value)
-    fd.append("tournament_date", details["Date"].input.value)
-    fd.append("tournament_slug", details.Slug.input.value)
-    fd.append("tournament_privacy", details.Privacy.index)
+    var postDetails = {"case":"UpdateTournament", 
+                       "tournament_id":details.tid,
+                       "tournament_name":details.Name.input.value,
+                       "tournament_text":details.Text.input.value,
+                       "tournament_date":details["Date"].input.value,
+                       "tournament_slug":details.Slug.input.value,
+                       "tournament_privacy":details.Privacy.index }
     async.onSuccess = function(r) { 
         document.getElementById("title").innerHTML=details.Name.input.value
         details.Name.original.innerHTML = details.Name.input.value
@@ -242,7 +219,7 @@ function tryUpdateDetails(details) {
         btn.className = "button"
         btn.onclick = editDetails
     }
-    async.post(fd)
+    async.post(postDetails)
 }
 
 function editDetails() {
@@ -298,6 +275,7 @@ function editDetails() {
 }
 
 function removeAdminDialog() {
+    var tid = document.getElementById("details").getAttribute("data-tid")
     var dialogToggle = function(oldNode) {
         var self = this
         var adminText = oldNode.innerHTML
@@ -334,11 +312,7 @@ function removeAdminDialog() {
         for (var i=0; i<adminList.length; i++)
             if (adminList[i].selected) {
                 var async = new asyncPost()
-                var fd = new FormData()
-                fd.append("case", "RemoveAdmin")
-                fd.append("tournament_id", document.getElementById("details").getAttribute("data-tid"))
-                fd.append("admin_email", adminList[i].email)
-                async.post(fd)
+                async.post({'case':'RemoveAdmin', 'tournament_id':tid, 'admin_email':adminList[i].email})
                 adminList[i].original.parentNode.removeChild(adminList[i].original)
             }
     })
