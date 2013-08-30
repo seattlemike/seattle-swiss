@@ -712,15 +712,67 @@ function get_lbracket($standings, $rounds) {
 
     $bracket[] = array();
 
-    // rnum: 2, 3, 4, ..., 2*nrounds-1
+    $nteams_wb = count($standings);
+    $team_idx = array(0);
+    $skip = $bsize / 2;
+    while (count($team_idx) < $nteams_wb) {
+        for ($i=count($team_idx); $i > 0 && count($team_idx) < $nteams_wb; $i--)
+            $team_idx[] = $team_idx[$i-1]+$skip;
+        $skip /= 2;
+    }
+
+
+    // TODO: refactor the actual lbracket display to work inside of the grey-display?
+    $del = $nteams_wb - pow(2, intval(ceil(log($nteams_wb,2))-1));
+    $nteams_wb -= $del;
+    $nteams_lb += $del;
     foreach ($rounds as $i => $rnum) {
-        //if (! $bracket[$i]) $bracket[$i] = array();
         $psize = pow(2, intval($rnum / 2)); // pocket size for single space in bracket
 
-        //if (!isset($bracket[$i][$idx+$offset-intval($rnum/2)+1]))
-        //$bracket[$i][$idx+$offset-intval($rnum/2)+1] = array('color' => 'grey', 'upper' => ! $is_upper);
-        //}
+        //echo "<div>$nteams_wb / $nteams_lb</div>";
 
+        if ($nteams_wb < $nteams_lb) {
+            $del = $nteams_lb - $nteams_wb;
+            $nsolo = $nteams_lb - 2*$del;
+            //echo "<div>Psize: $psize, Del: $del, Nsolo: $nsolo</div>";
+            for ($x=$nteams_wb; $x < $nteams_lb+$nteams_wb; $x++) {
+                $idx = $team_idx[$x];
+                $is_upper = ($idx % $psize == 0);
+                if ($is_upper)  $offset = -1 * ($idx % $psize);
+                else            $offset = 1-($idx % $psize);
+                $offset--;
+                //$offset++; // shift all losers-only rounds down one step
+                if ($x < $nteams_wb + $nsolo)
+                    $is_upper = 2;
+                $bracket[$i][$idx+$offset-intval($rnum/2)+1] = array('color' => 'grey', 'upper' => $is_upper);
+            } 
+
+        } else {
+            $del= max(0, $nteams_lb - $nteams_wb / 2);// ngames in lb
+            $nsolo = $nteams_lb - 2*$del;
+            //echo "<div>#Psize: $psize, Del: $del, Nsolo: $nsolo</div>";
+            for ($x=$nteams_wb; $x < $nteams_lb+$nteams_wb; $x++) {
+                $idx = $team_idx[$x];
+                // dropping down: 
+                $is_upper = ($idx % (2 * $psize) != $idx % $psize);
+                //if ($old_upper) $offset = -1 * ($idx % $psize);
+                //else            $offset = $psize-1-($idx % $psize)+1;
+                if ($is_upper)  $offset = -1 * ($idx % $psize);
+                else            $offset = 1 - ($idx % $psize)+$psize;
+
+                // solo?
+                if ($x < $nteams_wb + $nsolo)
+                    $is_upper = 2;
+                $bracket[$i][$idx+$offset-intval($rnum/2)+1] = array('color' => 'grey', 'upper' => $is_upper);
+            }
+            $nteams_wb /= 2;
+            $del -= $nteams_wb;  // incoming teams from wb
+        }
+        $nteams_lb -= $del;
+        
+
+        //if (! $bracket[$i]) $bracket[$i] = array();
+        $psize = pow(2, intval($rnum / 2)); // pocket size for single space in bracket
         foreach ($standings as $t) {
             if ($t['results'][$rnum]) {
                 $idx = (int) $t['loser_idx'] / 2;
@@ -750,6 +802,7 @@ function get_lbracket($standings, $rounds) {
             }
         }
     }
+
     return $bracket;
 }
 

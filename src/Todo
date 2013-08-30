@@ -2,12 +2,13 @@
 
 #### Aug 2013
     fix run_module.js toggles to use Toggle class
+    elim scores forbid tie (game status finished => now-playing)
 
 #### July 2013
   Interface:
-    module teams / seeding
-    tournament details
-    module details
+    #module teams / seeding
+    #tournament details
+    #module details
     finish blank entries on elim bracket display
     elim standings in-progress should give ranks for eliminated teams only
     options for various under-the-hood mechanisms (tie-break, matchups, odd#)
@@ -17,7 +18,7 @@
     better max likelihood?
     link-only mode
     no rematches
-    EVENT LOG
+    #EVENT LOG
     auto game-add in elim
     figure out round/game-add for swiss
     add round-robin mode
@@ -25,7 +26,7 @@
     update the About page
     admin settings?
     auto-update for view -games
-    get rid of view.php, make link from run (and tournament?) to public
+    get rid of view.php, make link from run (and tournament?) to public [but private standings?]
     #tblModule->module_title should be tblModule->module_name, change all
     fix dblelim colors
     fix winners bracket final display of winner (dblelim, sgl also?)
