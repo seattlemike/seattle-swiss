@@ -114,6 +114,7 @@ function get_dblelim_pairings($tid) {
     $lbracket = array_filter($standings, function ($t) { return ($t['status'] == 1); });
     $wbracket = array_filter($standings, function ($t) { return ($t['status'] == 2); });
 
+    /*
     foreach($standings as $k => $t) {
         debug_alert($k);
         print_r($t);
@@ -123,6 +124,7 @@ function get_dblelim_pairings($tid) {
         debug_alert($k);
         print_r($t);
     }
+    */
 
     // LOSERS' BRACKET MATCHES
     if (count($lbracket) == 0)

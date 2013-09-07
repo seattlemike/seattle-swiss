@@ -37,6 +37,9 @@ body {
     margin-left: auto;
     margin-right: auto;
 }
+.indent {
+    padding-left: 1em;
+}
 .light-box, .dialog, .topHeader, .mainBox { background: #e6ecf8; }
 
 /* Fonts */

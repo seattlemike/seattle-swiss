@@ -28,14 +28,6 @@
 // **GENERIC**
 //
 
-function ordinal($cdnl){
-    $test_c = abs($cdnl) % 10;
-    $ext = ((abs($cdnl) %100 < 21 && abs($cdnl) %100 > 4) ? 'th'
-        : (($test_c < 4) ? ($test_c < 3) ? ($test_c < 2) ? ($test_c < 1)
-        ? 'th' : 'st' : 'nd' : 'rd' : 'th'));
-    return $cdnl.$ext;
-}  
-
 // button with onclick that modifies form.action
 function disp_disabled_button($value, $name="submit_btn") {
     echo "<input class='button' name='$name' value='$value' DISABLED />";
@@ -386,80 +378,40 @@ function disp_teams_list($teams) {
     echo "</div>";
 }
 
+
 //
 // Display Games
 //
 function disp_module_games($module, $rounds) {
+    foreach (array_reverse($rounds) as $round)
+        foreach (get_round_data($round['round_id'], $module) as $r)
+            disp_round_games($r['rid'], $r['title'], $r['games']);
+/*
     switch ($module['module_mode']) {
-        case 0:
-            foreach (array_reverse($rounds) as $r) {
-                echo "<div class='round' data-rid='{$r['round_id']}'>";
-                echo "<div class='header'>Round {$r['round_number']}</div>";
-                disp_games(get_round_games($r['round_id'])); // get rid of byes?
-                echo "</div>";
-            }
-            break;
-        case 1:
-            $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
-            foreach(array_reverse($rounds) as $i => $r) {
-                echo "<div class='round'>";
-                if (array_key_exists($i+1, $rounds))
-                    $teams = get_standings($rounds[$i+1]);
-                else
-                    $teams = get_standings(standings_init_round($module['module_id']));
-                $teams = array_filter($teams, function($t) { return ($t['status'] > 0); });
-                if (! $terms[count($teams)])
-                    $terms[count($teams)] = 'Round of '.count($teams);
-                echo "<div class='header'>{$terms[count($teams)]}</div>";
-                disp_games(filter_games($r['round_id'], $teams));
-                echo "</div>";
-            }
-            break;
-        case 2:
-            $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
-            $lbterms = array(4 => "Fourth Place Games", 3 => "Losers' Bracket Finals");
+        case MODULE_MODE_DBLELIM:
             foreach(array_reverse($rounds, true) as $idx => $r) {
-                echo "<div class='round'>";
-                // split round up if both winners and losers
-                if (array_key_exists($idx-1, $rounds))
-                    $teams = get_standings($rounds[$idx-1]);
-                else
-                    $teams = get_standings(standings_init_round($module['module_id']));
-
-                $teams = array_filter($teams, function($t) { return ($t['status'] > 0); });
-
-                if (count($teams) == 2) { // FINALS!
-                    $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
-                    if (count($lb) == 1)
-                        echo "<div class='header'>Tournament Finals</div>";
-                    else 
-                        echo "<div class='header'>Final Finals Game</div>";
-                    disp_round_games($r); // well, there's only one
+                $teams = array_filter(get_standings_before($r), function($t) { return ($t['status'] > 0); });
+                if (count($teams) == 2) { // FINALS! - only one game to display here
+                    disp_round_games($r['round_id'], get_round_title($module, $r), get_round_games($r['round_id']));
                 } else { // Not Finals (i.e. regular wb/wb and lb/lb games)
+                    $titles = get_round_title($module, $r);
                     $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
-                    $games = filter_games($r['round_id'], $wb);
-                    if ($games) {
-                        if ($wbterms[count($wb)])
-                            echo "<div class='header'>Winners' Bracket {$wbterms[count($wb)]}</div>";
-                        else
-                            echo "<div class='header'>Winners' Bracket Round of ".count($wb)."</div>";
-                        // filter games for wb
-                        disp_games($games);
-                    } 
+                    $games = filter_games($r['round_id'], $wb);  // filter this round's games for winners bracket teams
+                    if ($games)
+                        disp_round_games($r['round_id'], $titles['wb'], $games);
                     $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
-                    $games = filter_games($r['round_id'], $lb);
-                    if ($games) {
-                        if ($lbterms[count($teams)])
-                            echo "<div class='header'>{$lbterms[count($teams)]}</div>";
-                        else
-                            echo "<div class='header'>Losers' Bracket ".ordinal(count($teams)-count($games)+1)."-place Games</div>";
-                        disp_games($games);
-                    }
+                    $games = filter_games($r['round_id'], $lb);  // losers' bracket games this round
+                    if ($games)
+                        disp_round_games($r['round_id'], $titles['lb'], $games);
                 }
-                echo "</div>";
             }
+            break;
+        default:
+            foreach (array_reverse($rounds) as $r)
+                disp_round_games($r['round_id'], get_round_title($module, $r), get_round_games($r['round_id']));
             break;
     }
+*/
 }
 
 function disp_games($games, $filter = null) {
@@ -483,8 +435,11 @@ function disp_games($games, $filter = null) {
     echo "</div>";
 }
 
-function disp_round_games($round) {
-    disp_games(get_round_games($round['round_id']));
+function disp_round_games($rid, $title, $games) {
+    echo "<div class='round' data-rid='$rid'>";
+    echo "<div class='header'>$title</div>";
+    disp_games($games); // get rid of byes?
+    echo "</div>";
 }
 
 function disp_game($game) {

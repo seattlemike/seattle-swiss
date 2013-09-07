@@ -517,6 +517,13 @@ function standings_init_round($mid) {
     return array( "module_id" => $mid, 'round_number' => 0);
 }
 
+function get_standings_before($round) {
+    $round['round_number']--;
+    $st = get_standings($round);
+    $round['round_number']++;
+    return $st;
+}
+
 // standings through $round, ordered best to worst
 function get_standings($round, $all_tiebreaks = false) {
     $stats = build_stats($round);

@@ -42,59 +42,6 @@
 
     $rounds = get_module_rounds($mid);
 
-    if (isset($_POST['case'])) {
-        // make sure post data matches what we've validated
-        $_POST['tournament_id'] = $tid;
-        $_POST['module_id'] = $mid;
-
-        switch ($_POST['case']) {
-            case 'add_round':
-                if ($rounds)
-                    $round_id = $rounds[count($rounds)-1]['round_id'];
-                else 
-                    $round_id = module_new_round($mid);
-                break;
-            case 'next_round':
-                if ($rounds[count($rounds)-1]['round_id'] != $_POST['round_id']) 
-                    $round_id = $rounds[count($rounds)-1]['round_id'];
-                else
-                    $round_id = module_new_round($mid);
-                break;
-
-
-            //OLD
-            case 'add_round':
-                if ($rid=tournament_add_round($tid))
-                    header("location:play_tournament.php?id=$tid&round_id=$rid");
-                break;
-            case 'update_score':
-                // MIKE TODO IMMEDIATE validate:  $game_id is a member of tournament $tid
-                tournament_update_score($_POST['game_id'], $_POST);
-                break;
-            case 'delete_round':
-                $round = get_current_round($mid);
-                if (!$round)
-                    throw new Exception("Trying to delete round from empty module");
-                round_delete($round);
-                $rounds = get_module_rounds($mid);
-                break;
-            case 'empty_round':
-                round_empty($rid);
-                break;
-            case 'populate_round':
-                round_populate($rid);
-                break;
-            case 'add_game':
-                if (module_hasteam($mid, $_POST['team_a']) && module_hasteam($mid, $_POST['team_b']))
-                    round_add_game($rid, array( array("id" => $_POST['team_b']), array( "id" => $_POST['team_a']) ));
-                break;
-            case 'delete_game':
-                if ($round && game_in_round($rid, $_POST['game_id']))
-                    game_delete($_POST['game_id']);
-                break;
-        }
-    }
-
 // Display message about no-teams-yet with relocate to appropriate place to add?
 //      if (count(get_tournament_teams($tid)) && count(get_module_teams($mid))) {
 ?>

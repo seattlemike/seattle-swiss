@@ -153,17 +153,22 @@ function asyncAddRound($mid) {
     if ($status['value'] == 0) {
         $rid = module_add_round($mid);
         round_populate($rid);
-        $games = array_map( 
-            function ($g) { return array( "game_data" => $g, 
-                                "score_data" => sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($g['game_id']))); },
-            get_round_games($rid));
-        return(array("round" => get_round($rid), "games" => $games));
+
+        $data = get_round_data($rid, $module);
+        foreach ($data as &$r) {
+            $r['games'] = array_map( 
+                function ($g) { return array( "game_data" => $g, 
+                                    "score_data" => sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($g['game_id']))); },
+                $r['games']);
+        }
+        return array("rounds" => $data);
     }
+    // FAILED TO ADD ROUND - NOT ALL STATUS ARE ZERO
 }
 
 function asyncDelRound($round_id) {
     checkRoundPrivs($round_id);
-    // CHECK ROUND IS EMPTY?  RECURSIVELY DELETE??
+    // RECURSIVELY DELETE??
     sql_try("DELETE FROM tblRound WHERE round_id = ?", array($round_id));
 }
 
@@ -187,9 +192,16 @@ function asyncUpdateGame($game_data, $score_data) {
 }
 
 function asyncDelGame($game_id) {
-    checkGamePrivs($game_id);
-    sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($game_id));
-    sql_try("DELETE FROM tblGame WHERE game_id = ?", array($game_id));
+    $game = get_game($game_id);
+    if ($game) {
+        checkRoundPrivs($game['round_id']);
+        sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($game_id));
+        sql_try("DELETE FROM tblGame WHERE game_id = ?", array($game_id));
+        // now delete round if empty
+        $count = sql_select_one("SELECT COUNT(*) FROM tblGame WHERE round_id = ?", array($game['round_id']));
+        if (! $count[0])
+            sql_try("DELETE from tblRound WHERE round_id = ?", array($game['round_id']));
+    }
 }
 
 ?>

@@ -79,6 +79,8 @@ function buildNode(elType, elClass, elText) {
     return el
 }
 
+function removeNode(n) { n.parentNode.removeChild(n) }
+
 function removeChildren(node) {
     while (node.hasChildNodes())
         node.removeChild(node.firstChild);

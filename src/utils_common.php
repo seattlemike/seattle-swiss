@@ -23,9 +23,32 @@
 require_once('utils_db.php');
 require_once('utils_display.php');
 
+define(MODULE_MODE_SWISS, 0);
+define(MODULE_MODE_SGLELIM, 1);
+define(MODULE_MODE_DBLELIM, 2);
+define(MODULE_MODE_ROBIN, 3);
+
+define(LOG_ACTION_LOGIN, 0);
+define(LOG_ACTION_LOGOUT, 1);
+define(LOG_ACTION_NEWACCOUNT, 2);
+define(LOG_ACTION_NEWTOURNEY, 10);
+define(LOG_ACTION_DELTOURNEY, 11);
+
 function max_session_life() {
     return 2700;  // 45 minute session timeout
 }
+
+//
+// General
+//
+
+function ordinal($cdnl){
+    $test_c = abs($cdnl) % 10;
+    $ext = ((abs($cdnl) %100 < 21 && abs($cdnl) %100 > 4) ? 'th'
+        : (($test_c < 4) ? ($test_c < 3) ? ($test_c < 2) ? ($test_c < 1)
+        ? 'th' : 'st' : 'nd' : 'rd' : 'th'));
+    return $cdnl.$ext;
+}  
 
 //
 // Credentials functions
@@ -88,7 +111,7 @@ function login($user, $pass) {
     if ($creds = get_credentials($user, $pass)) {
         //TODO: should check session_start documentation to make sure that a (potential)
         //      second call to the function without session_end isn't going to ever be an issue
-        sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($creds['admin_id'], 0));
+        sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($creds['admin_id'], LOG_ACTION_LOGIN));
         session_start();
         foreach ($creds as $k => $v)
             $_SESSION[$k] = $v;
@@ -99,7 +122,7 @@ function login($user, $pass) {
 
 function logout() {
     // destroy session cookie
-    sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($_SESSION['admin_id'], 1));
+    sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($_SESSION['admin_id'], LOG_ACTION_LOGOUT));
     setcookie(ini_get('session.name'),'',1,'/');
     session_destroy();
     header("location:/index.php");
@@ -159,6 +182,7 @@ function admin_create($data) {
     $success = sql_try('INSERT INTO tblAdmin (admin_name, admin_city, admin_pass, admin_type, admin_email) values (?,?,?,?,?)',
                        array(htmlspecialchars($data['name']), htmlspecialchars($data['location']), 
                              salt_pass($data['password']), "tournament", $data['email']));
+    sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($creds['admin_id'], LOG_ACTION_NEWACCOUNT));
     return array($success, "New admin entry added to database");
 }
 
@@ -198,7 +222,12 @@ function filter_games($rid, $stats) {
         if ($teams[$g['team_id']])
             $ret[$g['game_id']] = $g;
     }
-    return $ret;
+    $games = array();  // instead of associative array, return simple array
+    if ($ret) {
+        foreach ($ret as $g)
+            $games[] = $g;
+    }
+    return $games;
 }
 
 //
@@ -241,6 +270,93 @@ function round_empty($rid) {
             sql_try("DELETE FROM tblGameTeams WHERE game_id = ?", array($g['game_id']), $db);
         // delete all games in round $rid
         sql_try("DELETE FROM tblGame WHERE round_id = ?", array($rid), $db);
+    }
+}
+
+function get_round_data($rid, $module=null) {
+    $round = get_round($rid);
+    if (! $module)
+        $module = get_module($round['module_id']);
+
+    switch ($module['module_mode']) {
+        case (MODULE_MODE_SGLELIM):
+            $teams = array_filter(get_standings_before($round), function($t) { return ($t['status'] > 0); });
+            $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            if (! $terms[count($teams)])
+                $terms[count($teams)] = "Round of ".count($teams);
+            return array(array("rid" => $rid, "title" => $terms[count($teams)], "games" => get_round_games($rid)));
+        case MODULE_MODE_DBLELIM:
+            $teams = array_filter(get_standings_before($round), function($t) { return ($t['status'] > 0); });
+            $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
+            $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
+            if (count($teams) == 2) { // FINALS!
+                $titles = array( 1 => "Tournament Finals", 2 => "Final Finals Game" );
+                return array(array("rid" => $rid, "title" => $titles[count($lb)], "games" => get_round_games($rid)));
+            } else {
+                $ret = array();
+
+                // Winners' bracket games?
+                $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+                if (! $wbterms[count($wb)])
+                    $wbterms[count($wb)] = "Round of ".count($wb);
+                $games = filter_games($rid, $wb);  // filter this round's games for winners bracket teams
+                if ($games)
+                    $ret[] = array("rid" => $rid, "title" => "Winners' Bracket {$wbterms[count($wb)]}", "games" => $games);
+
+                // Losers' bracket round title:
+                $lbterms = array(4 => "Fourth Place Game", 3 => "Losers' Bracket Finals");
+                if (count($wb) < count($lb))
+                    $del = count($lb) - count($wb);
+                else
+                    $del= max(0, count($lb) - count($wb)/ 2);
+                if (! $lbterms[count($teams)])
+                        $lbterms[count($teams)] = "Losers' Bracket ".ordinal(count($teams)-$del+1)."-place Games";
+                $games = filter_games($rid, $lb);  // losers' bracket games this round
+                if ($games)
+                    $ret[] = array("rid" => $rid, "title" => $lbterms[count($teams)], "games" => $games);
+
+                return $ret;
+            }
+            break;
+        default:
+            return array(array("rid" => $rid, "title" => "Round {$round['round_number']}", "games" => get_round_games($rid)));
+    }
+}
+
+function get_round_title($module, $round) {
+    switch ($module['module_mode']) {
+        case (MODULE_MODE_SGLELIM):
+            $terms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            $teams = array_filter(get_standings_before($round), function($t) { return ($t['status'] > 0); });
+            if (! $terms[count($teams)])
+                return "Round of ".count($teams);
+            else
+                return $terms[count($teams)];
+        case (MODULE_MODE_DBLELIM):
+            $wbterms = array(8 => "Quarter-finals", 4 => "Semi-finals", 2 => "Finals");
+            $lbterms = array(4 => "Fourth Place Game", 3 => "Losers' Bracket Finals");
+            $teams = array_filter(get_standings_before($round), function($t) { return ($t['status'] > 0); });
+            $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
+            $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
+            if (count($teams) == 2) { // FINALS!
+                $titles = array( 1 => "Tournament Finals", 2 => "Final Finals Game" );
+                return array('wb' => $titles[count($lb)]);
+            } else {
+                if (! $wbterms[count($wb)])
+                    $wbterms[count($wb)] = "Winners' Bracket Round of ".count($wb);
+                // number of lbracket games this round
+                if (count($wb) < count($lb))
+                    $del = $count($lb) - count($wb);
+                else
+                    $del= max(0, count($lb) - count($wb) / 2);
+                // using $del to determine what place the losers share
+                if (! $lbterms[count($teams)])
+                        $lbterms[count($teams)] = "Losers' Bracket ".ordinal(count($teams)-$del+1)."-place Games";
+
+                return array('wb' => $wbterms[count($wb)], 'lb' => $lbterms[count($teams)]);
+            }
+        default: // SWISS / ROBIN
+            return "Round {$round['round_number']}";
     }
 }
 
@@ -492,7 +608,7 @@ function new_tournament() {
                 array("New Tournament", date("Y-m-d"), $_SESSION['admin_id']));
     if (! $newid)
         throw new Exception("Failed to create new tournament");
-    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], 2, $newid));
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_NEWTOURNEY, $newid));
     sql_try("UPDATE tblTournament SET tournament_slug = ? WHERE tournament_id = ?", array("new-tournament-$newid", $newid));
     sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $_SESSION['admin_id']));
     return $newid;
@@ -512,7 +628,7 @@ function tournament_update($data) {
 
 function tournament_delete($tid) {
     // TODO: $db = connect_to_db();
-    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], 3, $tid));
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELTOURNEY, $tid));
     $modules = get_tournament_modules($tid);
     foreach ($modules as $m) {
         $rounds = get_module_rounds($m['module_id']);

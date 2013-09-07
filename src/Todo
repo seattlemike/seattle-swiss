@@ -1,8 +1,19 @@
 *Readme* - major stuff
 
 #### Aug 2013
+    fix run_module.js (ui.js?)
+        #game score update should re-enable game on async
+        #delete game screws up in double elim where rounds can be split among wb and lb divs
+        #delete game does an overzealous round-remove when in double elim and either wb or lb div is emptied
+            #server-side should delete round if empty when deleting game
+        #dblelim next round not working
+    in run_module.js, modifying game score should change toggle to now-playing
     fix run_module.js toggles to use Toggle class
     elim scores forbid tie (game status finished => now-playing)
+    #tblSystemLog should use enum constants for its loc_action values
+    #    0/1 login/logout, 2/3 tmt create/delete, 1000 new account 
+    add something like asyncGetModuleCtrls to figure out what buttons to display in play_tournament (i.e. add_game, delete_game, etc)
+        so we have maybe just move_game for single-/dbl-elim and full controls for swiss
 
 #### July 2013
   Interface:

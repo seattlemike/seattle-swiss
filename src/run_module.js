@@ -70,13 +70,16 @@ function Game(node, scores, data) {
     this.postUpdate = function () {
         var gameData = { "status":self.status, "game_id":data.game_id }
         var async = new asyncPost()
-        async.onSuccess = function () { node.onclick = self.show; list.updateNextBtn() }
+        async.onSuccess = function () { node.onclick = self.dialog.show; list.updateNextBtn() }
         async.post( { 'case':'UpdateGame', 'score_data':JSON.stringify(scores), 'game_data':JSON.stringify(gameData) } )
     }
     this.deleteGame = function () {
         var async = new asyncPost()
         async.onSuccess = function () { 
-            node.parentNode.removeChild(node); 
+            var listNode = node.parentNode
+            listNode.removeChild(node)
+            if (listNode.children.length == 0)
+                removeNode(listNode.parentNode)
             list.updateNextBtn() 
         }
         async.post({'case':'DeleteGame', 'game_id':data.game_id})
@@ -97,67 +100,48 @@ function Game(node, scores, data) {
 function GamesList() {
     var self = this;
     this.module = JSON.parse(document.getElementById("module").getAttribute("data-module"));
-    this.rounds = {}
     this.games = []
 
-    var Round = function (node, rid) {
-        var list = self
-        var self = this
-
-        this.count = 0
-        this.node = node
-        this.rid  = rid
-        this.decrement = function () { return(--self.count) }
-        this.increment = function() { return(++self.count) }
-    }
-
-    this.addRoundNode = function(round) {
-        var rid = round.getAttribute("data-rid")
-        this.rounds[rid] = new Round(round, rid)
-
+    this.parseRoundNode = function(round) {
         var games = round.lastChild.children
         for(var j=0; j<games.length; j++) {
             var scores = JSON.parse(games[j].getAttribute("data-score"))
             var data = JSON.parse(games[j].getAttribute("data-game"))
             this.games.push(new Game(games[j], scores, data))
-            this.rounds[rid].increment()
         }
     }
 
-    // build new game-node and add game to games-list
-    this.newGame = function (data) {
+    // build a new game from async return data
+    this.newGame = function (data, roundNode) {
         var gameNode = buildNode("div", "game game-inprogress")
         var rid = data.game_data.round_id
         gameNode.setAttribute("data-score", JSON.stringify(data.score_data))
         gameNode.setAttribute("data-game", JSON.stringify(data.game_data))
         var game = new Game(gameNode, data.score_data, data.game_data)
         self.games.push(game);
-        if (! self.rounds[rid])
-            throw new Error("Problem adding game to round "+rid+", "+data)
-        self.rounds[rid].node.lastChild.appendChild(gameNode)
-        self.rounds[rid].increment()
+        roundNode.lastChild.appendChild(gameNode)
     }
 
     this.insertGame = function (data) {
-        self.newGame(data)
+        if (data.game_data.round_id != self.latest.getAttribute("data-rid"))
+            throw new Error("Problem adding game from round "+rid+" to latest round.")
+        self.newGame(data, self.latest)
         self.updateNextBtn()
     }
 
-    this.insertGames = function (round, games) {
-        for(var i=0; i<games.length; i++) {
-            rid = games[i].game_data.round_id
-            if (! self.rounds[rid]) {
-                var roundNode = buildNode("div", "round");
-                // TODO: async get the round number (round title?)
-                roundNode.appendChild(buildNode("div", "header", "Round "+round.round_number));
-                roundNode.appendChild(buildNode("div", "games-list"));
-                var node = document.getElementById("module")
-                node.insertBefore(roundNode, node.firstChild);
-                self.rounds[rid] = new Round(roundNode, rid)
-            }
-            self.newGame(games[i])
+    // build a new round from async return data
+    this.buildRound = function (round) {
+        // round: title, rid, games
+        var moduleNode = document.getElementById("module")
+        var node = buildNode("div", "round")
+        node.appendChild(buildNode("div", "header", round.title))
+        node.appendChild(buildNode("div", "games-list"))
+        node.setAttribute("data-rid", round.rid)
+        moduleNode.insertBefore(node, moduleNode.firstChild)
+        for (var j=0; j<round.games.length; j++) {
+            self.newGame(round.games[j], node)
         }
-        self.updateNextBtn()
+        return node
     }
 
     this.nextReady = function () {
@@ -183,20 +167,12 @@ function GamesList() {
         }
     }
 
+    // delete game corresponding to game-node
     this.deleteGame = function (node) {
         for (var i=self.games.length-1; i>=0; i--) {
             if (self.games[i].node == node) {
-                var round = self.rounds[self.games[i].round_id]
-                self.games[i].deleteGame()
-                var count = round.decrement()
-                if (count == 0) {
-                    round.node.parentNode.removeChild(round.node)
-                    var async = new asyncPost()
-                    // anonymous function to hold reference to round id
-                    async.onSuccess = (function (rid) { return function () { delete self.rounds[rid]; self.updateNextBtn() } })(round.rid)
-                    async.post({'case':'DeleteRound', 'round_id':round.rid})
-                }
-                self.games.splice(i,1);
+                self.games[i].deleteGame() // delete game from our list (and from the games-list div)
+                self.games.splice(i,1)
             }
         }
     }
@@ -365,30 +341,14 @@ function addRound(module_id) {
 
     var async = new asyncPost()
     async.onSuccess = function (response) { 
-        list.insertGames(response.round, response.games)
+        for (var i=0; i<response.rounds.length; i++) {
+            //console.log("Build Round "+response.rounds[i].title)
+            //console.log("  Games: "+response.rounds[i].games)
+            list.buildRound(response.rounds[i])
+        }
         list.updateNextBtn()
     }
     async.post({'case':'AddRound', 'module_id':module_id})
-}
-
-function delToggle() {
-    var delBtn = document.getElementById("game-del")
-    var edit = document.getElementById("edit-games")
-    var header = document.getElementById("edit-header")
-    if (edit.getAttribute("data-status") == "delete") {
-        edit.className = "light-box";
-        edit.setAttribute("data-status", "")
-        newNodeText(delBtn, "Delete Game")
-        newNodeText(header, "Edit Games")
-        for (var i=0; i<list.games.length; i++) {
-            list.games[i].onclick = togDelGame
-        }
-    } else {
-        edit.className = "red-box";
-        edit.setAttribute("data-status", "delete")
-        newNodeText(delBtn, "Cancel")
-        newNodeText(header, "Delete Game")
-    }
 }
 
 function runModuleOnLoad() {
@@ -396,7 +356,8 @@ function runModuleOnLoad() {
     // build rounds-list and games-list from existing round/game nodes
     var rounds = document.querySelectorAll(".round")
     for(var i=0; i<rounds.length; i++)
-        list.addRoundNode(rounds[i])
+        list.parseRoundNode(rounds[i])
+    list.latest = rounds[0]
 
     list.updateNextBtn()
     document.getElementById("game-add").onclick = addGameDialog 
@@ -405,6 +366,4 @@ function runModuleOnLoad() {
     // if (games.length)
     //document.getElementById("edit-toggle").onclick = function () { toggleHide('edit-controls') }
     //document.getElementById("edit-controls").style["display"] = "none"
-
-
 }
