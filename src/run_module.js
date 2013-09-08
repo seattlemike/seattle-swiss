@@ -228,7 +228,10 @@ function GameDialog(game) {
         team.appendChild(buildNode("div", "rank"))
         inputs[i] = buildNode("input", "dialog-score")
         inputs[i].value = game.scores[i]['score']
-        inputs[i].onclick = function () { this.select() }
+        inputs[i].onclick = function () { 
+            this.select()
+            if (tmpStatus == 0) { self.toggleStatus() }
+        }
         team.firstChild.appendChild(inputs[i])
         team.appendChild(buildNode("div", "dialog-team", game.scores[i]['team_name']))
         box.appendChild(team)

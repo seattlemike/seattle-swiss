@@ -740,8 +740,11 @@ function get_lbracket($standings, $rounds) {
                     if ($is_upper) { 
                         $offset--;
                         $t['color'] = 'dark';
+                    } else {
+                        $t['color'] = 'light';
                     }
                 } else {  // fighting it out among the already-losers
+                    $t['color'] = 'light';
                     $is_upper = ((($idx % (2 * $psize)) - ($idx % $psize)) == 0);
                     //debug_alert("Team {$t['name']}, upper $is_upper");
                     if (! $is_upper) $offset = -1 * ($idx % $psize);
