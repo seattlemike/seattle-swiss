@@ -105,7 +105,7 @@ function disp_modnav_topbar($tourney, $module, $page) {
         $navs = array( array( $tourney['tournament_name'], "/private/tournament/{$tourney['tournament_id']}/" ),
                        array( $module['module_name'], "/private/module/{$module['module_id']}/" ),
                        array( "Run", "/private/module/{$module['module_id']}/run/" ), 
-                       array( "Standings", "/private/module/{$module['module_id']}/view/standings" ));
+                       array( "Standings", "/private/module/{$module['module_id']}/view/" ));
 
     echo "<div class='rHead'>";
     foreach ($navs as $idx => $link) {

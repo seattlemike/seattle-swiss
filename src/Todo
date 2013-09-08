@@ -1,5 +1,9 @@
 *Readme* - major stuff
 
+#### Sep 2013
+    Event Log View page
+    Add Teams button
+
 #### Aug 2013
     fix run_module.js (ui.js?)
         #game score update should re-enable game on async
@@ -20,7 +24,7 @@
     #module teams / seeding
     #tournament details
     #module details
-    finish blank entries on elim bracket display
+    #finish blank entries on elim bracket display
     elim standings in-progress should give ranks for eliminated teams only
     options for various under-the-hood mechanisms (tie-break, matchups, odd#)
     better field validation (mostly just strip certain things to alnum/etc: email, slug, name, etc)
@@ -30,8 +34,8 @@
     link-only mode
     no rematches
     #EVENT LOG
-    auto game-add in elim
-    figure out round/game-add for swiss
+    auto game-add in elim / upcoming games
+    #figure out round/game-add for swiss
     add round-robin mode
   Other:
     update the About page
@@ -39,13 +43,13 @@
     auto-update for view -games
     get rid of view.php, make link from run (and tournament?) to public [but private standings?]
     #tblModule->module_title should be tblModule->module_name, change all
-    fix dblelim colors
+    #fix dblelim colors
     fix winners bracket final display of winner (dblelim, sgl also?)
     
 #### June 2013
   Fix Immediate:
-    Initial team seeds
-    Display of elim tournaments
+    #Initial team seeds
+    #Display of elim tournaments
         #display lines connecting games
         display empty [winner of] [loser of] lines
         display game numbers / identifier?
@@ -60,8 +64,8 @@
     #sort rank based on MaxLikelihood
     figure out how we're going to pick matchups (consecutive or +8 or something)
     EVENT LOG
-        new/delete tournament
-        login/out
+        #new/delete tournament
+        #login/out
     #Delete Game
     #Run Module should work:
     #    move next-round button into javascript

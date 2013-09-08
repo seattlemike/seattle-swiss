@@ -51,7 +51,7 @@
         echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
         if ($module) {
             if (count(get_module_rounds($module['module_id']))) {
-                $default_view = array("results", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
+                $default_view = array("standings", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
                 disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
             } else {
                 echo "<div class='header'>Not yet started</div><div class='line'>";
