@@ -519,10 +519,6 @@ function disp_standings_swiss($module, $standings) {
 }
 
 function disp_standings_elim($module, $standings) {
-    // split teams into wb / lb / done (ranked)
-    $cats = array(2 => "Winners Bracket", 1 => "Losers Bracket", 0 => "Finished");
-
-
     //$teams = array();
     array_multisort(array_map(function($t) {return $t['rank'];}, $standings), SORT_NUMERIC, 
                     array_map(function($t) {return $t['name'];}, $standings), SORT_STRING,
@@ -530,17 +526,48 @@ function disp_standings_elim($module, $standings) {
 
     foreach ($standings as $t )
         $teams[$t['status']][] = $t;
+
+    foreach ($teams as $s => $grp) {
+        if ($s == 0) {
+            array_multisort(array_map(function($t) {return $t['rank'];}, $grp), SORT_NUMERIC, 
+                            array_map(function($t) {return $t['name'];}, $grp), SORT_STRING,
+                            $teams[$s]);
+        } else {
+            array_multisort(array_map(function($t) {return $t['seed'];}, $grp), SORT_NUMERIC, 
+                            $teams[$s]);
+        }
+    }
     
     if (count($teams[1]) + count($teams[2]) == 1) {
         // Tournament is over
         echo "<div class='header'>Final Standings</div>";
-        echo "<div class='line'><div class='list-box'>";
+        echo "<div class='games-list'>";
         foreach ($standings as $t)
-            echo "<div class='team'><span class='rank'>{$t['rank']}</span>{$t['name']}</div>";
-        echo "</div></div>";
+            echo "<div class='rank-team'><div class='rank'>{$t['rank']}</div><div class='team-name'>{$t['name']}</div></div>";
+        echo "</div>";
     } else {
-        // TODO: Elim Standings for GAME IN PROGRESS
-        //foreach ($cats 
+        switch ($module['module_mode']) {
+            case MODULE_MODE_SGLELIM:
+                $cats = array(2 => "Still In", 0 => "Finished");
+                break;
+            case MODULE_MODE_DBLELIM:
+                $cats = array(2 => "Winners' Bracket", 1 => "Losers' Bracket", 0 => "Finished");
+                break;
+        }
+        foreach ($cats as $s => $title) {
+            if (count($teams[$s])) {
+                echo "<div class='header'>$title</div>";
+                echo "<div class='games-list'>";
+                if ($s == 0) {  // teams with rank
+                    foreach ($teams[$s] as $t)
+                        echo "<div class='rank-team'><div class='rank'>{$t['rank']}</div><div class='team-name'>{$t['name']}</div></div>";
+                } else {  // teams, no rank displayed
+                    foreach ($teams[$s] as $t)
+                        echo "<div class='team'><div class='seed'>{$t['seed']}</div><div class='team-name'>{$t['name']}</div></div>";
+                }
+                echo "</div>";
+            }
+        }
     }
 
 }
@@ -634,7 +661,7 @@ function get_dblelim_finals($standings, $finals) {
 
     // 'blank' bracket
     $bracket = array( array( $center-1 => array("name"=>"Tournament Finals", "color" => "grey", "upper" => 1),
-                             $center   => array("color" => "grey", "upper" => 0)),
+                             $center   => array("name"=>"[Winner of LB]", "color" => "bold", "upper" => 0)),
                       array( $center-2 => array("name"=>"Second Finals", "color" => "grey", "upper" => 1),
                              $center-1 => array("name"=>"(if necessary)", "color" => "grey", "upper" => 0)));
     // identify teams in finals, if we have them yet
@@ -650,11 +677,31 @@ function get_dblelim_finals($standings, $finals) {
         }
     }
     if ($teams) {     // if we have teams in the finals
-        $bracket[0] = array($center-1 => $teams['wb'], $center => $teams['lb']); // first finals
-        if ($teams['wb']['results'][$finals]['res'])  // one-game finals
-            $bracket = array( array($center-1 => $teams['wb'], $center => $teams['lb']) ); // no second finals
-        elseif ($teams['lb']['results'][$finals])
-            $bracket[1] = array($center-2 => $teams['wb'], $center-1 => $teams['lb']); // second finals
+        // first finals (when teams are known)
+        if ($teams['wb'])
+            $bracket[0][$center-1] = $teams['wb'];
+        if ($teams['lb'])
+            $bracket[0][$center] = $teams['lb'];
+
+        if ($teams['wb']['results'][$finals]['res']) { // one-game finals
+            $bracket[0] = array($center-1 => $teams['wb'], $center => $teams['lb']);
+            // winner!
+            $bracket[1] = array($center-2 => array("name" => $teams['wb']['name'], "color" => "winner", "upper" => 2));
+            //$bracket[1] = array($center-2 => array("name" => $team['wb']['name'], "color" => "winner", "upper" => 2));
+        }
+        elseif ($teams['lb']['results'][$finals]) { // second finals
+            $teams['wb']['color'] = 'bold';
+            $bracket[1] = array($center-2 => $teams['wb'], $center-1 => $teams['lb']);
+            // winner!
+            if ($teams['lb']['results'][$finals+1])
+                $winner = $teams['lb']['name'];
+            else if ($teams['wb']['results'][$finals+1])
+                $winner = $teams['wb']['name'];
+            if ($winner)
+                $bracket[2] = array($center-3 => array("name" => $winner, "color" => "winner", "upper" => 2));
+        }
+
+
     }
     return $bracket;
 }
@@ -770,6 +817,8 @@ function get_bracket($standings, $rounds) {
     $nrounds = intval(ceil(log(count($standings),2)));
     $bsize = pow(2, $nrounds);
 
+    foreach ($standings as $idx => $t)
+        $standings[$idx]['color'] = ($t['bracket_idx'] % 4 < 2 ) ? 'dark' : 'light';
     // build the display $bracket
     foreach ($rounds as $rnum) {
         $bracket[] = array();
@@ -823,7 +872,6 @@ function disp_elim($bracket, $height, $rounds) {
         }
     }
    
-
     // $bracket is ordered by columns (rounds), $table will be ordered by table-row
     // initialize table with $height-many blank rows
     $table = array_map(function ($r) {return array();}, range(1, $height));
@@ -844,13 +892,14 @@ function disp_elim($bracket, $height, $rounds) {
             $pow = 2;
             $offset = 1;
         }
-        foreach (range(0, count($rounds)-1) as $colnum) {
+        //foreach (range(0, count($rounds)-1) as $colnum) {
+        foreach ($bracket as $colnum => $column) {
             $team = $row[$colnum];
             disp_team($team, $colnum, $rounds[$colnum]);
 
             // Draw connecting lines
 
-            // if not yet in last round:  $colnum < count($rounds)-1) {
+            // if not yet in last round(s):  $colnum < count($rounds)-1) {
             if ($pow < count($table)) {
                 if (($in_loser_bracket) && ($colnum % 2 == 0)) {
                     $offset += 1;
@@ -884,7 +933,7 @@ function disp_elim($bracket, $height, $rounds) {
                         echo "<td class='spacer'></td>";
                 }
             } else { // last two rows
-                if ($colnum < count($rounds)-1) {
+                if ($colnum < count($bracket)-1) {
                     $offset += 1;
                     $pos = ($rownum + $offset) % $pow;
                     if ($pos == $pow/2 +1)  // hook up

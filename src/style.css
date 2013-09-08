@@ -251,17 +251,17 @@ td.numeric { min-width: 40px; }
 }
 
 .standings .bottom-left { 
-    border-bottom: 2px solid #224365;
-    border-right: 2px solid #224365;
+    border-bottom: 2px solid #246;
+    border-right: 2px solid #246;
     border-radius: 0.5em;
 }
 .standings .top-left { 
-    border-top: 2px solid #224365;
-    border-right: 2px solid #224365;
+    border-top: 2px solid #246;
+    border-right: 2px solid #246;
 }
-.standings .top-right    { border-bottom: 2px solid black; }
+.standings .top-right    { border-bottom: 2px solid #246; }
 .standings .spacer-right { 
-    border-right: 2px solid black; 
+    border-right: 2px solid #246; 
     border-radius: 0.5em;
     height: 100%;
 }
@@ -275,6 +275,7 @@ td.numeric { min-width: 40px; }
     border-bottom-left-radius: 0.5em; 
 }
 
+.standings .winner { border: 2px solid #246; }
 .standings .dark  { background: #658ab3; }
 .standings .light { background: #b4cfed; }
 .standings .grey { background: #ddd; border: 1px solid #888; font-style: italic; min-height: 1.2em;}
@@ -325,6 +326,16 @@ td.numeric { min-width: 40px; }
     margin: 1px 0;
     background: #b4cfed;
     overflow: hidden;
+}
+.team .team-name {
+    display: inline-block;
+    margin: 0 1em;
+    padding: 0.5em 0;
+}
+.team .seed {
+    display: inline-block;
+    margin: 0 1em;
+    font-style: italic;
 }
 .rank-team .team-name {
     margin: 0 8em 0 6em;
