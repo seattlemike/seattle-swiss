@@ -44,7 +44,7 @@ function bulkAddTeams() {
     var teamInput = buildNode("textarea","medium","team name / details / uid, one team per line");
     teamInput.onclick = clearOnce
     //TODO
-    var d = new Dialog("Add many teams [NOT YET WORKING]",
+    var d = new Dialog("Add teams", 
                     function () { processBulk(teamInput.value) })
     d.insert(teamInput)
     d.show()

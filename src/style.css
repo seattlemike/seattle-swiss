@@ -1,4 +1,4 @@
-/*  Copyright 2011, 2012 Mike Bell and Paul Danos
+/*  Copyright 2011, 2012 Mike Bell and Paul Danos}
 
     This file is part of 20Swiss.
     
@@ -319,6 +319,11 @@ td.numeric { min-width: 40px; }
     background: #fff;
 }
 
+
+.event { margin: 1px; background: #b4cfed; }
+.event>* { display: inline-block; padding: 0.5em; }
+.event .date { background: #658ab3; }
+.event .admin { min-width : 7em; }
 
 .result { padding: 1em; }
 .result, .rank-team {

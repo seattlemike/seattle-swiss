@@ -1,7 +1,7 @@
 <?php 
 
 /*  
-    Copyright 2011, 2012 Mike Bell and Paul Danos
+    Copyright 2011, 2012, 2013 Mike Bell and Paul Danos
 
     This file is part of 20Swiss.
     
@@ -87,8 +87,10 @@ function disp_admin_topbar() {
     if (check_login()) {
         echo "<a class='button' href='/private/'>{$_SESSION['admin_name']}</a>";
         //echo "<a href='/settings/'>settings</a>";
-        if ($_SESSION['admin_type'] == 'super') 
+        if ($_SESSION['admin_type'] == 'super')  {
+            echo "<a class='button' href='/log/'>log</a>";
             echo "<a class='button' href='/super/'>super</a>";
+        }
         echo "<a class='button' href='/logout/'>log out</a>\n";
     } else {
         // admin/login button should go here, but not on public watch pages

@@ -30,7 +30,11 @@ disp_titlebar();
 <div class='con'>
     <div class='centerBox'>
         <div class='mainBox'>
-            <div class='header lline'>(Jul 15, 2013) Note</div><p>We're transition to a new, better version of the software here.  Things look a lot prettier, but not everything works yet.  That should get better in the next week or two.</p>
+            <? 
+            // <div class='header lline'>(Jul 15, 2013) Note</div><p>We're transition to a new, better version of the software here.  Things look a lot prettier, but not everything works yet.  That should get better in the next week or two.</p>
+            ?>
+            <div class='header lline'>(Sep 08, 2013) Note</div><p>Things are mostly working now</p>
+            
         </div>
         <div class='mainBox'>
             <div class='item'><a class="button" href="/about/">About</a></div>

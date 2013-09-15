@@ -28,7 +28,7 @@
 <div class='con'>
     <div class='centerBox'>
         <div class='mainBox'> 
-            <div class="header">Note</div>
+            <div class="header">Note (Sep 2013)</div>
             <p>This is the old 'about' page, and some of this content is now out-of-date.  Working on that.</p>
         </div>
         <div class='mainBox'> 

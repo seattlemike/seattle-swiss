@@ -190,6 +190,11 @@ function is_poweruser() {
     return $_SESSION['admin_controls'];
 }
 
+// Optional timestamp for events prior/since?
+function get_events() {
+    return sql_select_all("SELECT * FROM tblSystemLog JOIN tblAdmin USING (admin_id) ORDER BY log_time DESC", array());
+}
+
 //
 // Game Functions
 //

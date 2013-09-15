@@ -8,6 +8,7 @@ RewriteRule ^about/$ /about.php [QSA,L]
 RewriteRule ^settings/$ /settings.php [QSA,L]
 RewriteRule ^logout/$ /logout.php [QSA,L]
 RewriteRule ^super/$ /main_menu.php?super=true [QSA,L]
+RewriteRule ^log/$ /event_log.php [QSA,L]
 
 RewriteRule ^super/$ /main_menu.php?super=true [QSA,L]
 RewriteRule ^super/(.*)$ /private/$1 [QSA]

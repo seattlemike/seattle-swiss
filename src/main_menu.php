@@ -1,7 +1,6 @@
 <?php
-
 /*  
-    Copyright 2011, 2012 Mike Bell and Paul Danos
+    Copyright 2011, 2012, 2013 Mike Bell and Paul Danos
 
     This file is part of 20Swiss.
     
@@ -24,6 +23,13 @@
     disp_topbar();
     disp_titlebar();
 
+    if (isset($_GET['super'])) {
+        require_privs(false);  // dies unless $_SESSION['admin_type']=='super'
+        $tlist = sql_select_all( "SELECT * FROM tblTournament WHERE is_fixed=1 ORDER BY tournament_date DESC", array() );
+    } else {
+        $tlist = get_my_tournaments();
+    }
+
 ?>
 
 <div class="con">
@@ -38,16 +44,7 @@
         </div>
         <div class='mainBox'>
             <div class="header">Your Tournaments</div>
-            <?php
-            if (isset($_GET['super'])) {
-                require_privs(false);  // dies unless $_SESSION['admin_type']=='super'
-                // should super get un-fixed tournaments? -- "WHERE is_fixed=1" if no
-                $tlist = sql_select_all( "SELECT * FROM tblTournament ORDER BY tournament_date DESC", array() );
-            }
-            else
-                $tlist = get_my_tournaments();
-            disp_tournaments($tlist);
-            ?>
+            <? disp_tournaments($tlist); ?>
         </div>
     </div>
 </div>
