@@ -69,6 +69,7 @@ function disp_header($title = null, $js_extra=array(), $header_extra = array()) 
 <html xmlns='http://www.w3.org/1999/xhtml'>
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+<link href='/favicon.png' rel='icon' type='image/png' />
 <link rel='stylesheet' type='text/css' href='/style.css' />
 END;
     foreach ($js_extra as $jsfile)
