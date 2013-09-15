@@ -34,6 +34,11 @@ define(LOG_ACTION_NEWACCOUNT, 2);
 define(LOG_ACTION_NEWTOURNEY, 10);
 define(LOG_ACTION_DELTOURNEY, 11);
 
+define(TOURNAMENT_PRIVATE, 0);
+define(TOURNAMENT_LINK_ONLY, 1);
+define(TOURNAMENT_PUBLIC, 2);
+
+
 function max_session_life() {
     return 2700;  // 45 minute session timeout
 }

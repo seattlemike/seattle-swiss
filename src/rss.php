@@ -19,26 +19,19 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-    require_once("utils_db.php");
-    require_once("utils_common.php");
-    require_once("utils_display.php");
-    require_once("utils_debug.php");
-    require_once("utils_pairing.php");
-    require_once("utils_standings.php");
-
-    // ??
-    if (isset($_COOKIE[ini_get('session.name')])) 
-        session_start();
+    include("header.php");
 
     $mid = $_GET['id'];
-    if ($mid)
+    try {
         $module = get_module($mid) ;
-    if (! $module) 
+    } catch (Exception $e) {
         header_redirect("/");
-    $tid = $module['parent_id'];
-    if (!( (check_login() && tournament_isadmin($tid)) ||
-           (tournament_ispublic($tid)) ))
+    }
+    
+    $tourney = get_tournament($module['parent_id']);
+    if (($tourney['tournament_privacy'] != TOURNAMENT_PUBLIC) && !(check_login() && tournament_isadmin($tourney['tournament_id'])))
         header_redirect("/");
+    //if (!( (check_login() && tournament_isadmin($module['parent_id'])) ||
 
     $server_url="http://" . $_SERVER["SERVER_NAME"];
     header("Content-type: text/xml");
