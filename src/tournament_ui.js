@@ -19,9 +19,13 @@
 
 // Torunamnent UI
 
+if (! String.prototype.trim) {
+    String.prototype.trim = function () { return this.replace(/^\s+|\s+$/g, '') }
+}
+
 function clearOnce() {
-    this.value = "";
-    this.onclick = "";
+    this.value = ""
+    this.onclick = ""
 }
 
 function buildTeamNode(node, team) {
@@ -37,13 +41,31 @@ function buildTeamNode(node, team) {
 }
 
 function processBulk(text) {
-    alert("this is not yet working");
+    var tourney = document.getElementById("details")
+    var tid = tourney.getAttribute("data-tid")
+
+    var lines = text.split("\n")
+    var parse = /^(.*?)(\/.*?)?(\/.*?)?$/
+    //var teams = text.match(parse)
+    for (var i=0; i<lines.length; i++) {
+        var team = lines[i].match(parse)
+        if (team[1].trim().length) {
+            for (var j=1; j<4; j++) {
+                if (team[j]) {
+                    team[j] = team[j].replace(/^\//,"")
+                    team[j] = team[j].trim()
+                } else {
+                    team[j] = ""
+                }
+            }
+            addTeam(tid, team[1], team[2], team[3])
+        }
+    }
 }
 
 function bulkAddTeams() {
     var teamInput = buildNode("textarea","medium","team name / details / uid, one team per line");
     teamInput.onclick = clearOnce
-    //TODO
     var d = new Dialog("Add teams", 
                     function () { processBulk(teamInput.value) })
     d.insert(teamInput)

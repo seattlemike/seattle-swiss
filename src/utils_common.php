@@ -148,11 +148,6 @@ function tournament_isowner($tid) {
                      array($tid, $_SESSION['admin_id']))));
 }
 
-function tournament_ispublic($tid) {
-    return is_array(sql_select_one('SELECT * FROM tblTournament WHERE tournament_id = :tid AND is_public = 1', 
-                    array($tid)));
-}
-
 function tournament_isparent($tid, $mid) {
     return is_array(sql_select_one("SELECT * FROM tblModule WHERE module_id = ? AND parent_id = ?", 
                     array($tid, $mid)));

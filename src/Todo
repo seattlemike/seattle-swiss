@@ -2,11 +2,22 @@
 
 #### Sep 2013
     #Event Log View page
-    Add Teams button
+    #Add Teams button
     SglElim bracket should include final winner the way DblElim does
+        (should losers bracket include lb-winner?)
     Public/Private/Link-only
     Elim standings during play
     ASYNC watch!
+    re-enable idle timeout (but at like 60m)
+    seeding dependencies on other modules:
+        interface: list of module dependencies (maybe...)
+            find connected regions
+            shuffle regions together
+    update get-pairings
+        interface: should be able to choose from several mechanisms
+        1/4-1/8-1/8-1/16-1/32-...
+        better is to double all, but probably want to finish in log2 time
+        option to input number of rounds, instead of doing it as-we-go
     #fix rss??
 
 #### Aug 2013
@@ -50,14 +61,14 @@
     get rid of view.php, make link from run (and tournament?) to public [but private standings?]
     #tblModule->module_title should be tblModule->module_name, change all
     #fix dblelim colors
-    fix winners bracket final display of winner (dblelim, sgl also?)
+    #fix winners bracket final display of winner (dblelim, sgl also?)
     
 #### June 2013
   Fix Immediate:
     #Initial team seeds
     #Display of elim tournaments
         #display lines connecting games
-        display empty [winner of] [loser of] lines
+        #display empty [winner of] [loser of] lines
         display game numbers / identifier?
     Auto add-games for elim tournaments
 

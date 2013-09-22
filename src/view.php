@@ -18,63 +18,41 @@
     You should have received a copy of the GNU Affero General Public License
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
-    include("header.php");
+    // TODO: this is just a duplicate of the module-view component of public.php
+    //       where we should just work a public/private/link-only check in and use that instead
 
-    // TODO: move this to whatever our public view tournaments file becomes
-    //if (isset($_GET['all'])) $title_text = "All Tournaments";
-    //else $title_text = "Recent Tournaments";
+    include("header.php");
 
     // Ensure mid/tid are valid and that we have privs to edit
     ($mid = $_POST['module_id']) || ($mid = $_GET['module']);
-    $module = get_module($mid) ;
-    if ($module)
-        $tid = $module['parent_id'];
-    else 
-        ($tid = $_POST['tournament_id']) || ($tid = $_GET['id']);
-    $tourney = get_tournament($tid);
+    try {
+        $module = get_module($mid) ;
+        if ($module)
+            $tid = $module['parent_id'];
+        else 
+            ($tid = $_POST['tournament_id']) || ($tid = $_GET['id']);
+        $tourney = get_tournament($tid);
+        require_login();
+        require_privs( tournament_isadmin($tid) );
+    } catch ( Exception $e) {
+        header_redirect("/private/");
+    }
 
-	require_login();
-    require_privs( tournament_isadmin($tid) );
-
-    if ($module)
-        $title = $module['module_name'];
-    else
-        $title = $tourney['tournament_name'];
-
+    $title = $module['module_name'];
     $js_extra = array("/ui.js", "/view_ui.js");
     $header_extra = array( '<script type="text/javascript">window.onload = viewOnLoad</script>' );
     disp_header($title, $js_extra, $header_extra);
     disp_topbar($tourney, $module, 3);
     disp_titlebar($title);
-
-        // default view if nothing explicitly chosen
-        echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
-        if ($module) {
-            if (count(get_module_rounds($module['module_id']))) {
-                $default_view = array("standings", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
-                disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
-            } else {
-                echo "<div class='header'>Not yet started</div><div class='line'>";
-                disp_teams_list(get_module_teams($mid));
-                echo "</div>";
-            }
-        } elseif ($tourney) {
-            if ($tourney['tournament_privacy'] > 0)
-                disp_modules_list(get_tournament_modules($tid), "view.php");
-        }
-        else {  // List of public tournaments
-            $tlist = sql_select_all("SELECT * FROM tblTournament WHERE is_public = 1 ORDER BY tournament_date DESC", array());
-            // only list tournaments from the past year?
-            if (! isset($_GET['all'])) {
-            foreach( $tlist as $k => $t ) {
-                if ((strtotime($t['tournament_date']) > time() +3600 * 24 * 7))
-                    //(strtotime($t['tournament_date']) < time() -3600*24*365))
-                    unset($tlist[$k]);
-            }
-            disp_tournaments(array_slice($tlist,0,10), 'view.php');
-            echo '<div class="nav line"> <a href="view.php?all">Older Tournaments</a> </div>';
+    echo "<div class='con'> <div class='centerBox'> <div class='mainBox'>\n";
+    if ($module) {
+        if (count(get_module_rounds($module['module_id']))) {
+            $default_view = array("standings", "bracket", "wbracket"); // default by module_mode if no $_GET['view']
+            disp_standings($module, $_GET['view'] ? $_GET['view'] : $default_view[$module['module_mode']]);
         } else {
-            disp_tournaments($tlist, 'view.php');
+            echo "<div class='header'>Not yet started</div><div class='line'>";
+            disp_teams_list(get_module_teams($mid));
+            echo "</div>";
         }
     }
     echo "</div></div></div>\n";
