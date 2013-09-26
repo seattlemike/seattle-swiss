@@ -31,9 +31,10 @@ disp_titlebar();
     <div class='centerBox'>
         <div class='mainBox'>
             <? 
-            // <div class='header lline'>(Jul 15, 2013) Note</div><p>We're transition to a new, better version of the software here.  Things look a lot prettier, but not everything works yet.  That should get better in the next week or two.</p>
+            // <div class='header lline'>(Jul 15, 2013) Status</div><p>We're transition to a new, better version of the software here.  Things look a lot prettier, but not everything works yet.  That should get better in the next week or two.</p>
+            // <div class='header lline'>(Sep 08, 2013) Status</div><p>Things are mostly working now</p>
             ?>
-            <div class='header lline'>(Sep 08, 2013) Note</div><p>Things are mostly working now</p>
+            <div class='header lline'>(Sep 22, 2013) Status</div><p>New swiss-style pairing algorithm is live!<br>Coming soon: settings in tournament modules to choose from among the vaious Swiss pairing methods and ranking</p>
             
         </div>
         <div class='mainBox'>

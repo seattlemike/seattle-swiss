@@ -424,7 +424,8 @@ class stats {
     }
 
     function iterMaxLikelihood() {
-        $error = 0; $probs = array(); 
+            $spread = array(0.01, 0.03, 0.06, 0.12, 0.25, 0.5, 0.75, 0.88, 0.94, 0.97, 0.99);
+        $probs = array(); 
         foreach ($this->teams as $id => $team) {
             if (count($team['faced'])) {
                 $denom = 0;
@@ -432,14 +433,25 @@ class stats {
                     $denom += $count  / ($this->teams[$id]['maxprob'] + $this->teams[$opp_id]['maxprob']);
                 $probs[$id] = $team['adjscore']/ $denom;
             }
-            else
-                $probs[$id] = 1 / count($this->teams);
+            else { $probs[$id] = 1 / count($this->teams); }
+
+            /*
+            // per-game $adj/$denom rather than cumulative -- is this a better way to go?
+            if ($team['results']) {
+                foreach ($team['results'] as $r) {
+                    $adj = $spread[$r['score'][0]-$r['score'][1]+5];
+                    $probs[$id] += $adj / ($this->teams[$id]['maxprob']+$this->teams[$r['opp_id']]['maxprob']);
+                }
+            }
+            else { $probs[$id] = 1 / count($this->teams); }
+            */
         }
+        $delta = 0;
         foreach ($probs as $id => $val) {
-            $error += abs($val - $this->teams[$id]['maxprob']);
+            $delta += abs($val - $this->teams[$id]['maxprob']);
             $this->teams[$id]['maxprob'] = $val;
         }
-        return $error;
+        return $delta;
     }
 
     function calcMaxLikelihood() {
@@ -458,10 +470,10 @@ class stats {
             }
         }
         // Iterate
-        $count=0; $error=1;
-        while (($count < 1000) && ($error > 0.0001)) {
+        $count=0; $delta=1;
+        while (($count < 1000) && ($delta> 0.0001)) {
             $count++;
-            $error = $this->iterMaxLikelihood();
+            $delta= $this->iterMaxLikelihood();
         }
         // Normalize
         $sum = 0;
@@ -473,7 +485,7 @@ class stats {
         $mean = 100 / count($this->teams);
         foreach($this->teams as $team)
             $var += ($team['maxprob']-$mean) * ($team['maxprob']-$mean) / count($this->teams);
-        //echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $error).", iterations: $count, mean: ".sprintf("%.2f",$mean).", StdDev:".sprintf("%.2f",sqrt($var))."</div>\n";
+        //echo "<div class='alert'>Max Likelihood Calc: total error: ".sprintf("%.5f", $delta).", iterations: $count, mean: ".sprintf("%.2f",$mean).", StdDev:".sprintf("%.2f",sqrt($var))."</div>\n";
     }
 }
 

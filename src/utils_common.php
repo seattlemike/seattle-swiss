@@ -448,14 +448,18 @@ function module_update($module, $data) {
 }
 
 function module_new_round($mid) {
-    if ($mid) {
-        // if (Module Has Pending Games) { return false; } else {
-        $rid = module_add_round($mid);
+    if (! $mid)
+        throw new Exception("Failed to add new round");
+    // if (Module Has Pending Games) { return false; } else {
+    $rid = module_add_round($mid);
+    try {
         round_populate($rid);
-        return $rid;
+    } catch (Exception $e) {
+        round_empty($rid);
+        sql_try("DELETE FROM tblRound WHERE round_id = ?", array($rid));
+        throw $e;
     }
-    else
-        return false;
+    return $rid;
 }
 
 // adds a round to module $mid

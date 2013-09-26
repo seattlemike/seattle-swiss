@@ -152,7 +152,13 @@ function asyncAddRound($mid) {
     // if all status are 0 (or if no entries at all), add/populate new round
     if ($status['value'] == 0) {
         $rid = module_add_round($mid);
-        round_populate($rid);
+        try {
+            round_populate($rid);
+        } catch (Exception $e) {
+            round_empty($rid);
+            sql_try("DELETE FROM tblRound WHERE round_id = ?", array($rid));
+            throw $e;
+        }
 
         $data = get_round_data($rid, $module);
         foreach ($data as &$r) {

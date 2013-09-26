@@ -95,13 +95,13 @@ function round_get_pairings($round) {
     if (!$module) 
         return false;
     switch ($module['module_mode']) {
-        case 0:
+        case MODULE_MODE_SWISS:
             return get_swiss_pairings($round);
-        case 1:
+        case MODULE_MODE_SGLELIM:
             return get_sglelim_pairings($round);
-        case 2:
+        case MODULE_MODE_DBLELIM:
             return get_dblelim_pairings($round);
-        case 3:
+        case MODULE_MODE_ROBIN:
             die("Oops:  Round Robin mode is not yet functional");
         default:  // oh no!  what other modes do we have?
             return array();
@@ -252,7 +252,7 @@ function get_sglelim_pairings($tid) {
 //  find a minimal-weight perfect matching
 //
 
-function get_swiss_pairings($round) {
+function old_get_swiss_pairings($round) {
     $teams = get_standings($round);
     array_multisort(array_map(function($t) {return $t['rank'];}, $teams), SORT_NUMERIC, $teams);
 
@@ -294,5 +294,49 @@ function get_swiss_pairings($round) {
   return $pairs;
 }
 
+// new pairing method: instead of best v worst within semi-group we match in quartiles, eiths, sixteenths, etc 
+//    regardless of record difference
+function get_swiss_pairings($round) {
+    function get_next($a, $teams) {
+        for ($i = 0; $i < count($teams); $i++)
+            if (! ($a['faced'][$teams[$i]['id']]))
+                return $i;
+        return 0;
+    }
+
+    // FOR ODD NUMBERS OF TEAMS:
+    //    check if there's a team that's played less than other teams, 
+    //    if so give them one extra game against a team with a similar record
+    //    similarly, ignore teams that have played more than other teams
+    $teams = get_standings($round);
+    array_multisort(array_map(function($t) {return $t['score'];}, $teams), SORT_NUMERIC, SORT_DESC, array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
+    //array_multisort(array_map(function($t) {return $t['maxprob'];}, $teams), SORT_NUMERIC, array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
+
+    //foreach ($teams as $idx => $t)
+    //    echo "Team: $idx {$t['name']}\n";
+    
+    $pairs = array();
+    $quartile = pow(2,$round['round_number']);
+    if ($round['round_number'] == 1)
+        $quartile *= 2;
+    $interval = ceil(count($teams) / $quartile);
+    //echo "Interval: $interval\n";
+
+    while (count($teams) > 0) {
+        $waiting = array_splice($teams, 0, $interval);
+        while (count($waiting) > 0 && count($teams) > 0) {
+            // naive:  pair waiting[0] against teams[0]
+            // better: pair waiting[0] against first teams[i] that isn't a rematch
+            $opp = get_next($waiting[0], $teams);
+            //echo "{$waiting[0]['name']} vs {$teams[$opp]['name']}\n";
+            $pairs[] = array($teams[$opp], array_shift($waiting));
+            array_splice($teams, $opp, 1);
+        }
+    }
+    // LEFTOVERS in $waiting
+    while (count($waiting) > 1)
+        $pairs[] = array(array_pop($waiting), array_shift($waiting));
+    return $pairs;
+}
 
 ?>

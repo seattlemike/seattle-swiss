@@ -27,7 +27,7 @@
         #delete game does an overzealous round-remove when in double elim and either wb or lb div is emptied
             #server-side should delete round if empty when deleting game
         #dblelim next round not working
-    in run_module.js, modifying game score should change toggle to now-playing
+    #in run_module.js, modifying game score should change toggle to now-playing
     fix run_module.js toggles to use Toggle class
     elim scores forbid tie (game status finished => now-playing)
         and modification if there are games dependent on them
