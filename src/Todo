@@ -15,9 +15,9 @@
             shuffle regions together
     update get-pairings
         interface: should be able to choose from several mechanisms
-        1/4-1/8-1/8-1/16-1/32-...
-        better is to double all, but probably want to finish in log2 time
         option to input number of rounds, instead of doing it as-we-go
+    #    1/4-1/8-1/8-1/16-1/32-...
+    #    better is to double all, but probably want to finish in log2 time
     #fix rss??
 
 #### Aug 2013

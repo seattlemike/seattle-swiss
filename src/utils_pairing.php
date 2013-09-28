@@ -299,36 +299,40 @@ function old_get_swiss_pairings($round) {
 function get_swiss_pairings($round) {
     function get_next($a, $teams) {
         for ($i = 0; $i < count($teams); $i++)
-            if (! ($a['faced'][$teams[$i]['id']]))
+            if (($a['id'] != $teams[$i]['id']) && (! ($a['faced'][$teams[$i]['id']]))) // not me and not rematch
                 return $i;
         return 0;
     }
 
-    // FOR ODD NUMBERS OF TEAMS:
-    //    check if there's a team that's played less than other teams, 
-    //    if so give them one extra game against a team with a similar record
-    //    similarly, ignore teams that have played more than other teams
+    // for pairing: sort teams by w/l record and tie-break BY SEED
     $teams = get_standings($round);
     array_multisort(array_map(function($t) {return $t['score'];}, $teams), SORT_NUMERIC, SORT_DESC, array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
+    $pairs = array();
     //array_multisort(array_map(function($t) {return $t['maxprob'];}, $teams), SORT_NUMERIC, array_map(function($t) {return $t['seed'];}, $teams), SORT_NUMERIC, $teams);
 
-    //foreach ($teams as $idx => $t)
-    //    echo "Team: $idx {$t['name']}\n";
+    // FOR ODD NUMBERS OF TEAMS:
+    //    if team has played fewer games than number of rounds, give them one extra vs the bottom
+    //    TODO: how do I know I want vs bottom
+    //    TODO: how will I know they've been skipped in the past and so not do that again?
+    //    TODO: also how do I space out the games so neither skip nor opp are playing back-to-back?
+    $waiting = array_filter($teams, function ($t) use ($round) { return (count($t['results']) < $round['round_number']-1); });
+    foreach ($waiting as $t) {
+        // get-next gives us the reverse index (pick first non-rematch from the end), so un-reverse for $opp:
+        $opp = count($teams) - 1 - get_next($t, array_reverse($teams));
+        $pairs[] = array($t, $teams[$opp]);
+        array_splice($teams, $opp, 1);  // don't get rid of $t, but do get rid of $opp
+    }
     
-    $pairs = array();
+    // Pairing Method:  in round k, pair seeds 1 vs 2^k+1, 2 vs 2^k+2, etc
     $quartile = pow(2,$round['round_number']);
     if ($round['round_number'] == 1)
         $quartile *= 2;
     $interval = ceil(count($teams) / $quartile);
-    //echo "Interval: $interval\n";
 
     while (count($teams) > 0) {
         $waiting = array_splice($teams, 0, $interval);
         while (count($waiting) > 0 && count($teams) > 0) {
-            // naive:  pair waiting[0] against teams[0]
-            // better: pair waiting[0] against first teams[i] that isn't a rematch
             $opp = get_next($waiting[0], $teams);
-            //echo "{$waiting[0]['name']} vs {$teams[$opp]['name']}\n";
             $pairs[] = array($teams[$opp], array_shift($waiting));
             array_splice($teams, $opp, 1);
         }
