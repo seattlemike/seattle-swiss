@@ -176,14 +176,16 @@ function admin_create($data) {
     //       (email doesn't get htmlspecialchars - should we watch for injection?)
     $count = sql_select_one('SELECT COUNT(*) FROM tblAdmin WHERE admin_email = :email', array(':email' => $data['email']));
     if (!$count)
-        return array(false, "Database access failed on Admin Creation attempt");
+        throw new Exception("Database access failed on Admin Creation attempt");
     elseif ($count[0] > 0)
-        return array(false, "Admin account with that email already exists");
-    $success = sql_try('INSERT INTO tblAdmin (admin_name, admin_city, admin_pass, admin_type, admin_email) values (?,?,?,?,?)',
-                       array(htmlspecialchars($data['name']), htmlspecialchars($data['location']), 
-                             salt_pass($data['password']), "tournament", $data['email']));
-    sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($creds['admin_id'], LOG_ACTION_NEWACCOUNT));
-    return array($success, "New admin entry added to database");
+        throw new Exception("Admin account with that email already exists");
+    $new_aid = sql_insert('INSERT INTO tblAdmin (admin_name, admin_city, admin_pass, admin_type, admin_email) values (?,?,?,?,?)',
+                            array(htmlspecialchars($data['name']), htmlspecialchars($data['location']), 
+                            salt_pass($data['password']), "tournament", $data['email']));
+    sql_try('INSERT INTO tblSystemLog (admin_id, log_action) values (?,?)', array($new_aid, LOG_ACTION_NEWACCOUNT));
+
+    // now login as the new admin
+    login($data['email'], $data['password']);
 }
 
 function is_poweruser() {

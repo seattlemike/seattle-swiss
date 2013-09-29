@@ -328,18 +328,26 @@ function get_swiss_pairings($round) {
     if ($round['round_number'] == 1)
         $quartile *= 2;
     $interval = ceil(count($teams) / $quartile);
+    //echo "Interval: $interval\n";
 
+    //TODO: for rematch, search through reverse pair for someone who isn't rematch 
+    //      and whose opponent isnt rematch with all remaining teams
+    //
     while (count($teams) > 0) {
         $waiting = array_splice($teams, 0, $interval);
+        //foreach ($waiting as $t)
+        //    echo "Waiting: {$t['name']}\n";
         while (count($waiting) > 0 && count($teams) > 0) {
             $opp = get_next($waiting[0], $teams);
             $pairs[] = array($teams[$opp], array_shift($waiting));
             array_splice($teams, $opp, 1);
         }
     }
-    // LEFTOVERS in $waiting
+    // LEFTOVERS in $waiting, first v last until all done
     while (count($waiting) > 1)
         $pairs[] = array(array_pop($waiting), array_shift($waiting));
+
+    //throw new Exception("Test pairings");
     return $pairs;
 }
 

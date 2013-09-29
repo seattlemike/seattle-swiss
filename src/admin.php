@@ -37,11 +37,13 @@
     }
     elseif ($_POST['action'] == 'create') {
         // on success, note about 'click link in verification email to enable account'
-        list($status, $msg) = admin_create($_POST);
-            if ($status)
-                echo "<div class='header warning'>Admin ".$_POST['name']." successfully created.</div>";
-            else
-                echo "<div class='header warning'>$msg</div>";
+        try {
+            admin_create($_POST);
+            header_redirect("/private/");            
+        } catch ( Exception $e ) {
+            // PROBLEM 
+            echo "<div class='header'>".$e->getMessage()."</div>";
+        }
     }
 ?>
 <div class="con">

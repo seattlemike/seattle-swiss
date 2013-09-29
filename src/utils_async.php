@@ -169,7 +169,8 @@ function asyncAddRound($mid) {
         }
         return array("rounds" => $data);
     }
-    // FAILED TO ADD ROUND - NOT ALL STATUS ARE ZERO
+    // FAILED TO ADD ROUND - NOT ALL STATUS ARE ZERO (error?)
+    return array("success" => false);
 }
 
 function asyncDelRound($round_id) {
