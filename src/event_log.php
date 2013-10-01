@@ -60,6 +60,21 @@
     //    event type
     //    tid/mid(?)
     $list = get_events();
+    /*  Do we want the log to include deleted admins?
+    $list = sql_select_all("SELECT * FROM tblSystemLog ORDER BY log_time DESC", array());
+    $admin_data = sql_select_all("SELECT admin_id, admin_name FROM tblAdmin", array());
+    foreach ($admin_data as $a)
+        $admins[$a['admin_id']] = $a;
+
+    foreach ($list as $e) {
+        $date = date("Ymd",strtotime($e['log_time']));
+        if (! $admins[$e['admin_id']])
+            $admins[$e['admin_id']] = array("admin_name" => "[Deleted]");
+        echo "<div>$date  {$admins[$e['admin_id']]['admin_name']}: {$e['log_action']}</div>";
+    }
+    die();
+    */
+
     // group by days?
     $days = array();
     foreach ($list as $e) {

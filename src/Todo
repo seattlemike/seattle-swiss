@@ -1,5 +1,9 @@
 *Readme* - major stuff
 
+#### Oct 2013
+    some issues with mobile browsers - be sure we work on android
+    possibly use some @media queries to handle mobile styling
+
 #### Sep 2013
     #Event Log View page
     #Add Teams button

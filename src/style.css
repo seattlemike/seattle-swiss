@@ -158,6 +158,10 @@ p { margin: 1em 2em; }
     margin: 0 0.2em;
 }
 
+.game-container {
+    display: inline-block;
+}
+
 .on-court {
     background: #fee;
     border: 1px solid #c99;
@@ -549,7 +553,9 @@ td.numeric { min-width: 40px; }
 }
 
 .dialog { 
-    position: fixed;
+    position: absolute;
+    top: 10em;
+    left: 5em;
     min-width: 20em;
     border-radius: 0.5em;
     z-index: 1002;

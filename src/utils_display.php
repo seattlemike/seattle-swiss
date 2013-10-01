@@ -386,32 +386,6 @@ function disp_module_games($module, $rounds) {
     foreach (array_reverse($rounds) as $round)
         foreach (get_round_data($round['round_id'], $module) as $r)
             disp_round_games($r['rid'], $r['title'], $r['games']);
-/*
-    switch ($module['module_mode']) {
-        case MODULE_MODE_DBLELIM:
-            foreach(array_reverse($rounds, true) as $idx => $r) {
-                $teams = array_filter(get_standings_before($r), function($t) { return ($t['status'] > 0); });
-                if (count($teams) == 2) { // FINALS! - only one game to display here
-                    disp_round_games($r['round_id'], get_round_title($module, $r), get_round_games($r['round_id']));
-                } else { // Not Finals (i.e. regular wb/wb and lb/lb games)
-                    $titles = get_round_title($module, $r);
-                    $wb = array_filter($teams, function ($t) { return ($t['status'] == 2); });
-                    $games = filter_games($r['round_id'], $wb);  // filter this round's games for winners bracket teams
-                    if ($games)
-                        disp_round_games($r['round_id'], $titles['wb'], $games);
-                    $lb = array_filter($teams, function ($t) { return ($t['status'] == 1); });
-                    $games = filter_games($r['round_id'], $lb);  // losers' bracket games this round
-                    if ($games)
-                        disp_round_games($r['round_id'], $titles['lb'], $games);
-                }
-            }
-            break;
-        default:
-            foreach (array_reverse($rounds) as $r)
-                disp_round_games($r['round_id'], get_round_title($module, $r), get_round_games($r['round_id']));
-            break;
-    }
-*/
 }
 
 function disp_games($games, $filter = null) {
@@ -452,11 +426,15 @@ function disp_game($game) {
     else {
         if ($game['status'] == 1) {
             if ($teams[0]['score'] > $teams[1]['score'])
-                $teams[0]['team_name'] = "<div class='victor'>{$teams[0]['team_name']}</div>";
+                $teams[0]['team_name'] = "<span class='victor'>{$teams[0]['team_name']}</span>";
             elseif ($teams[0]['score'] < $teams[1]['score'])
-                $teams[1]['team_name'] = "<div class='victor'>{$teams[1]['team_name']}</div>";
+                $teams[1]['team_name'] = "<span class='victor'>{$teams[1]['team_name']}</span>";
         }
-        echo "{$teams[0]['team_name']} vs {$teams[1]['team_name']}";
+        //foreach ($teams as $i => $t)
+        //    $teams[$i]['team_name'] = "<span class='{$t['class']}'>{$t['team_name']}</span>";
+        
+        echo "<span class='game-container'>{$teams[0]['team_name']} vs {$teams[1]['team_name']}</span>";
+
         if ($game['status'] > 0) {
             echo ", {$teams[0]['score']}-{$teams[1]['score']}";
         }
