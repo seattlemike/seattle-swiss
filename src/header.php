@@ -36,6 +36,7 @@ require_once("utils_display.php");
 require_once("utils_debug.php");
 require_once("utils_pairing.php");
 require_once("utils_standings.php");
+require_once("utils_settings.php");
 
 // Buffer all output until footer.php is processed
 ob_start();
@@ -70,9 +71,9 @@ function disp_header($title = null, $js_extra=array(), $header_extra = array()) 
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
 <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-<link href='/favicon.png' rel='icon' type='image/png' />
 <link rel='stylesheet' type='text/css' href='/style.css' />
 END;
+    echo "<link href='".SWISS_ROOT_PATH."favicon.png' rel='icon' type='image/png' />";
     foreach ($js_extra as $jsfile)
         echo "<script src='$jsfile' type='text/javascript'></script>\n";
     foreach ($header_extra as $line)
@@ -87,13 +88,13 @@ END;
 function disp_admin_topbar() {
     echo "<div class='lHead'>\n";
     if (check_login()) {
-        echo "<a class='button' href='/private/'>{$_SESSION['admin_name']}</a>";
+        echo "<a class='button' href='".SWISS_ROOT_PATH."private/'>{$_SESSION['admin_name']}</a>";
         //echo "<a href='/settings/'>settings</a>";
         if ($_SESSION['admin_type'] == 'super')  {
-            echo "<a class='button' href='/log/'>log</a>";
-            echo "<a class='button' href='/super/'>super</a>";
+            echo "<a class='button' href='".SWISS_ROOT_PATH."log/'>log</a>";
+            echo "<a class='button' href='".SWISS_ROOT_PATH."super/'>super</a>";
         }
-        echo "<a class='button' href='/logout/'>log out</a>\n";
+        echo "<a class='button' href='".SWISS_ROOT_PATH."logout/'>log out</a>\n";
     } else {
         // admin/login button should go here, but not on public watch pages
     }
@@ -104,20 +105,20 @@ function disp_modnav_topbar($tourney, $module, $page) {
     if (! $tourney)
         return;
     elseif (! $module)
-        $navs = array( array( $tourney['tournament_name'], "/private/tournament/{$tourney['tournament_id']}/" ) );
+        $navs = array( array( $tourney['tournament_name'], "private/tournament/{$tourney['tournament_id']}/" ) );
     else 
-        $navs = array( array( $tourney['tournament_name'], "/private/tournament/{$tourney['tournament_id']}/" ),
-                       array( $module['module_name'], "/private/module/{$module['module_id']}/" ),
-                       array( "Run", "/private/module/{$module['module_id']}/run/" ), 
-                       array( "Standings", "/private/module/{$module['module_id']}/view/" ));
+        $navs = array( array( $tourney['tournament_name'], "private/tournament/{$tourney['tournament_id']}/" ),
+                       array( $module['module_name'], "private/module/{$module['module_id']}/" ),
+                       array( "Run", "private/module/{$module['module_id']}/run/" ), 
+                       array( "Standings", "private/module/{$module['module_id']}/view/" ));
 
     echo "<div class='rHead'>";
     foreach ($navs as $idx => $link) {
         list($text, $dest) = $link;
         if ($page == $idx)
-            echo "<a class='selected button' href='$dest'>$text</a>";
+            echo "<a class='selected button' href='".SWISS_ROOT_PATH."$dest'>$text</a>";
         else 
-            echo "<a class='button' href='$dest'>$text</a>";
+            echo "<a class='button' href='".SWISS_ROOT_PATH."$dest'>$text</a>";
     }
     echo "</div>\n";
 }

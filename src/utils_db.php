@@ -19,8 +19,6 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-require_once("utils_settings.php");
-
 // Connect to server and select database
 function connect_to_db() {
   try {

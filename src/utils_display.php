@@ -153,7 +153,7 @@ function disp_modules_list($modules) {
     if ($modules && count($modules)) {
         foreach ($modules as $m) {
             echo "<div class='item'>";
-            echo "<a href='/rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>";
+            echo "<a href='".SWISS_ROOT_PATH."rss/{$m['module_id']}/' title='Follow via RSS'><img src='/img/feed-icon-28x28.png' width='14px' height='14px' /></a>";
             echo "<a href='../../module/{$m['module_id']}/'>{$m['module_name']}</a>";
             echo "</div>";
         }
@@ -246,41 +246,6 @@ function disp_team_edit($team) {
 
     echo "</tr>\n";
 }
-
-// displays the navigation for a round
-function disp_round_nav($mid, $round, $admin=false) {
-    $rounds = get_module_rounds($mid);
-    if (! $rounds)
-        echo "<div class='header'>Not yet started</div>";
-    else {
-        $url = $_SERVER['PHP_SELF'];
-        foreach ($rounds as $r) {
-            if ($r['round_id'] == $round['round_id']) $isSelected = "selected";
-            else                        $isSelected = "";
-            echo "<a class='button $isSelected' href='$url?round={$r['round_id']}'>Round {$r['round_number']}</a>";
-        }
-    }
-
-    if ($admin) {
-        echo "<form name='round' action='' method='post'>
-            <input type='hidden' name='module_id' value='$mid' />
-            <input type='hidden' name='round_id' value='{$round['round_id']}' />";
-        if (! $rounds)  {
-            echo "<input type='hidden' name='case' value='start_module' />
-            <input class='button' type='submit' name='start_module' value='Start' />";
-        } else {
-            // if we're looking at most recent round and round_isdone
-            if (($rounds[count($rounds)-1]['round_id'] == $round['round_id']) && round_isdone($round['round_id'])) {
-                echo "<input type='hidden' name='case' value='next_round' />
-                <input class='button' type='submit' name='next_round' value='Next' />";
-            } else {
-                echo "<a class='button disabled'>Next</a>";
-            }
-        }
-        echo "</form>";
-    }
-}
-
 
 function disp_view_nav($module, $rounds, $view) {
     echo "<div class='nav'>";

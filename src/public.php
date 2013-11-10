@@ -73,7 +73,6 @@
         if (! isset($_GET['all'])) {
             echo "<div class='header'>Recent Tournaments</div><div class='line'>";
             disp_tournament_list(array_slice($tlist,0,10));
-            //echo "<div class='line'> <a class='button' href='all'>Older Tournaments</a> </div>";
             echo "</div>";
         } else {
             echo "<div class='header'>Public Tournaments</div>";

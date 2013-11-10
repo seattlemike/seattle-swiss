@@ -44,7 +44,7 @@
         // Date
         echo "<div class='event'><div class='date'>$date</div>";
         // Admin Name
-        echo "<div class='admin'><a href='/log/admin/{$e['admin_id']}/'>{$e['admin_name']}</a></div>";
+        echo "<div class='admin'><a href='".SWISS_ROOT_PATH."log/admin/{$e['admin_id']}/'>{$e['admin_name']}</a></div>";
 
         echo "<div class='text'>";
         echo "<span class='eventlog-action'>{$types[$e['log_action']]}</span> <span class='eventlog-note'>{$e['log_note']}</span>";

@@ -38,9 +38,9 @@ disp_titlebar();
             
         </div>
         <div class='mainBox'>
-            <div class='item'><a class="button" href="/about/">About</a></div>
-            <div class='item'><a class="button" href="/public/">Tournaments</a></div>
-            <div class='item'><a class="button" href="/login/">Login</a></div>
+            <div class='item'><a class="button" href="about/">About</a></div>
+            <div class='item'><a class="button" href="public/">Tournaments</a></div>
+            <div class='item'><a class="button" href="login/">Login</a></div>
         </div>
     </div>
 </div>
