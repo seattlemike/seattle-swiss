@@ -55,7 +55,7 @@ function Game(node, scores, data) {
                 b = "<span class='victor'>"+b+"</span>"
         }
         if (self.status > 0) 
-            return "<span class='game-container'>"+a+" vs "+b+", "+scores[0].score + "-" + scores[1].score+"</span>"
+            return a+" vs "+b+", "+scores[0].score + "-" + scores[1].score
         else 
             return a+" vs "+b
     }

@@ -21,6 +21,8 @@
 @import url(http://fonts.googleapis.com/css?family=Oxygen+Mono);
 
 body {
+    display: inline-block;
+    min-width: 100%;
     margin: 0;
 	padding:0;
 	border:0;
@@ -94,7 +96,6 @@ hr { height: 1px; color: #aaf; border: none; }
 .footer { padding-bottom: 1em; }
 
 .lHead, .rHead { margin: 0 2em; }
-.rHead { float: right; }
 .right { float: right; }
 
 .rBox, { float: right; }
@@ -127,6 +128,7 @@ p { margin: 1em 2em; }
 .game { 
     text-align: left; 
     padding: 1em 2em;
+    white-space: nowrap;
 }
 #run-module .game { cursor: pointer; }
 #run-module .game:hover { background: #cde; }
@@ -156,10 +158,6 @@ p { margin: 1em 2em; }
     border: 2px dashed #fff;
     padding: 0.2em;
     margin: 0 0.2em;
-}
-
-.game-container {
-    display: inline-block;
 }
 
 .on-court {
@@ -257,7 +255,6 @@ td.numeric { min-width: 40px; }
 .standings .bottom-left { 
     border-bottom: 2px solid #246;
     border-right: 2px solid #246;
-    border-radius: 0.5em;
 }
 .standings .top-left { 
     border-top: 2px solid #246;
@@ -266,7 +263,6 @@ td.numeric { min-width: 40px; }
 .standings .top-right    { border-bottom: 2px solid #246; }
 .standings .spacer-right { 
     border-right: 2px solid #246; 
-    border-radius: 0.5em;
     height: 100%;
 }
 
@@ -329,6 +325,7 @@ td.numeric { min-width: 40px; }
 .event .date { background: #658ab3; }
 .event .admin { min-width : 7em; }
 
+.team-name { white-space: nowrap; }
 .result { padding: 1em; }
 .result, .rank-team {
     position: relative;
@@ -338,8 +335,7 @@ td.numeric { min-width: 40px; }
 }
 .team .team-name {
     display: inline-block;
-    margin: 0 1em;
-    padding: 0.5em 0;
+    padding: 1em;
 }
 .team .seed {
     display: inline-block;
@@ -391,7 +387,7 @@ td.numeric { min-width: 40px; }
     background: #b4cfed;
     margin: 1px 0;
 }
-.team-text {
+.team .team-text {
     display: inline-block;
     width: 15em;
     background: #658ab3;
@@ -399,12 +395,7 @@ td.numeric { min-width: 40px; }
     min-height: 1.5em;
     float: right;
 }
-.team-name {
-    white-space: nowrap;
-}
 .info {
-    display: inline-block;
-    padding: 1em;
 }
 .dark-ctr {
     text-align-right;
@@ -542,27 +533,29 @@ td.numeric { min-width: 40px; }
 /* Modal Dialog */
 .window-overlay { 
     position: fixed;
-    top: 0px;
-    left: 0px;
+    top: 0; left: 0;
     background-color: #000;
     /*transition: opacity 0.2s ease-in-out;*/
     opacity: 0.5;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     z-index: 1001;
+    border: 0px none;
 }
 
 .dialog { 
     position: absolute;
-    top: 10em;
-    left: 5em;
+    top: 2em;
+    left: 1em;
     min-width: 20em;
     border-radius: 0.5em;
     z-index: 1002;
     min-height: 5em;
     padding: 1em;
-    overflow: hidden;
     text-align: center;
+}
+.dialog-container {
+    display: inline-block;
 }
 
 .dialog-text { 
@@ -574,7 +567,6 @@ td.numeric { min-width: 40px; }
 .dialog-status {
     cursor: pointer;
     margin: 1em -1em;
-    font-size: 1.2em;
     padding: 1em;
 }
 .dialog-line {
@@ -614,3 +606,8 @@ input.dialog-score {
 }
 
 
+/* Media Queries for mobile(?) browsers */
+@media only screen and (max-device-width: 780px) {
+    .centerBox { min-width: 90%; }
+    .dialog { top: 2em; left: 1em; min-width: 0; }
+}

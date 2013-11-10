@@ -33,7 +33,12 @@
                         LOG_ACTION_LOGOUT => "Logout",
                         LOG_ACTION_NEWACCOUNT => "Created New Account",
                         LOG_ACTION_NEWTOURNEY => "New Tournament",
-                        LOG_ACTION_DELTOURNEY => "Delete Tournament", );
+                        LOG_ACTION_DELTOURNEY => "Delete Tournament",
+                        LOG_ACTION_NEWMODULE => "New Module",
+                        LOG_ACTION_DELMODULE => "Delete Module",
+                        LOG_ACTION_NEWROUND => "New Round",
+                        LOG_ACTION_DELROUND => "Delete Round",
+                        );
 
         $date = date("H:i:s", strtotime($e['log_time']));
         // Date
@@ -42,14 +47,7 @@
         echo "<div class='admin'><a href='/log/admin/{$e['admin_id']}/'>{$e['admin_name']}</a></div>";
 
         echo "<div class='text'>";
-        switch ($e['log_action']) {
-            case LOG_ACTION_NEWTOURNEY:
-            case LOG_ACTION_DELTOURNEY:
-                echo "{$types[$e['log_action']]} [{$e['log_note']}]";
-                break;
-            default:
-                echo $types[$e['log_action']];
-        }
+        echo "<span class='eventlog-action'>{$types[$e['log_action']]}</span> <span class='eventlog-note'>{$e['log_note']}</span>";
         echo "</div></div>";
     }
 

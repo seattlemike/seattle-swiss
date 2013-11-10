@@ -69,6 +69,7 @@ function disp_header($title = null, $js_extra=array(), $header_extra = array()) 
 <html xmlns='http://www.w3.org/1999/xhtml'>
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+<meta name='viewport' content='width=device-width, initial-scale=1.0' />
 <link href='/favicon.png' rel='icon' type='image/png' />
 <link rel='stylesheet' type='text/css' href='/style.css' />
 END;
@@ -124,8 +125,8 @@ function disp_modnav_topbar($tourney, $module, $page) {
 // assert: already checked tid/mid/has_privs/etc
 function disp_topbar($tourney=null, $module=null, $page=null) {
     echo "<div class='topNav'>";
-    disp_modnav_topbar($tourney, $module, $page);
     disp_admin_topbar();
+    disp_modnav_topbar($tourney, $module, $page);
     echo "</div>";
 }
 

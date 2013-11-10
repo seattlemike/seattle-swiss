@@ -107,7 +107,7 @@ function makeTop(el) {
         if (parseInt(elements[i].style.zIndex) > idx)
             idx=parseInt(elements[i].style.zIndex)
 
-    el.style.zIndex = idx;
+    el.style.zIndex = idx+1;
 }
 
 function Dialog( titleText, okfn) {
@@ -133,32 +133,35 @@ function Dialog( titleText, okfn) {
         this.dialog.appendChild(this.titleBox)
     }
     this.dialog.appendChild(this.buttonBox)
-
     this.show = function() { 
         document.body.appendChild(self.overlay); 
         makeTop(self.overlay)
         document.body.appendChild(self.dialog); 
         makeTop(self.dialog)
+        if (0) {
+            if (self.dialog.offsetWidth-34 < self.minWidth)  
+                self.setWidth(self.minWidth)
+            //if (window.innerHeight < self.dialog.offsetHeight)
+            //    self.dialog.style.position = "absolute" // if taller than innerHeight, better allow scrolling
 
-        if (self.dialog.offsetWidth-34 < self.minWidth)  
-            self.setWidth(self.minWidth)
-
-        //if (window.innerHeight < self.dialog.offsetHeight)
-        //    self.dialog.style.position = "absolute" // if taller than innerHeight, better allow scrolling
-
-        // center dialog
-        var newTop = (window.innerHeight-self.dialog.offsetHeight)/2
-        if (newTop < 0) {
-            newTop = 0
-            self.dialog.style.position = "absolute" // if taller than innerHeight, better allow scrolling
+            // center dialog
+            //if (self.dialog.style.display == "none") {  // this is true only in @media [mobile] css scenario
+            var newTop = (window.innerHeight-self.dialog.offsetHeight)/2
+            if (newTop < 0) {
+                newTop = 0
+                self.dialog.style.position = "absolute" // if taller than innerHeight, better allow scrolling
+            }
+            self.dialog.style.top = newTop+"px"
+            var newLeft = (window.innerWidth-self.dialog.offsetWidth)/2
+            self.dialog.style.left= newLeft+"px"
+            // scroll to top?
+            //self.dialog.scrollIntoView()
         }
-        self.dialog.style.top = newTop+"px"
-        var newLeft = (window.innerWidth-self.dialog.offsetWidth)/2
-        self.dialog.style.left= newLeft+"px"
-
-        // scroll to top?
-        //self.dialog.scrollIntoView()
         scroll(0,0)
+        if ( self.overlay.style.minHeight < window.outerHeight)
+            self.overlay.style.minHeight = window.outerHeight+"px"
+        if ( self.overlay.style.minWidth < window.outerWidth)
+            self.overlay.style.minWidth = window.outerWidth+"px"
     }
     this.hide = function() { document.body.removeChild(self.dialog);  document.body.removeChild(self.overlay) }
     this.insert = function(node) { self.dialog.insertBefore(node, self.buttonBox); return node }

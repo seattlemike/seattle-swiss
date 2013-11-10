@@ -297,11 +297,13 @@ function old_get_swiss_pairings($round) {
 // new pairing method: instead of best v worst within semi-group we match in quartiles, eiths, sixteenths, etc 
 //    regardless of record difference
 function get_swiss_pairings($round) {
+    //TODO: for rematch, search through reverse pair for someone who isn't rematch 
+    //      and whose opponent isnt rematch with all remaining teams
     function get_next($a, $teams) {
         for ($i = 0; $i < count($teams); $i++)
             if (($a['id'] != $teams[$i]['id']) && (! ($a['faced'][$teams[$i]['id']]))) // not me and not rematch
                 return $i;
-        return 0;
+        throw new Exception("No non-rematch found for {$a['team_name']}.");
     }
 
     // for pairing: sort teams by w/l record and tie-break BY SEED
@@ -316,9 +318,14 @@ function get_swiss_pairings($round) {
     //    TODO: how will I know they've been skipped in the past and so not do that again?
     //    TODO: also how do I space out the games so neither skip nor opp are playing back-to-back?
     $waiting = array_filter($teams, function ($t) use ($round) { return (count($t['results']) < $round['round_number']-1); });
+    // TODO: if we have multiple skipped teams should we pair them against eachother?
     foreach ($waiting as $t) {
         // get-next gives us the reverse index (pick first non-rematch from the end), so un-reverse for $opp:
-        $opp = count($teams) - 1 - get_next($t, array_reverse($teams));
+        try { // only throws an exception when all games would be rematches
+            $opp = count($teams) - 1 - get_next($t, array_reverse($teams));
+        } catch ( Exception $e ) {
+            // TODO: find team from end against which fewest rematches?
+        }
         $pairs[] = array($t, $teams[$opp]);
         array_splice($teams, $opp, 1);  // don't get rid of $t, but do get rid of $opp
     }
@@ -328,17 +335,17 @@ function get_swiss_pairings($round) {
     if ($round['round_number'] == 1)
         $quartile *= 2;
     $interval = ceil(count($teams) / $quartile);
-    //echo "Interval: $interval\n";
 
-    //TODO: for rematch, search through reverse pair for someone who isn't rematch 
-    //      and whose opponent isnt rematch with all remaining teams
-    //
     while (count($teams) > 0) {
         $waiting = array_splice($teams, 0, $interval);
-        //foreach ($waiting as $t)
-        //    echo "Waiting: {$t['name']}\n";
         while (count($waiting) > 0 && count($teams) > 0) {
-            $opp = get_next($waiting[0], $teams);
+            try {
+                $opp = get_next($waiting[0], $teams);
+            } catch (Exception $e) {  // rematch avoidance time
+                foreach ($pairs as $p) {
+                    // TODO IMMEDIATE: rematch avoidance
+                }
+            }
             $pairs[] = array($teams[$opp], array_shift($waiting));
             array_splice($teams, $opp, 1);
         }

@@ -88,6 +88,7 @@ function asyncNewModule($tid) {
     $mid = sql_insert("INSERT INTO tblModule (module_name, module_date, parent_id) 
                        VALUES (?, (SELECT tournament_date FROM tblTournament WHERE tournament_id=?), ?)",
                       array("New Module", $tid, $tid));
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_NEWMODULE, "M-$mid to T-$tid"));
     return array("moduleId" => $mid);
 }
 
@@ -167,16 +168,19 @@ function asyncAddRound($mid) {
                                     "score_data" => sql_select_all("SELECT * from tblGameTeams a JOIN tblTeam b using (team_id) WHERE a.game_id = ? ORDER BY a.score_id DESC", array($g['game_id']))); },
                 $r['games']);
         }
+        sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_NEWROUND, "R-$rid M-$mid"));
         return array("rounds" => $data);
     }
     // FAILED TO ADD ROUND - NOT ALL STATUS ARE ZERO (error?)
     return array("success" => false);
 }
 
-function asyncDelRound($round_id) {
-    checkRoundPrivs($round_id);
+function asyncDelRound($rid) {
+    checkRoundPrivs($rid);
     // RECURSIVELY DELETE??
-    sql_try("DELETE FROM tblRound WHERE round_id = ?", array($round_id));
+    $r = get_round($rid);
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELROUND, "R-$rid from M-{$r['module_id']}"));
+    sql_try("DELETE FROM tblRound WHERE round_id = ?", array($rid));
 }
 
 // Add/Update/Delete Games for module $mid
@@ -207,7 +211,7 @@ function asyncDelGame($game_id) {
         // now delete round if empty
         $count = sql_select_one("SELECT COUNT(*) FROM tblGame WHERE round_id = ?", array($game['round_id']));
         if (! $count[0])
-            sql_try("DELETE from tblRound WHERE round_id = ?", array($game['round_id']));
+            asyncDelRound($game['round_id']);
     }
 }
 

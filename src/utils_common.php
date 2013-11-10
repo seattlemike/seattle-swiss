@@ -33,6 +33,10 @@ define(LOG_ACTION_LOGOUT, 1);
 define(LOG_ACTION_NEWACCOUNT, 2);
 define(LOG_ACTION_NEWTOURNEY, 10);
 define(LOG_ACTION_DELTOURNEY, 11);
+define(LOG_ACTION_NEWMODULE, 20);
+define(LOG_ACTION_DELMODULE, 21);
+define(LOG_ACTION_NEWROUND, 30);
+define(LOG_ACTION_DELROUND, 31);
 
 define(TOURNAMENT_PRIVATE, 0);
 define(TOURNAMENT_LINK_ONLY, 1);
@@ -266,6 +270,7 @@ function get_module_rounds($mid) {
 
 function round_delete($round) {
     round_empty($round['round_id']);
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELROUND, "R-{$round['round_id']} from M-{$round['module_id']}"));
     sql_try("DELETE FROM tblRound WHERE round_id = ?", array($round['round_id']));
 }
 
@@ -391,9 +396,18 @@ function get_round_games($rid, $db=null) {
 //
 
 function module_delete($mid) {
-    // TODO: delete games/rounds or check for present?
-    return sql_try('DELETE FROM tblModuleTeams WHERE module_id = ?', array($mid)) &&
-           sql_try('DELETE FROM tblModule WHERE module_id = ?', array($mid));
+    $module = get_module($mid);
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELMODULE, "M-$mid \"{$module['module_name']}\" from T-{$module['parent_id']}"));
+
+    // LEAVES GAMES/SCORES BEHIND FOR POSSIBLE MODULE RECOVERY
+    $rounds = get_module_rounds($mid);
+    foreach ($rounds as $r)
+        sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELROUND, "R-{$r['round_id']} from M-$mid"));
+    //    round_empty($r['round_id']);  // all games/g_teams in round
+
+    sql_try("DELETE FROM tblModuleTeams WHERE module_id = ?", array($mid)); // all module_teams in module
+    sql_try("DELETE FROM tblRound WHERE module_id = ?", array($mid)); // all rounds in module
+    sql_try("DELETE FROM tblModule WHERE module_id = ?", array($mid)); // finally, delete module record itself
 }
 
 function get_module_parent($mid) {
@@ -605,13 +619,6 @@ function tournament_remove_admin($data, $aid) {
     return sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ? AND admin_id = ?", array($data['tournament_id'], $data['admin_id']));
 }
 
-function tournament_new_module($data) {
-    require_privs(tournament_isadmin($data['tournament_id']));
-    $tourney = get_tournament($data['tournament_id']);
-    return sql_try("INSERT INTO tblModule (module_name, module_date, parent_id) VALUES (?, ?, ?)",
-                   array("New Round", $tourney['tournament_date'], $data['tournament_id']));
-}
-
 function new_tournament() {
     // TODO the RAND() is silly, but I don't know how to reference my new id value in the same query
     $newid = sql_insert("INSERT INTO tblTournament 
@@ -619,7 +626,7 @@ function new_tournament() {
                 array("New Tournament", date("Y-m-d"), $_SESSION['admin_id']));
     if (! $newid)
         throw new Exception("Failed to create new tournament");
-    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_NEWTOURNEY, $newid));
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_NEWTOURNEY, "T-$newid"));
     sql_try("UPDATE tblTournament SET tournament_slug = ? WHERE tournament_id = ?", array("new-tournament-$newid", $newid));
     sql_try("INSERT INTO tblTournamentAdmins (tournament_id, admin_id) VALUES (?, ?)", array($newid, $_SESSION['admin_id']));
     return $newid;
@@ -638,19 +645,15 @@ function tournament_update($data) {
 }
 
 function tournament_delete($tid) {
-    // TODO: $db = connect_to_db();
-    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELTOURNEY, $tid));
+    $db = connect_to_db();
+    $tournament = get_tournament($tid);
+    sql_try("INSERT INTO tblSystemLog (admin_id, log_action, log_note) VALUES (?,?,?)", array($_SESSION['admin_id'], LOG_ACTION_DELTOURNEY, "T-$tid \"{$tournament['tournament_name']}\""));
     $modules = get_tournament_modules($tid);
-    foreach ($modules as $m) {
-        $rounds = get_module_rounds($m['module_id']);
-        foreach ($rounds as $r)
-            round_empty($r['round_id']);  // all games/g_teams in round
-        sql_try("DELETE FROM tblModuleTeams WHERE module_id = ?", array($m['module_id'])); // all m_teams in module
-        sql_try("DELETE FROM tblRound WHERE module_id = ?", array($m['module_id'])); // all rounds in module
-    }
+    foreach ($modules as $m)
+        module_delete($m['module_id']);
     sql_try("DELETE FROM tblTournamentAdmins WHERE tournament_id = ?", array($tid), $db); // admins in tourney
+    // tblTeam data is necessary for module game recovery - should we throw away module games or save team data?
     sql_try("DELETE FROM tblTeam WHERE tournament_id = ?", array($tid), $db); // teams in tourney
-    sql_try("DELETE FROM tblModule WHERE parent_id = ?", array($tid)); // modules in tourney
     sql_try("DELETE FROM tblTournament WHERE tournament_id = ?", array($tid), $db); // admins in tourney
 }
 

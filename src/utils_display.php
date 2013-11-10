@@ -433,7 +433,7 @@ function disp_game($game) {
         //foreach ($teams as $i => $t)
         //    $teams[$i]['team_name'] = "<span class='{$t['class']}'>{$t['team_name']}</span>";
         
-        echo "<span class='game-container'>{$teams[0]['team_name']} vs {$teams[1]['team_name']}</span>";
+        echo "{$teams[0]['team_name']} vs {$teams[1]['team_name']}";
 
         if ($game['status'] > 0) {
             echo ", {$teams[0]['score']}-{$teams[1]['score']}";
