@@ -19,10 +19,13 @@
 
 // Common UI
 
+if (! SwissRootPath)
+    SwissRootPath = "/"
+
 function buildSyncForm(fData) {
     var form = document.createElement("form")
     form.method="post"
-    form.action="/sync.php"
+    form.action=SwissRootPath+"sync.php"
     form.style="display: none;"
     for(var key in fData) {
         form.appendChild(buildInput(key, fData[key]))

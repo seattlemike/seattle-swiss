@@ -170,8 +170,8 @@ function addModule(tid) {
     var rssBtn = buildNode("img")
     rssBtn.width=14
     rssBtn.height=14
-    rssBtn.src="/img/feed-icon-28x28.png"
-    rssBtn.href="/"
+    rssBtn.src=SwissRootPath+"img/feed-icon-28x28.png"
+    rssBtn.href=SwissRootPath
     var m = buildNode("div", "item")
     m.appendChild(document.createElement('a'))
     m.firstChild.title = "Follow via RSS"
@@ -185,8 +185,8 @@ function addModule(tid) {
     // add module to database
     var async = new asyncPost()
     async.onSuccess = function (r) { 
-        m.firstChild.href="/rss/"+r.moduleId+"/";
-        m.lastChild.href="/private/module/"+r.moduleId+"/";
+        m.firstChild.href=SwissRootPath+"rss/"+r.moduleId+"/";
+        m.lastChild.href=SwissRootPath+"private/module/"+r.moduleId+"/";
     }
     async.post({'case':'NewModule', 'tournament_id':tid})
 }
