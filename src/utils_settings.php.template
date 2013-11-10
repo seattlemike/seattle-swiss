@@ -1,7 +1,6 @@
 <?php
-
 /*  
-    Copyright 2011, 2012 Mike Bell and Paul Danos
+    Copyright 2011, 2012, 2013 Mike Bell and Paul Danos
 
     This file is part of 20Swiss.
     
@@ -19,11 +18,14 @@
     along with 20Swiss.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-  // list($db_addr, $db_user, $db_pass, $db_name) = get_db_settings();
-  function get_db_settings() {
-    return array('localhost','db_admin','password','db_name');
-  }
-  function salt_pass($pass) {
-	  return md5("long_random_string".$pass);
-  }
+    define(SWISS_ROOT_PATH, '/');
+
+    // list($db_addr, $db_user, $db_pass, $db_name) = get_db_settings();
+    function get_db_settings() {
+        return array('localhost','db_admin','password','db_name');
+    }
+    function salt_pass($pass) {
+        // oops -- salting should include some user-specific datum as well
+        return md5("long_random_string".$pass);
+    }
 ?>
