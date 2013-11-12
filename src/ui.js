@@ -20,7 +20,7 @@
 // Common UI
 
 if (! SwissRootPath)
-    SwissRootPath = "/"
+    var SwissRootPath = "/"
 
 function buildSyncForm(fData) {
     var form = document.createElement("form")
